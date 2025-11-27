@@ -67,19 +67,19 @@ type RRule struct {
 	Until *time.Time
 	// The day of the week that the event occurs on.
 	// This is optional and repeatable.
-	Weekday []ByDay
+	ByDay []ByDay
 
-	// The Month(s) of the year that the event occurs on.
-	Month []int
+	// The ByMonth(s) of the year that the event occurs on.
+	ByMonth []int
 
-	// The day of the month that the event occurs on.
+	// ByMonthDay is the day of the month that the event occurs on.
 	// eg: 10th of the month, negative numbers are allowed to indicate the last day of the month.
 	// for example, -3 is the third-to-last-day of the month.
-	Monthday []int
+	ByMonthDay []int
 
-	// The day of the year that the event occurs on.
+	// ByYearDay is the day of the year that the event occurs on.
 	// eg: 100th day of the year, negative numbers are allowed to indicate the last day of the year.
-	YearDay []int
+	ByYearDay []int
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -124,44 +124,44 @@ func ParseRRule(rruleString string) (*RRule, error) {
 			rrule.Until = &until
 		case "BYDAY":
 			weekdays := strings.Split(value, ",")
-			rrule.Weekday = make([]ByDay, 0, len(weekdays))
+			rrule.ByDay = make([]ByDay, 0, len(weekdays))
 			for _, weekday := range weekdays {
 				// if there is an interval other than 1, it can be expressed as the number at the start of the string
 				interval, weekday, err := parseByDay(weekday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Weekday = append(rrule.Weekday, ByDay{Weekday: weekday, Interval: interval})
+				rrule.ByDay = append(rrule.ByDay, ByDay{Weekday: weekday, Interval: interval})
 			}
 		case "BYMONTH":
 			months := strings.Split(value, ",")
-			rrule.Month = make([]int, 0, len(months))
+			rrule.ByMonth = make([]int, 0, len(months))
 			for _, month := range months {
 				monthInt, err := strconv.Atoi(month)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Month = append(rrule.Month, monthInt)
+				rrule.ByMonth = append(rrule.ByMonth, monthInt)
 			}
 		case "BYMONTHDAY":
 			monthdays := strings.Split(value, ",")
-			rrule.Monthday = make([]int, 0, len(monthdays))
+			rrule.ByMonthDay = make([]int, 0, len(monthdays))
 			for _, monthday := range monthdays {
 				monthdayInt, err := strconv.Atoi(monthday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Monthday = append(rrule.Monthday, monthdayInt)
+				rrule.ByMonthDay = append(rrule.ByMonthDay, monthdayInt)
 			}
 		case "BYYEARDAY":
 			yeardays := strings.Split(value, ",")
-			rrule.YearDay = make([]int, 0, len(yeardays))
+			rrule.ByYearDay = make([]int, 0, len(yeardays))
 			for _, yearday := range yeardays {
 				yeardayInt, err := strconv.Atoi(yearday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.YearDay = append(rrule.YearDay, yeardayInt)
+				rrule.ByYearDay = append(rrule.ByYearDay, yeardayInt)
 			}
 		}
 	}
