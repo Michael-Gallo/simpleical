@@ -24,4 +24,6 @@ var (
 	errInvalidByDayString = errors.New("invalid BYDAY string")
 
 	errInvalidFrequency = errors.New("invalid frequency")
+
+	errInvalidWeekday = errors.New("invalid weekday")
 )

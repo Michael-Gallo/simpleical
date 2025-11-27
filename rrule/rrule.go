@@ -80,6 +80,9 @@ type RRule struct {
 	// ByYearDay is the day of the year that the event occurs on.
 	// eg: 100th day of the year, negative numbers are allowed to indicate the last day of the year.
 	ByYearDay []int
+
+	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
+	WKST Weekday
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -163,6 +166,11 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				}
 				rrule.ByYearDay = append(rrule.ByYearDay, yeardayInt)
 			}
+		case "WKST":
+			if !isValidWeekday(Weekday(value)) {
+				return nil, errInvalidWeekday
+			}
+			rrule.WKST = Weekday(value)
 		}
 	}
 	if err := validateRRule(rrule); err != nil {

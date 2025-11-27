@@ -398,65 +398,64 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when WKST property is implemented
-		// {
-		// 	name:  "Every other week - forever with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;WKST=SU",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		WeekStart: WeekdaySunday,
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Weekly on Tuesday and Thursday for five weeks with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  1,
-		// 		Until:     getPointer(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every other week on Monday, Wednesday, and Friday until December 24, 1997 with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayMonday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayFriday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every other week on Tuesday and Thursday, for 8 occurrences with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(8),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Every other week - forever with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;WKST=SU",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				WKST:      WeekdaySunday,
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Weekly on Tuesday and Thursday for five weeks with Sunday as week start",
+			input: "FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  1,
+				Until:     getPointer(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every other week on Monday, Wednesday, and Friday until December 24, 1997 with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayMonday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayFriday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every other week on Tuesday and Thursday, for 8 occurrences with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(8),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
 
+		// Missing RFC 5545 examples that need to be implemented
 		// TODO: Uncomment when BYWEEKNO property is implemented
 		// {
 		// 	name:  "Monday of week number 20 (where the default start of the week is Monday), forever",
