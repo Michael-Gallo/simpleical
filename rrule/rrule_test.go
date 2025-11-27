@@ -500,32 +500,31 @@ func TestParseRRule(t *testing.T) {
 			expectError: nil,
 		},
 
-		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when complex combinations with multiple BY* properties are implemented
-		// {
-		// 	name:  "Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day)",
-		// 	input: "FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyYearly,
-		// 		Interval:  4,
-		// 		Month:     []int{11},
-		// 		Weekday:   []ByDay{{Weekday: WeekdayTuesday, Interval: 1}},
-		// 		Monthday:  []int{2, 3, 4, 5, 6, 7, 8},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "The first Saturday that follows the first Sunday of the month, forever",
-		// 	input: "FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Weekday:   []ByDay{{Weekday: WeekdaySaturday, Interval: 1}},
-		// 		Monthday:  []int{7, 8, 9, 10, 11, 12, 13},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day)",
+			input: "FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
+			want: &RRule{
+				Frequency:  FrequencyYearly,
+				Interval:   4,
+				ByMonth:    []int{11},
+				ByDay:      []ByDay{{Weekday: WeekdayTuesday, Interval: 1}},
+				ByMonthDay: []int{2, 3, 4, 5, 6, 7, 8},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "The first Saturday that follows the first Sunday of the month, forever",
+			input: "FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
+			want: &RRule{
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				ByDay:      []ByDay{{Weekday: WeekdaySaturday, Interval: 1}},
+				ByMonthDay: []int{7, 8, 9, 10, 11, 12, 13},
+			},
+			expectError: nil,
+		},
 
+		// Missing RFC 5545 examples that need to be implemented
 		// TODO: Uncomment when BYHOUR and BYMINUTE properties are implemented
 		// {
 		// 	name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day",
