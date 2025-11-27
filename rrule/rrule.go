@@ -87,6 +87,10 @@ type RRule struct {
 	// BYWEEKNO is the week number that the event occurs on.
 	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
 	BYWEEKNO int8
+
+	// BySetPos (by set position) is the position of the last BY- component to use.
+	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
+	BySetPos int
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -184,6 +188,15 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, errInvalidWeekno
 			}
 			rrule.BYWEEKNO = int8(weekno)
+		case "BYSETPOS":
+			bySetPos, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, err
+			}
+			if bySetPos < -366 || bySetPos > 366 || bySetPos == 0 {
+				return nil, errInvalidBySetPos
+			}
+			rrule.BySetPos = bySetPos
 		}
 	}
 	if err := validateRRule(rrule); err != nil {

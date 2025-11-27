@@ -466,42 +466,41 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when BYSETPOS property is implemented
-		// {
-		// 	name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",
-		// 	input: "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Count:     getPointer(3),
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 		SetPos: []int{3},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "The second-to-last weekday of the month",
-		// 	input: "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayMonday, Interval: 1},
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 			{Weekday: WeekdayFriday, Interval: 1},
-		// 		},
-		// 		SetPos: []int{-2},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",
+			input: "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				Count:     getPointer(3),
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+				BySetPos: 3,
+			},
+			expectError: nil,
+		},
+		{
+			name:  "The second-to-last weekday of the month",
+			input: "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay: []ByDay{
+					{Weekday: WeekdayMonday, Interval: 1},
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+					{Weekday: WeekdayFriday, Interval: 1},
+				},
+				BySetPos: -2,
+			},
+			expectError: nil,
+		},
 
+		// Missing RFC 5545 examples that need to be implemented
 		// TODO: Uncomment when complex combinations with multiple BY* properties are implemented
 		// {
 		// 	name:  "Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day)",

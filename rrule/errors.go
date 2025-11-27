@@ -30,4 +30,6 @@ var (
 	errInvalidWeekno = errors.New("invalid week number: must be between 1 and 53 or -1 and -53")
 
 	errByWeekNoWithInvalidFrequency = errors.New("BYWEEKNO is only allowed for yearly frequency")
+
+	errInvalidBySetPos = errors.New("BYSETPOS must be between -366 and 366, not 0")
 )
