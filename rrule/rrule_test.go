@@ -455,20 +455,18 @@ func TestParseRRule(t *testing.T) {
 			expectError: nil,
 		},
 
+		{
+			name:  "Monday of week number 20 (where the default start of the week is Monday), forever",
+			input: "FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO",
+			want: &RRule{
+				Frequency: FrequencyYearly,
+				Interval:  1,
+				BYWEEKNO:  20,
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
+			},
+			expectError: nil,
+		},
 		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when BYWEEKNO property is implemented
-		// {
-		// 	name:  "Monday of week number 20 (where the default start of the week is Monday), forever",
-		// 	input: "FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyYearly,
-		// 		Interval:  1,
-		// 		WeekNo:    []int{20},
-		// 		Weekday:   []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
-		// 	},
-		// 	expectError: nil,
-		// },
-
 		// TODO: Uncomment when BYSETPOS property is implemented
 		// {
 		// 	name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",

@@ -83,6 +83,10 @@ type RRule struct {
 
 	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
 	WKST Weekday
+
+	// BYWEEKNO is the week number that the event occurs on.
+	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
+	BYWEEKNO int8
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -171,6 +175,15 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, errInvalidWeekday
 			}
 			rrule.WKST = Weekday(value)
+		case "BYWEEKNO":
+			weekno, err := strconv.ParseInt(value, 10, 8)
+			if err != nil {
+				return nil, err
+			}
+			if weekno < 1 || weekno > 53 || weekno == 0 {
+				return nil, errInvalidWeekno
+			}
+			rrule.BYWEEKNO = int8(weekno)
 		}
 	}
 	if err := validateRRule(rrule); err != nil {
@@ -182,6 +195,9 @@ func ParseRRule(rruleString string) (*RRule, error) {
 func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
+	}
+	if rrule.BYWEEKNO != 0 && rrule.Frequency != FrequencyYearly {
+		return errByWeekNoWithInvalidFrequency
 	}
 	if rrule.Count != nil && rrule.Until != nil {
 		return errCountAndUntilBothSet

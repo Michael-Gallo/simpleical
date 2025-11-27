@@ -26,4 +26,8 @@ var (
 	errInvalidFrequency = errors.New("invalid frequency")
 
 	errInvalidWeekday = errors.New("invalid weekday")
+
+	errInvalidWeekno = errors.New("invalid week number: must be between 1 and 53 or -1 and -53")
+
+	errByWeekNoWithInvalidFrequency = errors.New("BYWEEKNO is only allowed for yearly frequency")
 )
