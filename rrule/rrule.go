@@ -91,6 +91,12 @@ type RRule struct {
 	// BySetPos (by set position) is the position of the last BY- component to use.
 	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
 	BySetPos int
+
+	// ByMinute is a comma separated list of minutes of the hour that the event occurs on.
+	ByMinute []uint8
+
+	// ByHour is a comma separated list of hours of the day that the event occurs on.
+	ByHour []uint8
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -197,6 +203,32 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, errInvalidBySetPos
 			}
 			rrule.BySetPos = bySetPos
+		case "BYMINUTE":
+			minutes := strings.Split(value, ",")
+			rrule.ByMinute = make([]uint8, 0, len(minutes))
+			for _, minute := range minutes {
+				minuteInt, err := strconv.ParseUint(minute, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if minuteInt > 59 {
+					return nil, errInvalidByMinute
+				}
+				rrule.ByMinute = append(rrule.ByMinute, uint8(minuteInt))
+			}
+		case "BYHOUR":
+			hours := strings.Split(value, ",")
+			rrule.ByHour = make([]uint8, 0, len(hours))
+			for _, hour := range hours {
+				hourInt, err := strconv.ParseUint(hour, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if hourInt > 23 {
+					return nil, errInvalidByHour
+				}
+				rrule.ByHour = append(rrule.ByHour, uint8(hourInt))
+			}
 		}
 	}
 	if err := validateRRule(rrule); err != nil {

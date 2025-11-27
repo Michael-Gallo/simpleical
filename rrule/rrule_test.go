@@ -524,62 +524,60 @@ func TestParseRRule(t *testing.T) {
 			expectError: nil,
 		},
 
+		{
+			name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day",
+			input: "FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				ByHour:    []uint8{9, 10, 11, 12, 13, 14, 15, 16},
+				ByMinute:  []uint8{0, 20, 40},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day (alternative with MINUTELY)",
+			input: "FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
+			want: &RRule{
+				Frequency: FrequencyMinutely,
+				Interval:  20,
+				ByHour:    []uint8{9, 10, 11, 12, 13, 14, 15, 16},
+			},
+			expectError: nil,
+		},
+
+		{
+			name:  "An example where the days generated makes a difference because of WKST (Monday start)",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(4),
+				WKST:      WeekdayMonday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdaySunday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "An example where the days generated makes a difference because of WKST (Sunday start)",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(4),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdaySunday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+
 		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when BYHOUR and BYMINUTE properties are implemented
-		// {
-		// 	name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day",
-		// 	input: "FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyDaily,
-		// 		Interval:  1,
-		// 		Hour:      []int{9, 10, 11, 12, 13, 14, 15, 16},
-		// 		Minute:    []int{0, 20, 40},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day (alternative with MINUTELY)",
-		// 	input: "FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMinutely,
-		// 		Interval:  20,
-		// 		Hour:      []int{9, 10, 11, 12, 13, 14, 15, 16},
-		// 	},
-		// 	expectError: nil,
-		// },
-
-		// TODO: Uncomment when WKST property is implemented
-		// {
-		// 	name:  "An example where the days generated makes a difference because of WKST (Monday start)",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(4),
-		// 		WeekStart: WeekdayMonday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdaySunday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "An example where the days generated makes a difference because of WKST (Sunday start)",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(4),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdaySunday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-
 		// TODO: Uncomment when complex validation is implemented
 		// {
 		// 	name:  "An example where an invalid date (i.e., February 30) is ignored",
