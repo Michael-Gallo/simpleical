@@ -576,20 +576,6 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-
-		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when complex validation is implemented
-		// {
-		// 	name:  "An example where an invalid date (i.e., February 30) is ignored",
-		// 	input: "FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Count:     getPointer(5),
-		// 		Monthday:  []int{15, 30},
-		// 	},
-		// 	expectError: nil,
-		// },
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
