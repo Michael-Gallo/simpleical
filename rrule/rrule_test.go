@@ -461,7 +461,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				BYWEEKNO:  20,
+				ByWeekNo:  20,
 				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
 			},
 			expectError: nil,

@@ -84,9 +84,9 @@ type RRule struct {
 	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
 	WKST Weekday
 
-	// BYWEEKNO is the week number that the event occurs on.
+	// ByWeekNo is the week number that the event occurs on.
 	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
-	BYWEEKNO int8
+	ByWeekNo int8
 
 	// BySetPos (by set position) is the position of the last BY- component to use.
 	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
@@ -187,7 +187,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 			if weekno < 1 || weekno > 53 || weekno == 0 {
 				return nil, errInvalidWeekno
 			}
-			rrule.BYWEEKNO = int8(weekno)
+			rrule.ByWeekNo = int8(weekno)
 		case "BYSETPOS":
 			bySetPos, err := strconv.Atoi(value)
 			if err != nil {
@@ -209,7 +209,7 @@ func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
 	}
-	if rrule.BYWEEKNO != 0 && rrule.Frequency != FrequencyYearly {
+	if rrule.ByWeekNo != 0 && rrule.Frequency != FrequencyYearly {
 		return errByWeekNoWithInvalidFrequency
 	}
 	if rrule.Count != nil && rrule.Until != nil {
