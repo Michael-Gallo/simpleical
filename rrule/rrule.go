@@ -115,12 +115,10 @@ func ParseRRule(rruleString string) (*RRule, error) {
 		switch tag {
 		case "FREQ":
 			// Validate the frequency is valid
-			switch Frequency(value) {
-			case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly:
-				rrule.Frequency = Frequency(value)
-			default:
+			if !isValidFrequency(Frequency(value)) {
 				return nil, fmt.Errorf("%w: %s", errInvalidFrequency, value)
 			}
+			rrule.Frequency = Frequency(value)
 		case "INTERVAL":
 			interval, err := strconv.Atoi(value)
 			if err != nil {

@@ -2,6 +2,7 @@ package rrule
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -168,7 +169,37 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-		// WEEKLY examples from RFC 5545
+		{
+			name:        "Error: Week Number Set for non-yearly frequency",
+			input:       "FREQ=WEEKLY;BYWEEKNO=1",
+			want:        nil,
+			expectError: errByWeekNoWithInvalidFrequency,
+		},
+		{
+			name:        "Error: BYHOUR set to negative number",
+			input:       "FREQ=DAILY;BYHOUR=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:        "Error: ByHour set to number greater than 23",
+			input:       "FREQ=DAILY;BYHOUR=24",
+			want:        nil,
+			expectError: errInvalidByHour,
+		},
+		{
+			name:        "Error: BYMINUTE set to negative number",
+			input:       "FREQ=DAILY;BYMINUTE=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:        "Error: ByMinute set to number greater than 59",
+			input:       "FREQ=DAILY;BYMINUTE=60",
+			want:        nil,
+			expectError: errInvalidByMinute,
+		},
+		// Examples from RFC 5545
 		{
 			name:  "Weekly for 10 occurrences",
 			input: "FREQ=WEEKLY;COUNT=10",
