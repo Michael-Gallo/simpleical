@@ -54,23 +54,27 @@ type RRule struct {
 	// The frequency of the event.
 	// This MUST be specified.
 	Frequency Frequency
-	// The interval between occurrences of the event.
-	// eg: an interval of 2 for a daily rule means the event will happen every other day.
-	// Not mandatory, but treated as 1 if not present.
-	Interval int
+	// The date and time until the rule ends, inclusive.
+	// Can not occur with the Count property.
+	Until *time.Time
 	// The number of occurrences of the event.
 	// Can not occur with the Until property.
 	// DTStart always counts as the first occurrence.
 	Count *int
-	// The date and time until the rule ends, inclusive.
-	// Can not occur with the Count property.
-	Until *time.Time
+	// The interval between occurrences of the event.
+	// eg: an interval of 2 for a daily rule means the event will happen every other day.
+	// Not mandatory, but treated as 1 if not present.
+	Interval int
+	// TODO: add BYSECOND
+
+	// ByMinute is a comma separated list of minutes of the hour that the event occurs on.
+	ByMinute []uint8
+
+	// ByHour is a comma separated list of hours of the day that the event occurs on.
+	ByHour []uint8
 	// The day of the week that the event occurs on.
 	// This is optional and repeatable.
 	ByDay []ByDay
-
-	// The ByMonth(s) of the year that the event occurs on.
-	ByMonth []int
 
 	// ByMonthDay is the day of the month that the event occurs on.
 	// eg: 10th of the month, negative numbers are allowed to indicate the last day of the month.
@@ -81,22 +85,18 @@ type RRule struct {
 	// eg: 100th day of the year, negative numbers are allowed to indicate the last day of the year.
 	ByYearDay []int
 
-	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
-	WKST Weekday
-
 	// ByWeekNo is the week number that the event occurs on.
 	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
 	ByWeekNo int8
 
+	// The ByMonth(s) of the year that the event occurs on.
+	ByMonth []int
+
 	// BySetPos (by set position) is the position of the last BY- component to use.
 	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
 	BySetPos int
-
-	// ByMinute is a comma separated list of minutes of the hour that the event occurs on.
-	ByMinute []uint8
-
-	// ByHour is a comma separated list of hours of the day that the event occurs on.
-	ByHour []uint8
+	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
+	WKST Weekday
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
