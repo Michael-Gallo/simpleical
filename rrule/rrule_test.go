@@ -199,6 +199,28 @@ func TestParseRRule(t *testing.T) {
 			want:        nil,
 			expectError: errInvalidByMinute,
 		},
+		{
+			name:        "Error: BySecond set to number greater than 59",
+			input:       "FREQ=DAILY;BYSECOND=60",
+			want:        nil,
+			expectError: errInvalidBySecond,
+		},
+		{
+			name:        "Error: BySecond set to negative number",
+			input:       "FREQ=DAILY;BYSECOND=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:  "Success: every 15th and 35th second",
+			input: "FREQ=DAILY;BYSECOND=15,35",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				BySecond:  []uint8{15, 35},
+			},
+			expectError: nil,
+		},
 		// Examples from RFC 5545
 		{
 			name:  "Weekly for 10 occurrences",

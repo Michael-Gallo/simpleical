@@ -65,7 +65,8 @@ type RRule struct {
 	// eg: an interval of 2 for a daily rule means the event will happen every other day.
 	// Not mandatory, but treated as 1 if not present.
 	Interval int
-	// TODO: add BYSECOND
+	// BYSECOND is a comma separated list of seconds of the minute that the event occurs on.
+	BySecond []uint8
 
 	// ByMinute is a comma separated list of minutes of the hour that the event occurs on.
 	ByMinute []uint8
@@ -227,7 +228,21 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				}
 				rrule.ByHour = append(rrule.ByHour, uint8(hourInt))
 			}
+		case "BYSECOND":
+			seconds := strings.Split(value, ",")
+			rrule.BySecond = make([]uint8, 0, len(seconds))
+			for _, second := range seconds {
+				secondInt, err := strconv.ParseUint(second, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if secondInt > 59 {
+					return nil, errInvalidBySecond
+				}
+				rrule.BySecond = append(rrule.BySecond, uint8(secondInt))
+			}
 		}
+
 	}
 	if err := validateRRule(rrule); err != nil {
 		return nil, err

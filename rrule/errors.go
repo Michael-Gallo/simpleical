@@ -36,4 +36,6 @@ var (
 	errInvalidByMinute = errors.New("BYMINUTE must be between 0 and 59")
 
 	errInvalidByHour = errors.New("BYHOUR must be between 0 and 23")
+
+	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 59")
 )
