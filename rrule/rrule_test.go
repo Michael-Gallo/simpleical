@@ -2,6 +2,7 @@ package rrule
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -77,9 +78,9 @@ func TestParseRRule(t *testing.T) {
 			name:  "Monthly on the third-to-the-last day of the month, forever",
 			input: "FREQ=MONTHLY;BYMONTHDAY=-3",
 			want: &RRule{
-				Frequency: FrequencyMonthly,
-				Interval:  1,
-				Monthday:  []int{-3},
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				ByMonthDay: []int{-3},
 			},
 			expectError: nil,
 		},
@@ -87,10 +88,10 @@ func TestParseRRule(t *testing.T) {
 			name:  "Monthly on the first and last day of the month for 10 occurrences",
 			input: "FREQ=MONTHLY;COUNT=10;BYMONTHDAY=1,-1",
 			want: &RRule{
-				Frequency: FrequencyMonthly,
-				Interval:  1,
-				Count:     getPointer(10),
-				Monthday:  []int{1, -1},
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				Count:      getPointer(10),
+				ByMonthDay: []int{1, -1},
 			},
 			expectError: nil,
 		},
@@ -100,7 +101,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  2,
-				Weekday: []ByDay{{
+				ByDay: []ByDay{{
 					Weekday:  WeekdayTuesday,
 					Interval: 1,
 				}},
@@ -114,7 +115,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyYearly,
 				Interval:  3,
 				Count:     getPointer(10),
-				YearDay:   []int{1, 100, 200},
+				ByYearDay: []int{1, 100, 200},
 			},
 			expectError: nil,
 		},
@@ -124,7 +125,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				Weekday:   []ByDay{{Weekday: WeekdayMonday, Interval: 20}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 20}},
 			},
 			expectError: nil,
 		},
@@ -168,7 +169,59 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-		// WEEKLY examples from RFC 5545
+		{
+			name:        "Error: Week Number Set for non-yearly frequency",
+			input:       "FREQ=WEEKLY;BYWEEKNO=1",
+			want:        nil,
+			expectError: errByWeekNoWithInvalidFrequency,
+		},
+		{
+			name:        "Error: BYHOUR set to negative number",
+			input:       "FREQ=DAILY;BYHOUR=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:        "Error: ByHour set to number greater than 23",
+			input:       "FREQ=DAILY;BYHOUR=24",
+			want:        nil,
+			expectError: errInvalidByHour,
+		},
+		{
+			name:        "Error: BYMINUTE set to negative number",
+			input:       "FREQ=DAILY;BYMINUTE=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:        "Error: ByMinute set to number greater than 59",
+			input:       "FREQ=DAILY;BYMINUTE=60",
+			want:        nil,
+			expectError: errInvalidByMinute,
+		},
+		{
+			name:        "Error: BySecond set to number greater than 59",
+			input:       "FREQ=DAILY;BYSECOND=60",
+			want:        nil,
+			expectError: errInvalidBySecond,
+		},
+		{
+			name:        "Error: BySecond set to negative number",
+			input:       "FREQ=DAILY;BYSECOND=-1",
+			want:        nil,
+			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:  "Success: every 15th and 35th second",
+			input: "FREQ=DAILY;BYSECOND=15,35",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				BySecond:  []uint8{15, 35},
+			},
+			expectError: nil,
+		},
+		// Examples from RFC 5545
 		{
 			name:  "Weekly for 10 occurrences",
 			input: "FREQ=WEEKLY;COUNT=10",
@@ -205,7 +258,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyWeekly,
 				Interval:  1,
 				Count:     getPointer(10),
-				Weekday: []ByDay{
+				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
 					{Weekday: WeekdayThursday, Interval: 1},
 				},
@@ -219,7 +272,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyWeekly,
 				Interval:  2,
 				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-				Weekday: []ByDay{
+				ByDay: []ByDay{
 					{Weekday: WeekdayMonday, Interval: 1},
 					{Weekday: WeekdayWednesday, Interval: 1},
 					{Weekday: WeekdayFriday, Interval: 1},
@@ -234,7 +287,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyWeekly,
 				Interval:  2,
 				Count:     getPointer(8),
-				Weekday: []ByDay{
+				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
 					{Weekday: WeekdayThursday, Interval: 1},
 				},
@@ -249,7 +302,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     getPointer(10),
-				Weekday:   []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
 			},
 			expectError: nil,
 		},
@@ -260,7 +313,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-				Weekday:   []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
 			},
 			expectError: nil,
 		},
@@ -271,7 +324,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  2,
 				Count:     getPointer(10),
-				Weekday: []ByDay{
+				ByDay: []ByDay{
 					{Weekday: WeekdaySunday, Interval: 1},
 					{Weekday: WeekdaySunday, Interval: -1},
 				},
@@ -285,7 +338,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     getPointer(6),
-				Weekday:   []ByDay{{Weekday: WeekdayMonday, Interval: -2}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2}},
 			},
 			expectError: nil,
 		},
@@ -293,10 +346,10 @@ func TestParseRRule(t *testing.T) {
 			name:  "Monthly on the 2nd and 15th of the month for 10 occurrences",
 			input: "FREQ=MONTHLY;COUNT=10;BYMONTHDAY=2,15",
 			want: &RRule{
-				Frequency: FrequencyMonthly,
-				Interval:  1,
-				Count:     getPointer(10),
-				Monthday:  []int{2, 15},
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				Count:      getPointer(10),
+				ByMonthDay: []int{2, 15},
 			},
 			expectError: nil,
 		},
@@ -304,10 +357,10 @@ func TestParseRRule(t *testing.T) {
 			name:  "Every 18 months on the 10th thru 15th of the month for 10 occurrences",
 			input: "FREQ=MONTHLY;INTERVAL=18;COUNT=10;BYMONTHDAY=10,11,12,13,14,15",
 			want: &RRule{
-				Frequency: FrequencyMonthly,
-				Interval:  18,
-				Count:     getPointer(10),
-				Monthday:  []int{10, 11, 12, 13, 14, 15},
+				Frequency:  FrequencyMonthly,
+				Interval:   18,
+				Count:      getPointer(10),
+				ByMonthDay: []int{10, 11, 12, 13, 14, 15},
 			},
 			expectError: nil,
 		},
@@ -319,7 +372,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyYearly,
 				Interval:  1,
 				Count:     getPointer(10),
-				Month:     []int{6, 7},
+				ByMonth:   []int{6, 7},
 			},
 			expectError: nil,
 		},
@@ -330,7 +383,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyYearly,
 				Interval:  2,
 				Count:     getPointer(10),
-				Month:     []int{1, 2, 3},
+				ByMonth:   []int{1, 2, 3},
 			},
 			expectError: nil,
 		},
@@ -340,8 +393,8 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				Month:     []int{3},
-				Weekday:   []ByDay{{Weekday: WeekdayThursday, Interval: 1}},
+				ByMonth:   []int{3},
+				ByDay:     []ByDay{{Weekday: WeekdayThursday, Interval: 1}},
 			},
 			expectError: nil,
 		},
@@ -351,8 +404,8 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				Month:     []int{6, 7, 8},
-				Weekday:   []ByDay{{Weekday: WeekdayThursday, Interval: 1}},
+				ByMonth:   []int{6, 7, 8},
+				ByDay:     []ByDay{{Weekday: WeekdayThursday, Interval: 1}},
 			},
 			expectError: nil,
 		},
@@ -360,10 +413,10 @@ func TestParseRRule(t *testing.T) {
 			name:  "Every Friday the 13th, forever",
 			input: "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13",
 			want: &RRule{
-				Frequency: FrequencyMonthly,
-				Interval:  1,
-				Weekday:   []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
-				Monthday:  []int{13},
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				ByDay:      []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByMonthDay: []int{13},
 			},
 			expectError: nil,
 		},
@@ -398,205 +451,184 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
-		// Missing RFC 5545 examples that need to be implemented
-		// TODO: Uncomment when WKST property is implemented
-		// {
-		// 	name:  "Every other week - forever with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;WKST=SU",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		WeekStart: WeekdaySunday,
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Weekly on Tuesday and Thursday for five weeks with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  1,
-		// 		Until:     getPointer(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every other week on Monday, Wednesday, and Friday until December 24, 1997 with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayMonday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayFriday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every other week on Tuesday and Thursday, for 8 occurrences with Sunday as week start",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(8),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Every other week - forever with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;WKST=SU",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				WKST:      WeekdaySunday,
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Weekly on Tuesday and Thursday for five weeks with Sunday as week start",
+			input: "FREQ=WEEKLY;UNTIL=19971007T000000Z;WKST=SU;BYDAY=TU,TH",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  1,
+				Until:     getPointer(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every other week on Monday, Wednesday, and Friday until December 24, 1997 with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;UNTIL=19971224T000000Z;WKST=SU;BYDAY=MO,WE,FR",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayMonday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayFriday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every other week on Tuesday and Thursday, for 8 occurrences with Sunday as week start",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=8;WKST=SU;BYDAY=TU,TH",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(8),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
 
-		// TODO: Uncomment when BYWEEKNO property is implemented
-		// {
-		// 	name:  "Monday of week number 20 (where the default start of the week is Monday), forever",
-		// 	input: "FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyYearly,
-		// 		Interval:  1,
-		// 		WeekNo:    []int{20},
-		// 		Weekday:   []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Monday of week number 20 (where the default start of the week is Monday), forever",
+			input: "FREQ=YEARLY;BYWEEKNO=20;BYDAY=MO",
+			want: &RRule{
+				Frequency: FrequencyYearly,
+				Interval:  1,
+				ByWeekNo:  20,
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",
+			input: "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				Count:     getPointer(3),
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+				BySetPos: 3,
+			},
+			expectError: nil,
+		},
+		{
+			name:  "The second-to-last weekday of the month",
+			input: "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay: []ByDay{
+					{Weekday: WeekdayMonday, Interval: 1},
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+					{Weekday: WeekdayFriday, Interval: 1},
+				},
+				BySetPos: -2,
+			},
+			expectError: nil,
+		},
 
-		// TODO: Uncomment when BYSETPOS property is implemented
-		// {
-		// 	name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",
-		// 	input: "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Count:     getPointer(3),
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 		},
-		// 		SetPos: []int{3},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "The second-to-last weekday of the month",
-		// 	input: "FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-2",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayMonday, Interval: 1},
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdayWednesday, Interval: 1},
-		// 			{Weekday: WeekdayThursday, Interval: 1},
-		// 			{Weekday: WeekdayFriday, Interval: 1},
-		// 		},
-		// 		SetPos: []int{-2},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day)",
+			input: "FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
+			want: &RRule{
+				Frequency:  FrequencyYearly,
+				Interval:   4,
+				ByMonth:    []int{11},
+				ByDay:      []ByDay{{Weekday: WeekdayTuesday, Interval: 1}},
+				ByMonthDay: []int{2, 3, 4, 5, 6, 7, 8},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "The first Saturday that follows the first Sunday of the month, forever",
+			input: "FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
+			want: &RRule{
+				Frequency:  FrequencyMonthly,
+				Interval:   1,
+				ByDay:      []ByDay{{Weekday: WeekdaySaturday, Interval: 1}},
+				ByMonthDay: []int{7, 8, 9, 10, 11, 12, 13},
+			},
+			expectError: nil,
+		},
 
-		// TODO: Uncomment when complex combinations with multiple BY* properties are implemented
-		// {
-		// 	name:  "Every 4 years, the first Tuesday after a Monday in November, forever (U.S. Presidential Election day)",
-		// 	input: "FREQ=YEARLY;INTERVAL=4;BYMONTH=11;BYDAY=TU;BYMONTHDAY=2,3,4,5,6,7,8",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyYearly,
-		// 		Interval:  4,
-		// 		Month:     []int{11},
-		// 		Weekday:   []ByDay{{Weekday: WeekdayTuesday, Interval: 1}},
-		// 		Monthday:  []int{2, 3, 4, 5, 6, 7, 8},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "The first Saturday that follows the first Sunday of the month, forever",
-		// 	input: "FREQ=MONTHLY;BYDAY=SA;BYMONTHDAY=7,8,9,10,11,12,13",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Weekday:   []ByDay{{Weekday: WeekdaySaturday, Interval: 1}},
-		// 		Monthday:  []int{7, 8, 9, 10, 11, 12, 13},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day",
+			input: "FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				ByHour:    []uint8{9, 10, 11, 12, 13, 14, 15, 16},
+				ByMinute:  []uint8{0, 20, 40},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day (alternative with MINUTELY)",
+			input: "FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
+			want: &RRule{
+				Frequency: FrequencyMinutely,
+				Interval:  20,
+				ByHour:    []uint8{9, 10, 11, 12, 13, 14, 15, 16},
+			},
+			expectError: nil,
+		},
 
-		// TODO: Uncomment when BYHOUR and BYMINUTE properties are implemented
-		// {
-		// 	name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day",
-		// 	input: "FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyDaily,
-		// 		Interval:  1,
-		// 		Hour:      []int{9, 10, 11, 12, 13, 14, 15, 16},
-		// 		Minute:    []int{0, 20, 40},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "Every 20 minutes from 9:00 AM to 4:40 PM every day (alternative with MINUTELY)",
-		// 	input: "FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMinutely,
-		// 		Interval:  20,
-		// 		Hour:      []int{9, 10, 11, 12, 13, 14, 15, 16},
-		// 	},
-		// 	expectError: nil,
-		// },
-
-		// TODO: Uncomment when WKST property is implemented
-		// {
-		// 	name:  "An example where the days generated makes a difference because of WKST (Monday start)",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(4),
-		// 		WeekStart: WeekdayMonday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdaySunday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-		// {
-		// 	name:  "An example where the days generated makes a difference because of WKST (Sunday start)",
-		// 	input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyWeekly,
-		// 		Interval:  2,
-		// 		Count:     getPointer(4),
-		// 		WeekStart: WeekdaySunday,
-		// 		Weekday: []ByDay{
-		// 			{Weekday: WeekdayTuesday, Interval: 1},
-		// 			{Weekday: WeekdaySunday, Interval: 1},
-		// 		},
-		// 	},
-		// 	expectError: nil,
-		// },
-
-		// TODO: Uncomment when complex validation is implemented
-		// {
-		// 	name:  "An example where an invalid date (i.e., February 30) is ignored",
-		// 	input: "FREQ=MONTHLY;BYMONTHDAY=15,30;COUNT=5",
-		// 	want: &RRule{
-		// 		Frequency: FrequencyMonthly,
-		// 		Interval:  1,
-		// 		Count:     getPointer(5),
-		// 		Monthday:  []int{15, 30},
-		// 	},
-		// 	expectError: nil,
-		// },
+		{
+			name:  "An example where the days generated makes a difference because of WKST (Monday start)",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(4),
+				WKST:      WeekdayMonday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdaySunday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "An example where the days generated makes a difference because of WKST (Sunday start)",
+			input: "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
+			want: &RRule{
+				Frequency: FrequencyWeekly,
+				Interval:  2,
+				Count:     getPointer(4),
+				WKST:      WeekdaySunday,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdaySunday, Interval: 1},
+				},
+			},
+			expectError: nil,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

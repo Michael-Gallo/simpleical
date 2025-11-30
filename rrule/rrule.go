@@ -54,32 +54,50 @@ type RRule struct {
 	// The frequency of the event.
 	// This MUST be specified.
 	Frequency Frequency
-	// The interval between occurrences of the event.
-	// eg: an interval of 2 for a daily rule means the event will happen every other day.
-	// Not mandatory, but treated as 1 if not present.
-	Interval int
+	// The date and time until the rule ends, inclusive.
+	// Can not occur with the Count property.
+	Until *time.Time
 	// The number of occurrences of the event.
 	// Can not occur with the Until property.
 	// DTStart always counts as the first occurrence.
 	Count *int
-	// The date and time until the rule ends, inclusive.
-	// Can not occur with the Count property.
-	Until *time.Time
+	// The interval between occurrences of the event.
+	// eg: an interval of 2 for a daily rule means the event will happen every other day.
+	// Not mandatory, but treated as 1 if not present.
+	Interval int
+	// BYSECOND is a comma separated list of seconds of the minute that the event occurs on.
+	BySecond []uint8
+
+	// ByMinute is a comma separated list of minutes of the hour that the event occurs on.
+	ByMinute []uint8
+
+	// ByHour is a comma separated list of hours of the day that the event occurs on.
+	ByHour []uint8
 	// The day of the week that the event occurs on.
 	// This is optional and repeatable.
-	Weekday []ByDay
+	ByDay []ByDay
 
-	// The Month(s) of the year that the event occurs on.
-	Month []int
-
-	// The day of the month that the event occurs on.
+	// ByMonthDay is the day of the month that the event occurs on.
 	// eg: 10th of the month, negative numbers are allowed to indicate the last day of the month.
 	// for example, -3 is the third-to-last-day of the month.
-	Monthday []int
+	ByMonthDay []int
 
-	// The day of the year that the event occurs on.
+	// ByYearDay is the day of the year that the event occurs on.
 	// eg: 100th day of the year, negative numbers are allowed to indicate the last day of the year.
-	YearDay []int
+	ByYearDay []int
+
+	// ByWeekNo is the week number that the event occurs on.
+	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
+	ByWeekNo int8
+
+	// The ByMonth(s) of the year that the event occurs on.
+	ByMonth []int
+
+	// BySetPos (by set position) is the position of the last BY- component to use.
+	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
+	BySetPos int
+	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
+	WKST Weekday
 }
 
 // ParseRRule takes an iCal reccurence rule string and parses it into a RRule struct.
@@ -98,12 +116,10 @@ func ParseRRule(rruleString string) (*RRule, error) {
 		switch tag {
 		case "FREQ":
 			// Validate the frequency is valid
-			switch Frequency(value) {
-			case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly:
-				rrule.Frequency = Frequency(value)
-			default:
+			if !isValidFrequency(Frequency(value)) {
 				return nil, fmt.Errorf("%w: %s", errInvalidFrequency, value)
 			}
+			rrule.Frequency = Frequency(value)
 		case "INTERVAL":
 			interval, err := strconv.Atoi(value)
 			if err != nil {
@@ -124,46 +140,109 @@ func ParseRRule(rruleString string) (*RRule, error) {
 			rrule.Until = &until
 		case "BYDAY":
 			weekdays := strings.Split(value, ",")
-			rrule.Weekday = make([]ByDay, 0, len(weekdays))
+			rrule.ByDay = make([]ByDay, 0, len(weekdays))
 			for _, weekday := range weekdays {
 				// if there is an interval other than 1, it can be expressed as the number at the start of the string
 				interval, weekday, err := parseByDay(weekday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Weekday = append(rrule.Weekday, ByDay{Weekday: weekday, Interval: interval})
+				rrule.ByDay = append(rrule.ByDay, ByDay{Weekday: weekday, Interval: interval})
 			}
 		case "BYMONTH":
 			months := strings.Split(value, ",")
-			rrule.Month = make([]int, 0, len(months))
+			rrule.ByMonth = make([]int, 0, len(months))
 			for _, month := range months {
 				monthInt, err := strconv.Atoi(month)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Month = append(rrule.Month, monthInt)
+				rrule.ByMonth = append(rrule.ByMonth, monthInt)
 			}
 		case "BYMONTHDAY":
 			monthdays := strings.Split(value, ",")
-			rrule.Monthday = make([]int, 0, len(monthdays))
+			rrule.ByMonthDay = make([]int, 0, len(monthdays))
 			for _, monthday := range monthdays {
 				monthdayInt, err := strconv.Atoi(monthday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.Monthday = append(rrule.Monthday, monthdayInt)
+				rrule.ByMonthDay = append(rrule.ByMonthDay, monthdayInt)
 			}
 		case "BYYEARDAY":
 			yeardays := strings.Split(value, ",")
-			rrule.YearDay = make([]int, 0, len(yeardays))
+			rrule.ByYearDay = make([]int, 0, len(yeardays))
 			for _, yearday := range yeardays {
 				yeardayInt, err := strconv.Atoi(yearday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.YearDay = append(rrule.YearDay, yeardayInt)
+				rrule.ByYearDay = append(rrule.ByYearDay, yeardayInt)
+			}
+		case "WKST":
+			if !isValidWeekday(Weekday(value)) {
+				return nil, errInvalidWeekday
+			}
+			rrule.WKST = Weekday(value)
+		case "BYWEEKNO":
+			weekno, err := strconv.ParseInt(value, 10, 8)
+			if err != nil {
+				return nil, err
+			}
+			if weekno < 1 || weekno > 53 || weekno == 0 {
+				return nil, errInvalidWeekno
+			}
+			rrule.ByWeekNo = int8(weekno)
+		case "BYSETPOS":
+			bySetPos, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, err
+			}
+			if bySetPos < -366 || bySetPos > 366 || bySetPos == 0 {
+				return nil, errInvalidBySetPos
+			}
+			rrule.BySetPos = bySetPos
+		case "BYMINUTE":
+			minutes := strings.Split(value, ",")
+			rrule.ByMinute = make([]uint8, 0, len(minutes))
+			for _, minute := range minutes {
+				minuteInt, err := strconv.ParseUint(minute, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if minuteInt > 59 {
+					return nil, errInvalidByMinute
+				}
+				rrule.ByMinute = append(rrule.ByMinute, uint8(minuteInt))
+			}
+		case "BYHOUR":
+			hours := strings.Split(value, ",")
+			rrule.ByHour = make([]uint8, 0, len(hours))
+			for _, hour := range hours {
+				hourInt, err := strconv.ParseUint(hour, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if hourInt > 23 {
+					return nil, errInvalidByHour
+				}
+				rrule.ByHour = append(rrule.ByHour, uint8(hourInt))
+			}
+		case "BYSECOND":
+			seconds := strings.Split(value, ",")
+			rrule.BySecond = make([]uint8, 0, len(seconds))
+			for _, second := range seconds {
+				secondInt, err := strconv.ParseUint(second, 10, 8)
+				if err != nil {
+					return nil, err
+				}
+				if secondInt > 59 {
+					return nil, errInvalidBySecond
+				}
+				rrule.BySecond = append(rrule.BySecond, uint8(secondInt))
 			}
 		}
+
 	}
 	if err := validateRRule(rrule); err != nil {
 		return nil, err
@@ -174,6 +253,9 @@ func ParseRRule(rruleString string) (*RRule, error) {
 func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
+	}
+	if rrule.ByWeekNo != 0 && rrule.Frequency != FrequencyYearly {
+		return errByWeekNoWithInvalidFrequency
 	}
 	if rrule.Count != nil && rrule.Until != nil {
 		return errCountAndUntilBothSet

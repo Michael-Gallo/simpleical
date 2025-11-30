@@ -24,4 +24,18 @@ var (
 	errInvalidByDayString = errors.New("invalid BYDAY string")
 
 	errInvalidFrequency = errors.New("invalid frequency")
+
+	errInvalidWeekday = errors.New("invalid weekday")
+
+	errInvalidWeekno = errors.New("invalid week number: must be between 1 and 53 or -1 and -53")
+
+	errByWeekNoWithInvalidFrequency = errors.New("BYWEEKNO is only allowed for yearly frequency")
+
+	errInvalidBySetPos = errors.New("BYSETPOS must be between -366 and 366, not 0")
+
+	errInvalidByMinute = errors.New("BYMINUTE must be between 0 and 59")
+
+	errInvalidByHour = errors.New("BYHOUR must be between 0 and 23")
+
+	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 59")
 )
