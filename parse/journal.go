@@ -45,7 +45,11 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 
 	// Repeatable properties
 	case model.JournalTokenAttach:
-		journal.Attach = append(journal.Attach, value)
+		attachment, err := parseAttachment(value, params)
+		if err != nil {
+			return err
+		}
+		journal.Attach = append(journal.Attach, *attachment)
 		return nil
 	case model.JournalTokenAttendee:
 		parsedURL, err := url.Parse(value)

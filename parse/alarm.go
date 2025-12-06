@@ -17,7 +17,11 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 	case model.AlarmTokenTrigger:
 		return setOnceProperty(&alarm.Trigger, value, propertyName, alarmLocation)
 	case model.AlarmTokenAttach:
-		alarm.Attach = append(alarm.Attach, value)
+		attachment, err := parseAttachment(value, params)
+		if err != nil {
+			return err
+		}
+		alarm.Attach = append(alarm.Attach, *attachment)
 		return nil
 	case model.AlarmTokenDuration:
 		return setOnceDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)

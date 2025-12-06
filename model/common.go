@@ -35,3 +35,36 @@ type Organizer struct {
 
 	OtherParams map[string]string
 }
+
+// Attachment represents an ATTACH property in the iCalendar format.
+// This property provides the capability to associate a document object with a calendar component.
+// It can be specified as a URI pointing to a resource or as inline binary encoded content.
+// For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1.
+type Attachment struct {
+	// Value is the VALUE parameter, which can be "URI" (default) or "BINARY".
+	// When Value is "BINARY", Encoding must be "BASE64".
+	Value string
+
+	// Encoding is the ENCODING parameter, which is "BASE64" for binary attachments.
+	// This will be empty for URI attachments.
+	Encoding string
+
+	// URI is the URI pointing to the attachment resource.
+	// This is set when the attachment is specified as a URI (the default value type).
+	// This will be nil for binary attachments.
+	URI *url.URL
+
+	// Binary is the base64-encoded string for inline binary encoded content.
+	// This is set when the attachment has ENCODING=BASE64 and VALUE=BINARY parameters.
+	// This will be empty for URI attachments.
+	Binary string
+
+	// FormatType is the FMTTYPE parameter value.
+	// This is optional for URI attachments but recommended for binary attachments.
+	// It specifies the media type of the resource (e.g., "application/postscript").
+	FormatType string
+
+	// OtherParams contains any other parameters that may be specified on the ATTACH property.
+	// This includes IANA and non-standard parameters.
+	OtherParams map[string]string
+}

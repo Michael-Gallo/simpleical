@@ -90,7 +90,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 
 	// Repeatable properties
 	case model.TodoTokenAttach:
-		todo.Attach = append(todo.Attach, value)
+		attachment, err := parseAttachment(value, params)
+		if err != nil {
+			return err
+		}
+		todo.Attach = append(todo.Attach, *attachment)
 		return nil
 	case model.TodoTokenAttendee:
 		parsedURL, err := url.Parse(value)
