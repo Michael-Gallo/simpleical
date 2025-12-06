@@ -80,9 +80,8 @@ func TestParseAttachment(t *testing.T) {
 				assert.Error(t, err)
 				assert.Equal(t, testCase.expectedError, err)
 				return
-			} else {
-				assert.NoError(t, err)
 			}
+			assert.NoError(t, err)
 			assert.Equal(t, testCase.expectedAttachment, attachment)
 		})
 	}
