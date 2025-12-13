@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/model"
+	"github.com/michael-gallo/simpleical/rrule"
 )
 
 const todoLocation = "Todo"
@@ -83,6 +84,12 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		todo.Status = model.TodoStatus(value)
 	case model.TodoTokenSummary:
 		return setOnceProperty(&todo.Summary, value, propertyName, todoLocation)
+	case model.TodoTokenRRule:
+		rule, err := rrule.ParseRRule(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
 	case model.TodoTokenTransp:
 		return setOnceProperty(&todo.Transp, model.TodoTransp(value), propertyName, todoLocation)
 	case model.TodoTokenURL:
