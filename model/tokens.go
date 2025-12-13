@@ -68,6 +68,7 @@ const (
 	TodoTokenSequence        TodoToken = "SEQUENCE"
 	TodoTokenStatus          TodoToken = "STATUS"
 	TodoTokenSummary         TodoToken = "SUMMARY"
+	TodoTokenRRule           TodoToken = "RRULE"
 	TodoTokenTransp          TodoToken = "TRANSP"
 	TodoTokenURL             TodoToken = "URL"
 	TodoTokenUID             TodoToken = "UID"
