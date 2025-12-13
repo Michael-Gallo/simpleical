@@ -50,6 +50,8 @@ var (
 	testEventAlarmMissingAttendeeEmailInput string
 	//go:embed test_data/events/valid_test_event_with_rrule.ical
 	testEventWithRRuleInput string
+	//go:embed test_data/events/valid_test_event_with_attachment.ical
+	testEventWithAttachmentInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -104,6 +106,31 @@ func TestValidEvent(t *testing.T) {
 								TimeZoneOffsetFrom: "+0000",
 								TimeZoneOffsetTo:   "+0000",
 								DTStart:            time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VEVENT with ATTACH",
+			input: testEventWithAttachmentInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:         "13235@example.com",
+						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						Summary:     "Event with attachment",
+						Description: "Event Description",
+						Attach: []model.Attachment{
+							{
+								FormatType: "application/pdf",
+								Value:      "URI",
+								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/report.pdf"},
 							},
 						},
 					},
