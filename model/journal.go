@@ -97,13 +97,14 @@ type Journal struct {
 	URL string
 
 	// OPTIONAL, SHOULD NOT occur more than once
-	// TODO: RRULE - define once per journal
+	// Specifies the recurrence rule for the journal.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
 	RRule *rrule.RRule
 
 	// OPTIONAL, MAY occur more than once
 	// Provides the capability to associate a document object with a calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1
-	Attach []string
+	Attach []Attachment
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the participants that are invited to the activity.

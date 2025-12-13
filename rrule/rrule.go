@@ -242,7 +242,6 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				rrule.BySecond = append(rrule.BySecond, uint8(secondInt))
 			}
 		}
-
 	}
 	if err := validateRRule(rrule); err != nil {
 		return nil, err

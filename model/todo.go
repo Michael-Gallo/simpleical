@@ -7,6 +7,8 @@ package model
 import (
 	"net/url"
 	"time"
+
+	"github.com/michael-gallo/simpleical/rrule"
 )
 
 // TodoStatus represents the possible values for a VTODO's STATUS field.
@@ -151,13 +153,14 @@ type Todo struct {
 	URL string
 
 	// OPTIONAL, SHOULD NOT occur more than once
-	// TODO: RRULE - define once per todo
-	// RRule *RecurrenceRule
+	// Specifies the recurrence rule for the todo.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3
+	RRule *rrule.RRule
 
 	// OPTIONAL, MAY occur more than once
 	// Provides the capability to associate a document object with a calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1
-	Attach []string
+	Attach []Attachment
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the participants that are invited to the activity.

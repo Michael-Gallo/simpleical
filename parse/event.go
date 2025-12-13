@@ -87,6 +87,13 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 			return err
 		}
 		return setOnceProperty(&event.RRule, rule, propertyName, eventLocation)
+	case model.EventTokenAttach:
+		attachment, err := parseAttachment(value, params)
+		if err != nil {
+			return err
+		}
+		event.Attach = append(event.Attach, *attachment)
+		return nil
 	default:
 		return fmt.Errorf("%w: %s", errInvalidEventProperty, propertyName)
 	}

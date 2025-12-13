@@ -130,10 +130,9 @@ type Event struct {
 	Duration time.Duration
 
 	// OPTIONAL, MAY occur more than once.
-	// Optional and can be defined multiple times.
+	// Provides the capability to associate a document object with a calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1.
-	// TODO: define a more robust type for attachments.
-	Attach []string
+	Attach []Attachment
 
 	// Attendee is used to represent an ATTENDEE component in the iCalendar format.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.1.
