@@ -187,13 +187,9 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 			*currentState = stateTodoAlarm
 			calendar.Todos[len(calendar.Todos)-1].Alarms = append(calendar.Todos[len(calendar.Todos)-1].Alarms, model.Alarm{})
 		case stateJournal:
-			if len(calendar.Journals) == 0 {
-				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
-			}
-			// Journal alarms are not supported in the current model, but we'll handle gracefully.
-			calendar.Journals[len(calendar.Journals)-1].Alarms = append(calendar.Journals[len(calendar.Journals)-1].Alarms, model.Alarm{})
+			return fmt.Errorf("%w: VALARM not supported inside VJOURNAL", errUnexpectedBeginBlock)
 		default:
-			return fmt.Errorf("%w: VALARM must be inside VEVENT, VTODO, or VJOURNAL", errUnexpectedBeginBlock)
+			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", errUnexpectedBeginBlock)
 		}
 	case string(model.SectionTokenVJournal):
 		*currentState = stateJournal
