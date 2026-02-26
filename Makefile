@@ -28,4 +28,4 @@ bench-comparative:
 	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
 
 
-pre-commit: fmt vet test-slow
+pre-commit: fmt vet lint test-slow

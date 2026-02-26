@@ -64,7 +64,7 @@ const (
 	TodoTokenOrganizer       TodoToken = "ORGANIZER"
 	TodoTokenPercentComplete TodoToken = "PERCENT-COMPLETE"
 	TodoTokenPriority        TodoToken = "PRIORITY"
-	TodoTokenRecurrenceID    TodoToken = "RECURRENCE-ID"
+	TodoTokenRecurrenceID    TodoToken = "RECURRENCE-ID" //nolint:gosec // G101 - iCalendar property name, not a credential
 	TodoTokenSequence        TodoToken = "SEQUENCE"
 	TodoTokenStatus          TodoToken = "STATUS"
 	TodoTokenSummary         TodoToken = "SUMMARY"
@@ -95,7 +95,7 @@ const (
 	JournalTokenDTStart        JournalToken = "DTSTART"
 	JournalTokenLastModified   JournalToken = "LAST-MODIFIED"
 	JournalTokenOrganizer      JournalToken = "ORGANIZER"
-	JournalTokenRecurrenceID   JournalToken = "RECURRENCE-ID"
+	JournalTokenRecurrenceID   JournalToken = "RECURRENCE-ID" //nolint:gosec
 	JournalTokenSequence       JournalToken = "SEQUENCE"
 	JournalTokenStatus         JournalToken = "STATUS"
 	JournalTokenSummary        JournalToken = "SUMMARY"

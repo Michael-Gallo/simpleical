@@ -19,7 +19,7 @@ const (
 	TodoStatusNeedsAction TodoStatus = "NEEDS-ACTION"
 	TodoStatusCompleted   TodoStatus = "COMPLETED"
 	TodoStatusInProcess   TodoStatus = "IN-PROCESS"
-	TodoStatusCancelled   TodoStatus = "CANCELLED"
+	TodoStatusCanceled    TodoStatus = "CANCELED"
 )
 
 // TodoClass represents the possible values for a VTODO's CLASS field.
