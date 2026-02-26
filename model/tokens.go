@@ -64,7 +64,7 @@ const (
 	TodoTokenOrganizer       TodoToken = "ORGANIZER"
 	TodoTokenPercentComplete TodoToken = "PERCENT-COMPLETE"
 	TodoTokenPriority        TodoToken = "PRIORITY"
-	TodoTokenRecurrenceID    TodoToken = "RECURRENCE-ID" //nolint:gosec
+	TodoTokenRecurrenceID    TodoToken = "RECURRENCE-ID" //nolint:gosec // G101 - iCalendar property name, not a credential
 	TodoTokenSequence        TodoToken = "SEQUENCE"
 	TodoTokenStatus          TodoToken = "STATUS"
 	TodoTokenSummary         TodoToken = "SUMMARY"
