@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package parse
+package ical
 
 import (
 	"bufio"
@@ -31,23 +31,23 @@ const (
 	stateFinished
 )
 
-// IcalFromFileName parses an iCalendar file from the given file path into a Calendar.
+// FromFileName parses an iCalendar file from the given file path into a Calendar.
 // It opens the file, parses its contents, and returns a Calendar.
 // This is a convenience function that wraps IcalReader.
 // The file is automatically closed after parsing.
-func IcalFromFileName(filename string) (*model.Calendar, error) {
+func FromFileName(filename string) (*model.Calendar, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	return IcalReader(file)
+	return Read(file)
 }
 
-// IcalString takes the string representation of an ICAL and parses it into a Calendar.
+// FromString takes the string representation of an ICAL and parses it into a Calendar.
 // It returns an error if the input is not a valid ICAL string.
 // This is a convenience function that wraps IcalReader.
-func IcalString(input string) (*model.Calendar, error) {
+func FromString(input string) (*model.Calendar, error) {
 	// Handle empty input
 	if input == "" {
 		return nil, errNoCalendarFound
@@ -55,11 +55,11 @@ func IcalString(input string) (*model.Calendar, error) {
 
 	// Use the reader-based parser for consistency
 	reader := strings.NewReader(input)
-	return IcalReader(reader)
+	return Read(reader)
 }
 
-// IcalReader takes an io.Reader containing iCalendar data and parses it into a Calendar.
-func IcalReader(reader io.Reader) (*model.Calendar, error) {
+// Read takes an io.Reader containing iCalendar data and parses it into a Calendar.
+func Read(reader io.Reader) (*model.Calendar, error) {
 	calendar := &model.Calendar{}
 	currentState := stateCalendar
 	// Reusable parameter map to avoid allocations on every property
