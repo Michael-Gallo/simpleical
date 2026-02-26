@@ -18,8 +18,6 @@ linters:
     goconst:
       min-len: 2
       min-occurrences: 2
-    lll:
-      line-length: 120
     misspell:
       locale: US
   exclusions:
