@@ -33,7 +33,7 @@ const (
 
 // FromFileName parses an iCalendar file from the given file path into a Calendar.
 // It opens the file, parses its contents, and returns a Calendar.
-// This is a convenience function that wraps IcalReader.
+// This is a convenience function that wraps Read.
 // The file is automatically closed after parsing.
 func FromFileName(filename string) (*model.Calendar, error) {
 	file, err := os.Open(filename)
@@ -46,7 +46,7 @@ func FromFileName(filename string) (*model.Calendar, error) {
 
 // FromString takes the string representation of an ICAL and parses it into a Calendar.
 // It returns an error if the input is not a valid ICAL string.
-// This is a convenience function that wraps IcalReader.
+// This is a convenience function that wraps Read.
 func FromString(input string) (*model.Calendar, error) {
 	// Handle empty input
 	if input == "" {
