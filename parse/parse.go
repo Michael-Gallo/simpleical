@@ -172,17 +172,28 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		*currentState = stateFreebusy
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 	case string(model.SectionTokenVAlarm):
-		// Determine which parent component to add the alarm to based on current state
+		// Determine which parent component to add the alarm to based on current state.
 		switch *currentState {
 		case stateEvent:
+			if len(calendar.Events) == 0 {
+				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
+			}
 			*currentState = stateEventAlarm
 			calendar.Events[len(calendar.Events)-1].Alarms = append(calendar.Events[len(calendar.Events)-1].Alarms, model.Alarm{})
 		case stateTodo:
+			if len(calendar.Todos) == 0 {
+				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
+			}
 			*currentState = stateTodoAlarm
 			calendar.Todos[len(calendar.Todos)-1].Alarms = append(calendar.Todos[len(calendar.Todos)-1].Alarms, model.Alarm{})
 		case stateJournal:
-			// Journal alarms are not supported in the current model, but we'll handle gracefully
+			if len(calendar.Journals) == 0 {
+				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
+			}
+			// Journal alarms are not supported in the current model, but we'll handle gracefully.
 			calendar.Journals[len(calendar.Journals)-1].Alarms = append(calendar.Journals[len(calendar.Journals)-1].Alarms, model.Alarm{})
+		default:
+			return fmt.Errorf("%w: VALARM must be inside VEVENT, VTODO, or VJOURNAL", errUnexpectedBeginBlock)
 		}
 	case string(model.SectionTokenVJournal):
 		*currentState = stateJournal
@@ -191,9 +202,15 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		*currentState = stateTodo
 		calendar.Todos = append(calendar.Todos, model.Todo{})
 	case string(model.SectionTokenVStandard):
+		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
+			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", errUnexpectedBeginBlock)
+		}
 		*currentState = stateStandard
 		calendar.TimeZones[len(calendar.TimeZones)-1].Standard = append(calendar.TimeZones[len(calendar.TimeZones)-1].Standard, model.TimeZoneProperty{})
 	case string(model.SectionTokenVDaylight):
+		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
+			return fmt.Errorf("%w: DAYLIGHT must be inside VTIMEZONE", errUnexpectedBeginBlock)
+		}
 		*currentState = stateDaylight
 		calendar.TimeZones[len(calendar.TimeZones)-1].Daylight = append(calendar.TimeZones[len(calendar.TimeZones)-1].Daylight, model.TimeZoneProperty{})
 	default:
@@ -206,52 +223,92 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 func handleEndBlock(endLineValue string, currentState *parserState, calendar *model.Calendar) error {
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):
+		if *currentState != stateEvent || len(calendar.Events) == 0 {
+			return fmt.Errorf("%w: END:VEVENT", errUnexpectedEndBlock)
+		}
 		if err := validateEvent(calendar.Events[len(calendar.Events)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
 	case string(model.SectionTokenVCalendar):
+		if *currentState != stateCalendar {
+			return fmt.Errorf("%w: END:VCALENDAR", errUnexpectedEndBlock)
+		}
 		if err := validateCalendar(calendar); err != nil {
 			return err
 		}
 		*currentState = stateFinished
 	case string(model.SectionTokenVTimezone):
+		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
+			return fmt.Errorf("%w: END:VTIMEZONE", errUnexpectedEndBlock)
+		}
 		if err := validateTimeZone(&calendar.TimeZones[len(calendar.TimeZones)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
 	case string(model.SectionTokenVFreebusy):
+		if *currentState != stateFreebusy || len(calendar.FreeBusys) == 0 {
+			return fmt.Errorf("%w: END:VFREEBUSY", errUnexpectedEndBlock)
+		}
 		if err := validateFreeBusy(&calendar.FreeBusys[len(calendar.FreeBusys)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
 	case string(model.SectionTokenVAlarm):
-		// Validate alarm based on current state
+		// Validate alarm based on current state.
 		switch *currentState {
 		case stateEventAlarm:
-			if err := validateAlarm(&calendar.Events[len(calendar.Events)-1].Alarms[len(calendar.Events[len(calendar.Events)-1].Alarms)-1]); err != nil {
+			if len(calendar.Events) == 0 {
+				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+			}
+			ev := &calendar.Events[len(calendar.Events)-1]
+			if len(ev.Alarms) == 0 {
+				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+			}
+			if err := validateAlarm(&ev.Alarms[len(ev.Alarms)-1]); err != nil {
 				return err
 			}
-			*currentState = stateEvent // Return to parent state
+			*currentState = stateEvent // Return to parent state.
 		case stateTodoAlarm:
-			if err := validateAlarm(&calendar.Todos[len(calendar.Todos)-1].Alarms[len(calendar.Todos[len(calendar.Todos)-1].Alarms)-1]); err != nil {
+			if len(calendar.Todos) == 0 {
+				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+			}
+			todo := &calendar.Todos[len(calendar.Todos)-1]
+			if len(todo.Alarms) == 0 {
+				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+			}
+			if err := validateAlarm(&todo.Alarms[len(todo.Alarms)-1]); err != nil {
 				return err
 			}
-			*currentState = stateTodo // Return to parent state
+			*currentState = stateTodo // Return to parent state.
+		default:
+			return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
 		}
 	case string(model.SectionTokenVJournal):
+		if *currentState != stateJournal || len(calendar.Journals) == 0 {
+			return fmt.Errorf("%w: END:VJOURNAL", errUnexpectedEndBlock)
+		}
 		if err := validateJournal(&calendar.Journals[len(calendar.Journals)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
 	case string(model.SectionTokenVTodo):
+		if *currentState != stateTodo || len(calendar.Todos) == 0 {
+			return fmt.Errorf("%w: END:VTODO", errUnexpectedEndBlock)
+		}
 		if err := validateTodo(&calendar.Todos[len(calendar.Todos)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
 	case string(model.SectionTokenVStandard):
+		if *currentState != stateStandard || len(calendar.TimeZones) == 0 {
+			return fmt.Errorf("%w: END:STANDARD", errUnexpectedEndBlock)
+		}
 		*currentState = stateTimezone
 	case string(model.SectionTokenVDaylight):
+		if *currentState != stateDaylight || len(calendar.TimeZones) == 0 {
+			return fmt.Errorf("%w: END:DAYLIGHT", errUnexpectedEndBlock)
+		}
 		*currentState = stateTimezone
 	default:
 		return fmt.Errorf("%w: %s", errTemplateInvalidEndBlock, endLineValue)

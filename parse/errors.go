@@ -15,6 +15,8 @@ var (
 	errContentAfterEndBlock              = errors.New("content after END:VCALENDAR")
 	errTemplateInvalidEndBlock           = errors.New("invalid end block")
 	errTemplateInvalidStartBlock         = errors.New("invalid start block")
+	errUnexpectedEndBlock                = errors.New("unexpected end block: no matching begin or wrong nesting")
+	errUnexpectedBeginBlock              = errors.New("unexpected begin block: not inside expected parent")
 	errMissingCalendarVersionProperty    = errors.New("calendar must have a VERSION property")
 	errMissingCalendarProdIDProperty     = errors.New("calendar must have a PRODID property")
 
