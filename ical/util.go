@@ -75,45 +75,6 @@ func splitParametersWithReusableMap(paramString string, params map[string]string
 	}
 }
 
-// splitParameters splits a parameter string by semicolons, respecting quoted strings.
-func splitParameters(paramString string) map[string]string {
-	var params = make(map[string]string, 1)
-	var current strings.Builder
-	var currentKey string
-	inQuotes := false
-
-	for _, character := range paramString {
-		switch character {
-		case '"':
-			inQuotes = !inQuotes
-		case '=':
-			if inQuotes {
-				current.WriteRune(character)
-				continue
-			}
-			currentKey = current.String()
-			current.Reset()
-		case ';':
-			if inQuotes {
-				current.WriteRune(character)
-				continue
-			}
-			// Found a parameter separator, write the parameter.
-			if current.Len() > 0 {
-				params[currentKey] = current.String()
-				current.Reset()
-			}
-		default:
-			current.WriteRune(character)
-		}
-	}
-	// Write the last parameter (it never hit a semicolon).
-	if current.Len() > 0 {
-		params[currentKey] = current.String()
-	}
-	return params
-}
-
 // findUnquotedColonIndex finds the first colon that is not encapsulated in quotations.
 func findUnquotedColonIndex(line string) int {
 	inQuotes := false
