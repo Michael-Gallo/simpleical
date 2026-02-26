@@ -1,39 +1,49 @@
-linters-settings:
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  misspell:
-    locale: US
-  lll:
-    line-length: 120
-
+version: "2"
+run:
+  tests: true
 linters:
   enable:
-    - gofmt
-    - goimports
-    - govet
-    - ineffassign
-    - misspell
-    - gosec
-    - goconst
     - err113
+    - goconst
+    - gosec
+    - misspell
     - nakedret
     - noctx
     - nolintlint
     - revive
-    - staticcheck
-    - typecheck
     - unconvert
     - unparam
-    - unused
     - whitespace
-
-issues:
-  exclude-dirs:
-    - vendor
-  exclude-files:
-    - ".*\\.pb\\.go$"
-
-run:
-  timeout: 5m
-  tests: true
+  settings:
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    lll:
+      line-length: 120
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - .*\.pb\.go$
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - .*\.pb\.go$
+      - vendor
+      - third_party$
+      - builtin$
+      - examples$
