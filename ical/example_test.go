@@ -1,10 +1,10 @@
-package parse_test
+package ical_test
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/michael-gallo/simpleical/parse"
+	"github.com/michael-gallo/simpleical/ical"
 )
 
 const testIcalString string = `BEGIN:VCALENDAR
@@ -35,8 +35,8 @@ END:VEVENT
 END:VCALENDAR
 `
 
-func ExampleIcalString() {
-	calendar, err := parse.IcalString(testIcalString)
+func ExampleFromString() {
+	calendar, err := ical.FromString(testIcalString)
 	if err != nil {
 		panic(err)
 	}
@@ -50,8 +50,8 @@ func ExampleIcalString() {
 	// Event Summary
 }
 
-func ExampleIcalFromFileName() {
-	calendar, err := parse.IcalFromFileName("../test/test_data/calendar/valid_calendar.ical")
+func ExampleFromFileName() {
+	calendar, err := ical.FromFileName("../test/test_data/calendar/valid_calendar.ical")
 	if err != nil {
 		panic(err)
 	}
@@ -63,9 +63,9 @@ func ExampleIcalFromFileName() {
 	// GREGORIAN
 }
 
-func ExampleIcalReader() {
+func ExampleRead() {
 	reader := strings.NewReader(testIcalString)
-	calendar, err := parse.IcalReader(reader)
+	calendar, err := ical.Read(reader)
 	if err != nil {
 		panic(err)
 	}

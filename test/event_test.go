@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/model"
-	"github.com/michael-gallo/simpleical/parse"
 	"github.com/michael-gallo/simpleical/rrule"
 	"github.com/stretchr/testify/assert"
 )
@@ -199,7 +199,7 @@ func TestValidEvent(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendar, err := parse.IcalString(tc.input)
+			calendar, err := ical.FromString(tc.input)
 			assert.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
@@ -278,7 +278,7 @@ func TestInvalidEvent(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendar, err := parse.IcalString(tc.input)
+			calendar, err := ical.FromString(tc.input)
 			assert.Error(t, err)
 			assert.Nil(t, calendar)
 		})

@@ -1,4 +1,4 @@
-package parse
+package ical
 
 import "github.com/michael-gallo/simpleical/model"
 
