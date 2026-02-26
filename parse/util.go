@@ -20,10 +20,10 @@ func parseIcalLineWithReusableMap(line string, reusableParams map[string]string)
 
 	// The property name is the first part before any semicolon
 	propertyName = beforeColon
-	if semicolonIndex := strings.Index(beforeColon, ";"); semicolonIndex != -1 {
-		propertyName = beforeColon[:semicolonIndex]
+	if before, after, ok := strings.Cut(beforeColon, ";"); ok {
+		propertyName = before
 		// Extract parameters from the part between property name and colon
-		paramString := beforeColon[semicolonIndex+1:]
+		paramString := after
 		if paramString != "" {
 			// Use the reusable map (caller has already cleared it)
 			params = reusableParams
