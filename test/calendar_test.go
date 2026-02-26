@@ -121,10 +121,10 @@ func TestParseCalendarSuccess(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		if tc.name == "Calendar with carriage returns" {
-			assert.Contains(t, tc.input, "\r\n", "fixture must retain CRLF line endings")
-		}
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.name == "Calendar with carriage returns" {
+				assert.Contains(t, tc.input, "\r\n", "fixture must retain CRLF line endings")
+			}
 			calendar, err := parse.IcalString(tc.input)
 			assert.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
