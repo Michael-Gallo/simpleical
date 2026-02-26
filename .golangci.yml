@@ -29,10 +29,10 @@ linters:
       - std-error-handling
     paths:
       - .*\.pb\.go$
-      - vendor
-      - third_party$
-      - builtin$
-      - examples$
+      - ^vendor(/|$)
+      - ^third_party(/|$)
+      - ^builtin(/|$)
+      - ^examples(/|$)
 formatters:
   enable:
     - gofmt
@@ -41,7 +41,7 @@ formatters:
     generated: lax
     paths:
       - .*\.pb\.go$
-      - vendor
-      - third_party$
-      - builtin$
-      - examples$
+      - ^vendor(/|$)
+      - ^third_party(/|$)
+      - ^builtin(/|$)
+      - ^examples(/|$)
