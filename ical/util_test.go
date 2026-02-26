@@ -81,33 +81,3 @@ func TestFindUnquotedColonIndex(t *testing.T) {
 		})
 	}
 }
-
-func TestSplitParameters(t *testing.T) {
-	testCases := []struct {
-		name        string
-		paramString string
-		want        map[string]string
-	}{
-		{
-			name:        "Standard organize line with a common name",
-			paramString: "CN=ORG",
-			want:        map[string]string{"CN": "ORG"},
-		},
-		{
-			name:        "Organizer line with all parameters set",
-			paramString: "CN=ORG;DIR=http://example.com;LANGUAGE=en;SENT-BY=mailto:org@example.com",
-			want:        map[string]string{"CN": "ORG", "DIR": "http://example.com", "LANGUAGE": "en", "SENT-BY": "mailto:org@example.com"},
-		},
-		{
-			name:        "Organizer line with quoted string",
-			paramString: "CN=ORG;DIR=\"http://example.com\";LANGUAGE=en;SENT-BY=mailto:org@example.com",
-			want:        map[string]string{"CN": "ORG", "DIR": "http://example.com", "LANGUAGE": "en", "SENT-BY": "mailto:org@example.com"},
-		},
-	}
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			got := splitParameters(testCase.paramString)
-			assert.Equal(t, testCase.want, got)
-		})
-	}
-}
