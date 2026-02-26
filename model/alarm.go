@@ -48,7 +48,7 @@ type Alarm struct {
 	// OPTIONAL, MUST NOT occur more than once (for DISPLAY and EMAIL actions)
 	// Provides a more complete description of the alarm than that provided by the SUMMARY property.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
-	Description []string
+	Description string
 
 	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
 	// Defines the number of times the alarm should be repeated.

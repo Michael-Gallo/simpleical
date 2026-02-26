@@ -48,6 +48,8 @@ var (
 	testEventAlarmMissingDescriptionDisplayInput string
 	//go:embed test_data/events/test_event_alarm_missing_attendee_email.ical
 	testEventAlarmMissingAttendeeEmailInput string
+	//go:embed test_data/events/test_event_invalid_alarm_multiple_description.ical
+	testEventAlarmInvalidMultipleDescriptionInput string
 	//go:embed test_data/events/valid_test_event_with_rrule.ical
 	testEventWithRRuleInput string
 	//go:embed test_data/events/valid_test_event_with_attachment.ical
@@ -155,14 +157,14 @@ func TestValidEvent(t *testing.T) {
 							{
 								Action:      model.AlarmActionDisplay,
 								Trigger:     "-PT15M",
-								Description: []string{"Reminder: Event starting in 15 minutes"},
+								Description: "Reminder: Event starting in 15 minutes",
 								Repeat:      2,
 								Duration:    5 * time.Minute,
 							},
 							{
 								Action:      model.AlarmActionEmail,
 								Trigger:     "-PT1H",
-								Description: []string{"Email reminder for upcoming event"},
+								Description: "Email reminder for upcoming event",
 								Summary:     "Event Reminder",
 								Attendees:   []url.URL{{Scheme: "mailto", Opaque: "user@example.com"}},
 							},
@@ -264,6 +266,10 @@ func TestInvalidEvent(t *testing.T) {
 		{
 			name:  "VALARM EMAIL missing ATTENDEE",
 			input: testEventAlarmMissingAttendeeEmailInput,
+		},
+		{
+			name:  "VALARM multiple DESCRIPTION",
+			input: testEventAlarmInvalidMultipleDescriptionInput,
 		},
 		{
 			name:  "Invalid RRULE",
