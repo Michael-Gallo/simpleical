@@ -160,8 +160,4 @@ type Journal struct {
 	// An IANA registered property name.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.1
 	IANAProp map[string]string
-
-	// OPTIONAL, MAY occur more than once
-	// Sub-components: VALARM
-	Alarms []Alarm
 }
