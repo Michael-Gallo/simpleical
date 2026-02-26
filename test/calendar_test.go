@@ -30,58 +30,60 @@ var (
 	testCalendarMissingVersionInput string
 	//go:embed test_data/calendar/calendar_missing_prodid.ical
 	testCalendarMissingProdIDInput string
+	//go:embed test_data/calendar/valid_calendar_with_carriage_returns.ical
+	testValidCalendarWithCarriageReturnsInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
+	fullExpectedCalendar := &model.Calendar{
+		ProdID:   "-//Event//Event Calendar//EN",
+		Version:  "2.0",
+		Method:   "REQUEST",
+		CalScale: "GREGORIAN",
+		Events: []model.Event{
+			{
+				DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				UID:         "13235@example.com",
+				Comment:     []string{"I Am", "A Comment"},
+				Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+				End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+				Summary:     "Event Summary",
+				Description: "Event Description",
+				Location:    "555 Fake Street",
+				Organizer: &model.Organizer{
+					CommonName: "Org",
+					CalAddress: &url.URL{Scheme: "mailto", Opaque: "hello@world"},
+				},
+				Status:       model.EventStatusConfirmed,
+				Sequence:     1,
+				Transp:       model.EventTranspOpaque,
+				Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
+				LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+				Categories:   []string{"first", "second", "third"},
+				Geo:          []float64{37.386013, -122.082932},
+			},
+		},
+		TimeZones: []model.TimeZone{
+			{
+				TimeZoneID: "America/Detroit",
+				Standard: []model.TimeZoneProperty{
+					{
+						TimeZoneOffsetFrom: "+0000",
+						TimeZoneOffsetTo:   "+0000",
+						DTStart:            time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+					},
+				},
+			},
+		}}
 	testCases := []struct {
 		name             string
 		input            string
 		expectedCalendar *model.Calendar
 	}{
 		{
-			name:  "Valid iCal event",
-			input: testIcalWithEventAndTimezoneInput,
-			expectedCalendar: &model.Calendar{
-				ProdID:   "-//Event//Event Calendar//EN",
-				Version:  "2.0",
-				Method:   "REQUEST",
-				CalScale: "GREGORIAN",
-				Events: []model.Event{
-					{
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						UID:         "13235@example.com",
-						Comment:     []string{"I Am", "A Comment"},
-						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:     "Event Summary",
-						Description: "Event Description",
-						Location:    "555 Fake Street",
-						Organizer: &model.Organizer{
-							CommonName: "Org",
-							CalAddress: &url.URL{Scheme: "mailto", Opaque: "hello@world"},
-						},
-						Status:       model.EventStatusConfirmed,
-						Sequence:     1,
-						Transp:       model.EventTranspOpaque,
-						Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
-						LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Categories:   []string{"first", "second", "third"},
-						Geo:          []float64{37.386013, -122.082932},
-					},
-				},
-				TimeZones: []model.TimeZone{
-					{
-						TimeZoneID: "America/Detroit",
-						Standard: []model.TimeZoneProperty{
-							{
-								TimeZoneOffsetFrom: "+0000",
-								TimeZoneOffsetTo:   "+0000",
-								DTStart:            time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-							},
-						},
-					},
-				},
-			},
+			name:             "Valid iCal event",
+			input:            testIcalWithEventAndTimezoneInput,
+			expectedCalendar: fullExpectedCalendar,
 		},
 		{
 			name:  "Valid calendar",
@@ -111,6 +113,11 @@ func TestParseCalendarSuccess(t *testing.T) {
 				Method:   "REQUEST",
 				CalScale: "GREGORIAN",
 			},
+		},
+		{
+			name:             "Calendar with carriage returns",
+			input:            testValidCalendarWithCarriageReturnsInput,
+			expectedCalendar: fullExpectedCalendar,
 		},
 	}
 	for _, tc := range testCases {
