@@ -189,7 +189,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 			if err != nil {
 				return nil, err
 			}
-			if weekno < 1 || weekno > 53 || weekno == 0 {
+			if weekno < -53 || weekno > 53 || weekno == 0 {
 				return nil, errInvalidWeekno
 			}
 			rrule.ByWeekNo = int8(weekno)
