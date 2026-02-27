@@ -129,6 +129,28 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
+		{
+			name:  "Week Number set to second to last week of the year",
+			input: "FREQ=YEARLY;BYWEEKNO=-2",
+			want: &RRule{
+				Frequency: FrequencyYearly,
+				Interval:  1,
+				ByWeekNo:  -2,
+			},
+			expectError: nil,
+		},
+		{
+			name:        "ERROR: Week Number set to 0",
+			input:       "FREQ=YEARLY;BYWEEKNO=0",
+			want:        nil,
+			expectError: errInvalidWeekno,
+		},
+		{
+			name:        "ERROR: Week Number is not a valid number",
+			input:       "FREQ=YEARLY;BYWEEKNO=abc",
+			want:        nil,
+			expectError: strconv.ErrSyntax, // TODO: implement error wrapping
+		},
 		// DAILY examples from RFC 5545
 		{
 			name:  "Daily for 10 occurrences",
