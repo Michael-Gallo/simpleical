@@ -26,6 +26,10 @@ var (
 	testTodoInvalidGeoInput string
 	//go:embed test_data/todos/test_todo_with_rrule.ical
 	testTodoWithRRuleInput string
+	//go:embed test_data/todos/test_todo_duplicate_organizer.ical
+	testTodoDuplicateOrganizerInput string
+	//go:embed test_data/todos/test_todo_duplicate_status.ical
+	testTodoDuplicateStatusInput string
 )
 
 func TestValidTodo(t *testing.T) {
@@ -141,6 +145,14 @@ func TestInvalidTodo(t *testing.T) {
 		{
 			name:  "VTODO duplicate UID",
 			input: testTodoDuplicateUIDInput,
+		},
+		{
+			name:  "VTODO Organizer set twice",
+			input: testTodoDuplicateOrganizerInput,
+		},
+		{
+			name:  "VTODO Status set twice",
+			input: testTodoDuplicateStatusInput,
 		},
 	}
 	for _, tc := range testCases {

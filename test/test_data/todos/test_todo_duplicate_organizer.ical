@@ -1,0 +1,12 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Todo Calendar//EN
+BEGIN:VTODO
+UID:todo123@example.com
+DTSTAMP:20240101T000000Z
+SUMMARY:Complete project documentation
+ORGANIZER;CN=Project Manager:MAILTO:pm@example.com
+ORGANIZER;CN=Other Person:MAILTO:other@example.com
+DTSTART:20240101T090000Z
+END:VTODO
+END:VCALENDAR
