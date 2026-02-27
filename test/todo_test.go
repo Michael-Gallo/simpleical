@@ -105,7 +105,7 @@ func TestValidTodo(t *testing.T) {
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,
 							Interval:  1,
-							Count:     getPointer(10),
+							Count:     new(10),
 						},
 					},
 				},
