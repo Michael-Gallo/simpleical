@@ -65,7 +65,7 @@ type Event struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.6.
 	Geo []float64
 
-	// LastModified specifies the date and time tthat the information associated with the calendar information was last revised.
+	// LastModified specifies the date and time that the information associated with the calendar information was last revised.
 	// Refers to the LAST-MODIFIED property. Can be specified in Events, Todos, Journals, and TimeZones.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.3.
 	LastModified time.Time
@@ -105,7 +105,7 @@ type Event struct {
 
 	// URL specifies a URL associated with the event. Refers to the URL property.
 	// OPTIONAL, MUST NOT occur more than once.
-	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.6.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.6.
 	URL string
 
 	// RecurrenceID is the recurrence identifier for the event. Refers to the RECURRENCE-ID property.
@@ -126,7 +126,7 @@ type Event struct {
 
 	// The event's duration.
 	// Can not be specified if an End time is specified.
-	// See the Duration specficiation for more information: https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.6.
+	// See the Duration specification for more information: https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.6.
 	Duration time.Duration
 
 	// OPTIONAL, MAY occur more than once.

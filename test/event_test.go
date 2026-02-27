@@ -190,7 +190,7 @@ func TestValidEvent(t *testing.T) {
 							Interval:  1,
 							Count:     new(10),
 						},
-						Summary:     "Event with reccurrence rule",
+						Summary:     "Event with recurrence rule",
 						Description: "Event Description",
 					},
 				},
