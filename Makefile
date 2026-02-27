@@ -1,4 +1,4 @@
-.PHONY: test pre-commit lint fmt vet
+.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative pre-commit
 
 test-slow:
 	go test ./... --race --count 1
