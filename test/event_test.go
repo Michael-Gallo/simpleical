@@ -188,7 +188,7 @@ func TestValidEvent(t *testing.T) {
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,
 							Interval:  1,
-							Count:     getPointer(10),
+							Count:     new(10),
 						},
 						Summary:     "Event with reccurrence rule",
 						Description: "Event Description",
@@ -283,9 +283,4 @@ func TestInvalidEvent(t *testing.T) {
 			assert.Nil(t, calendar)
 		})
 	}
-}
-
-// TODO: replace with calls to New once go 1.26 is released
-func getPointer[T any](v T) *T {
-	return &v
 }

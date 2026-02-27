@@ -9,11 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: replace with calls to New once go 1.26 is released
-func getPointer[T any](v T) *T {
-	return &v
-}
-
 func TestParseRRule(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -28,7 +23,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyDaily,
 				Interval:  2,
-				Count:     getPointer(10),
+				Count:     new(10),
 				Until:     nil,
 			},
 			expectError: nil,
@@ -45,7 +40,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyDaily,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 				Until:     nil,
 			},
 			expectError: nil,
@@ -90,7 +85,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency:  FrequencyMonthly,
 				Interval:   1,
-				Count:      getPointer(10),
+				Count:      new(10),
 				ByMonthDay: []int{1, -1},
 			},
 			expectError: nil,
@@ -114,7 +109,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  3,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByYearDay: []int{1, 100, 200},
 			},
 			expectError: nil,
@@ -136,7 +131,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyDaily,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 			},
 			expectError: nil,
 		},
@@ -146,7 +141,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyDaily,
 				Interval:  1,
-				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
 			},
 			expectError: nil,
 		},
@@ -165,7 +160,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyDaily,
 				Interval:  10,
-				Count:     getPointer(5),
+				Count:     new(5),
 			},
 			expectError: nil,
 		},
@@ -228,7 +223,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 			},
 			expectError: nil,
 		},
@@ -238,7 +233,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  1,
-				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
 			},
 			expectError: nil,
 		},
@@ -257,7 +252,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
 					{Weekday: WeekdayThursday, Interval: 1},
@@ -271,7 +266,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
 				ByDay: []ByDay{
 					{Weekday: WeekdayMonday, Interval: 1},
 					{Weekday: WeekdayWednesday, Interval: 1},
@@ -286,7 +281,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Count:     getPointer(8),
+				Count:     new(8),
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
 					{Weekday: WeekdayThursday, Interval: 1},
@@ -301,7 +296,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
 			},
 			expectError: nil,
@@ -312,7 +307,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  1,
-				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
 				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
 			},
 			expectError: nil,
@@ -323,7 +318,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  2,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByDay: []ByDay{
 					{Weekday: WeekdaySunday, Interval: 1},
 					{Weekday: WeekdaySunday, Interval: -1},
@@ -337,7 +332,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  1,
-				Count:     getPointer(6),
+				Count:     new(6),
 				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2}},
 			},
 			expectError: nil,
@@ -348,7 +343,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency:  FrequencyMonthly,
 				Interval:   1,
-				Count:      getPointer(10),
+				Count:      new(10),
 				ByMonthDay: []int{2, 15},
 			},
 			expectError: nil,
@@ -359,7 +354,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency:  FrequencyMonthly,
 				Interval:   18,
-				Count:      getPointer(10),
+				Count:      new(10),
 				ByMonthDay: []int{10, 11, 12, 13, 14, 15},
 			},
 			expectError: nil,
@@ -371,7 +366,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByMonth:   []int{6, 7},
 			},
 			expectError: nil,
@@ -382,7 +377,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  2,
-				Count:     getPointer(10),
+				Count:     new(10),
 				ByMonth:   []int{1, 2, 3},
 			},
 			expectError: nil,
@@ -427,7 +422,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyHourly,
 				Interval:  3,
-				Until:     getPointer(time.Date(1997, 9, 2, 17, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 9, 2, 17, 0, 0, 0, time.UTC)),
 			},
 			expectError: nil,
 		},
@@ -437,7 +432,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMinutely,
 				Interval:  15,
-				Count:     getPointer(6),
+				Count:     new(6),
 			},
 			expectError: nil,
 		},
@@ -447,7 +442,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMinutely,
 				Interval:  90,
-				Count:     getPointer(4),
+				Count:     new(4),
 			},
 			expectError: nil,
 		},
@@ -467,7 +462,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  1,
-				Until:     getPointer(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 10, 7, 0, 0, 0, 0, time.UTC)),
 				WKST:      WeekdaySunday,
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
@@ -482,7 +477,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Until:     getPointer(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
 				WKST:      WeekdaySunday,
 				ByDay: []ByDay{
 					{Weekday: WeekdayMonday, Interval: 1},
@@ -498,7 +493,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Count:     getPointer(8),
+				Count:     new(8),
 				WKST:      WeekdaySunday,
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
@@ -525,7 +520,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyMonthly,
 				Interval:  1,
-				Count:     getPointer(3),
+				Count:     new(3),
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
 					{Weekday: WeekdayWednesday, Interval: 1},
@@ -605,7 +600,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Count:     getPointer(4),
+				Count:     new(4),
 				WKST:      WeekdayMonday,
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
@@ -620,7 +615,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyWeekly,
 				Interval:  2,
-				Count:     getPointer(4),
+				Count:     new(4),
 				WKST:      WeekdaySunday,
 				ByDay: []ByDay{
 					{Weekday: WeekdayTuesday, Interval: 1},
