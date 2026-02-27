@@ -13,7 +13,11 @@ import (
 
 const todoLocation = "Todo"
 
-// parseTodoProperty parses a single property line and adds it to the provided todo.
+// parseTodoProperty parses a single iCalendar TODO property line and applies it to the provided Todo.
+// It updates the appropriate field(s) on todo (including appending repeatable properties), performs type
+// conversions, and enforces single-assignment rules. It also validates mutually exclusive Due/Duration and
+// the Geo latitude;longitude format. An error is returned for invalid property names, duplicate or mutually
+// exclusive assignments, or any parse failures.
 func parseTodoProperty(propertyName string, value string, params map[string]string, todo *model.Todo) error {
 	switch model.TodoToken(propertyName) {
 	case model.TodoTokenDTStamp:
