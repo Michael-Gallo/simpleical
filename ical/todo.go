@@ -71,7 +71,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		if err != nil {
 			return err
 		}
-		todo.Organizer = organizer
+		return setOnceProperty(&todo.Organizer, organizer, propertyName, todoLocation)
 	case model.TodoTokenPercentComplete:
 		return setOnceIntProperty(&todo.PercentComplete, value, propertyName, todoLocation)
 	case model.TodoTokenPriority:
@@ -81,7 +81,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)
 	case model.TodoTokenStatus:
-		todo.Status = model.TodoStatus(value)
+		return setOnceProperty(&todo.Status, model.TodoStatus(value), propertyName, todoLocation)
 	case model.TodoTokenSummary:
 		return setOnceProperty(&todo.Summary, value, propertyName, todoLocation)
 	case model.TodoTokenRRule:
