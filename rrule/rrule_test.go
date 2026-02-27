@@ -146,6 +146,18 @@ func TestParseRRule(t *testing.T) {
 			expectError: errInvalidWeekno,
 		},
 		{
+			name:        "ERROR: Week Number < -53",
+			input:       "FREQ=YEARLY;BYWEEKNO=-54",
+			want:        nil,
+			expectError: errInvalidWeekno,
+		},
+		{
+			name:        "ERROR: Week Number > 53",
+			input:       "FREQ=YEARLY;BYWEEKNO=54",
+			want:        nil,
+			expectError: errInvalidWeekno,
+		},
+		{
 			name:        "ERROR: Week Number is not a valid number",
 			input:       "FREQ=YEARLY;BYWEEKNO=abc",
 			want:        nil,
