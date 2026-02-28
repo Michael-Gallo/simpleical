@@ -83,8 +83,8 @@ func ParseIcalTime(value string) (time.Time, error) {
 	}
 
 	t := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.UTC)
-	// validate that the date is valid
-	if t.Year() != year || int(t.Month()) != month || t.Day() != day {
+	// validate that day does not overflow (ie: february 31st would overflow to march 3rd)
+	if t.Day() != day {
 		return time.Time{}, ErrInvalidTimeValue
 	}
 	// All times are returned in UTC (floating times are treated as UTC per iCal spec)
