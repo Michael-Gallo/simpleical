@@ -69,9 +69,9 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	i++
 
 	var (
-		inTime              bool
-		dur                 int64 // nanoseconds
-		usedH, usedM, usedS bool
+		inTime                   bool
+		dur                      int64 // nanoseconds
+		usedD, usedH, usedM, usedS bool
 	)
 
 	// Helper to read a positive integer
@@ -147,6 +147,10 @@ func ParseICalDuration(s string) (time.Duration, error) {
 			if inTime {
 				return 0, errUnexpectedChar
 			}
+			if usedD {
+				return 0, errDuplicateUnit
+			}
+			usedD = true
 			seenComponent = true
 			dur += v * 24 * int64(time.Hour)
 		case 'H':
