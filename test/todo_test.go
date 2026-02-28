@@ -30,6 +30,10 @@ var (
 	testTodoDuplicateOrganizerInput string
 	//go:embed test_data/todos/test_todo_duplicate_status.ical
 	testTodoDuplicateStatusInput string
+	//go:embed test_data/todos/test_todo_duration_without_dtstart.ical
+	testTodoDurationWithoutDTStartInput string
+	//go:embed test_data/todos/test_todo_missing_dtstamp.ical
+	testTodoMissingDTStampInput string
 )
 
 func TestValidTodo(t *testing.T) {
@@ -153,6 +157,14 @@ func TestInvalidTodo(t *testing.T) {
 		{
 			name:  "VTODO Status set twice",
 			input: testTodoDuplicateStatusInput,
+		},
+		{
+			name:  "VTODO DURATION without DTSTART",
+			input: testTodoDurationWithoutDTStartInput,
+		},
+		{
+			name:  "VTODO missing DTSTAMP",
+			input: testTodoMissingDTStampInput,
 		},
 	}
 	for _, tc := range testCases {
