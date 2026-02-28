@@ -82,7 +82,11 @@ func ParseIcalTime(value string) (time.Time, error) {
 		return time.Time{}, ErrInvalidTimeValue
 	}
 
-	// time.Date will validate the date (e.g., invalid day for month)
+	t := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.UTC)
+	// validate that the date is valid
+	if t.Year() != year || int(t.Month()) != month || t.Day() != day {
+		return time.Time{}, ErrInvalidTimeValue
+	}
 	// All times are returned in UTC (floating times are treated as UTC per iCal spec)
-	return time.Date(year, time.Month(month), day, hour, minute, second, 0, time.UTC), nil
+	return t, nil
 }

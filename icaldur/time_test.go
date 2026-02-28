@@ -42,6 +42,11 @@ func TestParseIcalTime(t *testing.T) {
 			expectError: true,
 		},
 		{
+			name:        "Invalid date February 31st",
+			input:       "20250231T183000Z",
+			expectError: true,
+		},
+		{
 			name:        "Invalid Format",
 			input:       "2025-09-28T18:30:00Z",
 			expectError: true,
