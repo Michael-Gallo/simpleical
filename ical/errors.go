@@ -47,10 +47,11 @@ var (
 
 	errMissingTodoUIDProperty = errors.New("todo must have a UID property")
 
-	errMissingTodoDTStartProperty = errors.New("todo must have a DTSTART property")
+	errMissingTodoDTStampProperty = errors.New("todo must have a DTSTAMP property")
 
 	// Todo duration property errors.
 	errInvalidDurationPropertyDue = errors.New("invalid duration property in iCal Todo: DUE and DURATION are mutually exclusive")
+	errDurationRequiresDTStart    = errors.New("invalid duration property in iCal Todo: DURATION requires DTSTART to be set")
 )
 
 // Journal-specific errors.

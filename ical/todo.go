@@ -15,9 +15,9 @@ const todoLocation = "Todo"
 
 // parseTodoProperty parses a single iCalendar TODO property line and applies it to the provided Todo.
 // It updates the appropriate field(s) on todo (including appending repeatable properties), performs type
-// conversions, and enforces single-assignment rules. It also validates mutually exclusive Due/Duration and
-// the Geo latitude;longitude format. An error is returned for invalid property names, duplicate or mutually
-// exclusive assignments, or any parse failures.
+// conversions, and enforces single-assignment rules. It also validates the Geo latitude;longitude format.
+// An error is returned for invalid property names, duplicate
+// assignments, or any parse failures.
 func parseTodoProperty(propertyName string, value string, params map[string]string, todo *model.Todo) error {
 	switch model.TodoToken(propertyName) {
 	case model.TodoTokenDTStamp:
@@ -35,12 +35,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		return nil
 	case model.TodoTokenDTStart:
 		return setOnceTimeProperty(&todo.DTStart, value, propertyName, todoLocation)
-
-	// Due and Duration are mutually exclusive
 	case model.TodoTokenDue:
-		if todo.Duration != 0 {
-			return errInvalidDurationPropertyDue
-		}
 		return setOnceTimeProperty(&todo.Due, value, propertyName, todoLocation)
 	case model.TodoTokenDuration:
 		if todo.Due != (time.Time{}) {
@@ -136,12 +131,25 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 }
 
 // validateTodo ensures that all required values are present for a todo.
+// Per RFC 5545: If 'duration' appears in a 'todoprop', then 'dtstart' MUST also appear,
+// and 'due' and 'duration' MUST NOT occur in the same 'todoprop'.
+// DTstamp and uid are always required.
 func validateTodo(todo *model.Todo) error {
 	if todo.UID == "" {
 		return errMissingTodoUIDProperty
 	}
-	if time.Time.IsZero(todo.DTStart) {
-		return errMissingTodoDTStartProperty
+	if todo.DTStamp.IsZero() {
+		return errMissingTodoDTStampProperty
 	}
+
+	if todo.Duration != 0 {
+		if todo.DTStart.IsZero() {
+			return errDurationRequiresDTStart
+		}
+		if !todo.Due.IsZero() {
+			return errInvalidDurationPropertyDue
+		}
+	}
+
 	return nil
 }

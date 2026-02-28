@@ -1,0 +1,8 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Todo Calendar//EN
+BEGIN:VTODO
+UID:todo123@example.com
+SUMMARY:Todo missing dtstamp
+END:VTODO
+END:VCALENDAR
