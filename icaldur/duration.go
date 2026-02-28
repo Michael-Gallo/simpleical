@@ -31,7 +31,11 @@ var (
 // - H: hours
 // - M: minutes
 // - S: seconds
-// - W: weeks.
+// ParseICalDuration parses an iCalendar (RFC 5545) duration string into a time.Duration.
+// It accepts an optional leading '+' or '-' sign, a weeks-only form `PnW` (must be the only component),
+// or the date/time form `P[nD][T[nH][nM][nS]]`. The function validates format rules such as prohibiting
+// mixed weeks with other components, rejecting duplicate units or multiple `T` markers, and requiring
+// time components to follow a `T`; invalid inputs produce an error.
 func ParseICalDuration(s string) (time.Duration, error) {
 	if len(s) == 0 {
 		return 0, errEmpty
