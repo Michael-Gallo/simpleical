@@ -12,13 +12,16 @@ import (
 )
 
 var (
-	errEmpty          = errors.New("empty duration")
-	errBadPrefix      = errors.New("duration must start with P (optionally preceded by + or -)")
-	errUnexpectedChar = errors.New("unexpected character")
-	errMissingUnit    = errors.New("missing unit after number")
-	errMixedWeeks     = errors.New("weeks form (PnW) cannot be mixed with other components")
-	errTimeWithoutT   = errors.New("time components require a preceding 'T'")
-	errDuplicateUnit  = errors.New("duplicate time unit")
+	errEmpty           = errors.New("empty duration")
+	errBadPrefix       = errors.New("duration must start with P (optionally preceded by + or -)")
+	errUnexpectedChar  = errors.New("unexpected character")
+	errMissingUnit     = errors.New("missing unit after number")
+	errMixedWeeks      = errors.New("weeks form (PnW) cannot be mixed with other components")
+	errTimeWithoutT    = errors.New("time components require a preceding 'T'")
+	errDuplicateUnit   = errors.New("duplicate time unit")
+	errDuplicateT      = errors.New("duplicate 'T' marker")
+	errNoComponents    = errors.New("duration must have at least one component")
+	errTWithoutTimePart = errors.New("'T' marker must be followed by time components")
 )
 
 // ParseICalDuration parses an iCal duration string according to RFC 5545 section 3.3.6 into a time.Duration.
@@ -112,8 +115,18 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	}
 
 	// Otherwise parse date/time components: P[nD][T[nH][nM][nS]]
+	var (
+		seenT             bool
+		seenComponent     bool
+		seenTimeComponent bool
+	)
+
 	for i < len(s) {
 		if s[i] == 'T' {
+			if seenT {
+				return 0, errDuplicateT
+			}
+			seenT = true
 			inTime = true
 			i++
 			continue
@@ -134,6 +147,7 @@ func ParseICalDuration(s string) (time.Duration, error) {
 			if inTime {
 				return 0, errUnexpectedChar
 			}
+			seenComponent = true
 			dur += v * 24 * int64(time.Hour)
 		case 'H':
 			if !inTime {
@@ -143,6 +157,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedH = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Hour)
 		case 'M':
 			if !inTime {
@@ -152,6 +168,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedM = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Minute)
 		case 'S':
 			if !inTime {
@@ -161,10 +179,22 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedS = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Second)
 		default:
 			return 0, errUnexpectedChar
 		}
+	}
+
+	// Reject empty durations like "P".
+	if !seenComponent {
+		return 0, errNoComponents
+	}
+
+	// Reject trailing 'T' without time components like "PT" or "P1DT".
+	if seenT && !seenTimeComponent {
+		return 0, errTWithoutTimePart
 	}
 
 	return time.Duration(sign * dur), nil
