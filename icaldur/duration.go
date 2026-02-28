@@ -192,7 +192,7 @@ func ParseICalDuration(s string) (time.Duration, error) {
 		return 0, errNoComponents
 	}
 
-	// Reject trailing 'T' without time components like "PT" or "P1DT".
+	// Reject trailing 'T' after date components without time values (e.g., "P1DT").
 	if seenT && !seenTimeComponent {
 		return 0, errTWithoutTimePart
 	}
