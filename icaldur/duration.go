@@ -12,13 +12,16 @@ import (
 )
 
 var (
-	errEmpty          = errors.New("empty duration")
-	errBadPrefix      = errors.New("duration must start with P (optionally preceded by + or -)")
-	errUnexpectedChar = errors.New("unexpected character")
-	errMissingUnit    = errors.New("missing unit after number")
-	errMixedWeeks     = errors.New("weeks form (PnW) cannot be mixed with other components")
-	errTimeWithoutT   = errors.New("time components require a preceding 'T'")
-	errDuplicateUnit  = errors.New("duplicate time unit")
+	errEmpty            = errors.New("empty duration")
+	errBadPrefix        = errors.New("duration must start with P (optionally preceded by + or -)")
+	errUnexpectedChar   = errors.New("unexpected character")
+	errMissingUnit      = errors.New("missing unit after number")
+	errMixedWeeks       = errors.New("weeks form (PnW) cannot be mixed with other components")
+	errTimeWithoutT     = errors.New("time components require a preceding 'T'")
+	errDuplicateUnit    = errors.New("duplicate time unit")
+	errDuplicateT       = errors.New("duplicate 'T' marker")
+	errNoComponents     = errors.New("duration must have at least one component")
+	errTWithoutTimePart = errors.New("'T' marker must be followed by time components")
 )
 
 // ParseICalDuration parses an iCal duration string according to RFC 5545 section 3.3.6 into a time.Duration.
@@ -28,7 +31,11 @@ var (
 // - H: hours
 // - M: minutes
 // - S: seconds
-// - W: weeks.
+// ParseICalDuration parses an iCalendar (RFC 5545) duration string into a time.Duration.
+// It accepts an optional leading '+' or '-' sign, a weeks-only form `PnW` (must be the only component),
+// or the date/time form `P[nD][T[nH][nM][nS]]`. The function validates format rules such as prohibiting
+// mixed weeks with other components, rejecting duplicate units or multiple `T` markers, and requiring
+// time components to follow a `T`; invalid inputs produce an error.
 func ParseICalDuration(s string) (time.Duration, error) {
 	if len(s) == 0 {
 		return 0, errEmpty
@@ -66,9 +73,9 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	i++
 
 	var (
-		inTime              bool
-		dur                 int64 // nanoseconds
-		usedH, usedM, usedS bool
+		inTime                     bool
+		dur                        int64 // nanoseconds
+		usedD, usedH, usedM, usedS bool
 	)
 
 	// Helper to read a positive integer
@@ -112,8 +119,18 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	}
 
 	// Otherwise parse date/time components: P[nD][T[nH][nM][nS]]
+	var (
+		seenT             bool
+		seenComponent     bool
+		seenTimeComponent bool
+	)
+
 	for i < len(s) {
 		if s[i] == 'T' {
+			if seenT {
+				return 0, errDuplicateT
+			}
+			seenT = true
 			inTime = true
 			i++
 			continue
@@ -134,6 +151,11 @@ func ParseICalDuration(s string) (time.Duration, error) {
 			if inTime {
 				return 0, errUnexpectedChar
 			}
+			if usedD {
+				return 0, errDuplicateUnit
+			}
+			usedD = true
+			seenComponent = true
 			dur += v * 24 * int64(time.Hour)
 		case 'H':
 			if !inTime {
@@ -143,6 +165,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedH = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Hour)
 		case 'M':
 			if !inTime {
@@ -152,6 +176,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedM = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Minute)
 		case 'S':
 			if !inTime {
@@ -161,10 +187,22 @@ func ParseICalDuration(s string) (time.Duration, error) {
 				return 0, errDuplicateUnit
 			}
 			usedS = true
+			seenComponent = true
+			seenTimeComponent = true
 			dur += v * int64(time.Second)
 		default:
 			return 0, errUnexpectedChar
 		}
+	}
+
+	// Reject empty durations like "P".
+	if !seenComponent {
+		return 0, errNoComponents
+	}
+
+	// Reject trailing 'T' after date components without time values (e.g., "P1DT").
+	if seenT && !seenTimeComponent {
+		return 0, errTWithoutTimePart
 	}
 
 	return time.Duration(sign * dur), nil

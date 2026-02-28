@@ -27,6 +27,12 @@ func TestParseICalDuration(t *testing.T) {
 		{input: "+P15DT5H0M20G", expectError: errUnexpectedChar},
 		{input: "+P15DT5H0M20", expectError: errMissingUnit},
 		{input: "+P15DT5H0M20S20S", expectError: errDuplicateUnit},
+		{input: "P1D2D", expectError: errDuplicateUnit},
+		{input: "P", expectError: errNoComponents},
+		{input: "PT", expectError: errNoComponents},
+		{input: "P1DT", expectError: errTWithoutTimePart},
+		{input: "PTT1H", expectError: errDuplicateT},
+		{input: "P1DTT1H", expectError: errDuplicateT},
 	}
 	for _, test := range tests {
 		got, err := ParseICalDuration(test.input)
