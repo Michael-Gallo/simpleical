@@ -136,12 +136,25 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 }
 
 // validateTodo ensures that all required values are present for a todo.
+// Per RFC 5545: If 'duration' appears in a 'todoprop', then 'dtstart' MUST also appear,
+// and 'due' and 'duration' MUST NOT occur in the same 'todoprop'.
+// DTstamp and uid are always required.
 func validateTodo(todo *model.Todo) error {
 	if todo.UID == "" {
 		return errMissingTodoUIDProperty
 	}
-	if time.Time.IsZero(todo.DTStart) {
-		return errMissingTodoDTStartProperty
+	if todo.DTStamp.IsZero() {
+		return errMissingTodoDTStampProperty
 	}
+
+	if todo.Duration != 0 {
+		if todo.DTStart.IsZero() {
+			return errDurationRequiresDTStart
+		}
+		if !todo.Due.IsZero() {
+			return errInvalidDurationPropertyDue
+		}
+	}
+
 	return nil
 }
