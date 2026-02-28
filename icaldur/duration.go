@@ -69,8 +69,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	i++
 
 	var (
-		inTime                   bool
-		dur                      int64 // nanoseconds
+		inTime                     bool
+		dur                        int64 // nanoseconds
 		usedD, usedH, usedM, usedS bool
 	)
 
