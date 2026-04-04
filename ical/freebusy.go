@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/model"
@@ -100,7 +99,7 @@ func validateFreeBusy(freeBusy *model.FreeBusy) error {
 	if freeBusy.UID == "" {
 		return errMissingFreeBusyUIDProperty
 	}
-	if time.Time.IsZero(freeBusy.DTStart) {
+	if freeBusy.DTStart.IsZero() {
 		return errMissingFreeBusyDTStartProperty
 	}
 	return nil
