@@ -20,6 +20,8 @@ var (
 	testJournalDuplicateUIDInput string
 	//go:embed test_data/journals/test_journal_multiple_exdates.ical
 	testJournalMultipleExdatesInput string
+	//go:embed test_data/journals/test_journal_missing_dtstamp.ical
+	testJournalMissingDTStampInput string
 )
 
 func TestValidJournal(t *testing.T) {
@@ -104,6 +106,10 @@ func TestInvalidJournal(t *testing.T) {
 		{
 			name:  "VJOURNAL duplicate UID",
 			input: testJournalDuplicateUIDInput,
+		},
+		{
+			name:  "VJOURNAL missing DTSTAMP",
+			input: testJournalMissingDTStampInput,
 		},
 	}
 	for _, tc := range testCases {
