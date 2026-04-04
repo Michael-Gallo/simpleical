@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/michael-gallo/simpleical/model"
 )
@@ -84,7 +83,7 @@ func validateJournal(journal *model.Journal) error {
 	if journal.UID == "" {
 		return errMissingJournalUIDProperty
 	}
-	if time.Time.IsZero(journal.DTStamp) {
+	if journal.DTStamp.IsZero() {
 		return errMissingJournalDTStampProperty
 	}
 	return nil
