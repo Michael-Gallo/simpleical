@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -134,38 +135,45 @@ func TestParseCalendarSuccess(t *testing.T) {
 
 func TestParseCalendarError(t *testing.T) {
 	testCases := []struct {
-		name  string
-		input string
+		name        string
+		input       string
+		expectedErr error
 	}{
 		{
-			name:  "Calendar with no BEGIN:VCALENDAR",
-			input: testInvalidBeginCalendarInput,
+			name:        "Calendar with no BEGIN:VCALENDAR",
+			input:       testInvalidBeginCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarFormatMissingBegin,
 		},
 		{
-			name:  "Calendar with no END:VCALENDAR",
-			input: testInvalidEndCalendarInput,
+			name:        "Calendar with no END:VCALENDAR",
+			input:       testInvalidEndCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarFormatMissingEnd,
 		},
 		{
-			name:  "Empty line in calendar",
-			input: testInvalidEmptyLineCalendarInput,
+			name:        "Empty line in calendar",
+			input:       testInvalidEmptyLineCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarEmptyLine,
 		},
 		{
-			name:  "Calendar missing VERSION property",
-			input: testCalendarMissingVersionInput,
+			name:        "Calendar missing VERSION property",
+			input:       testCalendarMissingVersionInput,
+			expectedErr: icalerr.ErrMissingCalendarVersionProperty,
 		},
 		{
-			name:  "Calendar missing PRODID property",
-			input: testCalendarMissingProdIDInput,
+			name:        "Calendar missing PRODID property",
+			input:       testCalendarMissingProdIDInput,
+			expectedErr: icalerr.ErrMissingCalendarProdIDProperty,
 		},
 		{
-			name:  "Empty input",
-			input: "",
+			name:        "Empty input",
+			input:       "",
+			expectedErr: icalerr.ErrNoCalendarFound,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Error(t, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}

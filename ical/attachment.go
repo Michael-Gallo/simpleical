@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -36,7 +37,7 @@ func parseAttachment(value string, params map[string]string) (*model.Attachment,
 		if attachment.Encoding == "BASE64" {
 			isBinary = true
 		} else {
-			return nil, fmt.Errorf("%w: ATTACH property with VALUE=BINARY must have ENCODING=BASE64", errParseErrorInComponent)
+			return nil, fmt.Errorf("%w: ATTACH property with VALUE=BINARY must have ENCODING=BASE64", icalerr.ErrParseErrorInComponent)
 		}
 	}
 
@@ -49,7 +50,7 @@ func parseAttachment(value string, params map[string]string) (*model.Attachment,
 		}
 		_, err := base64.StdEncoding.DecodeString(paddedValue)
 		if err != nil {
-			return nil, fmt.Errorf("%w: invalid base64 encoded data", errParseErrorInComponent)
+			return nil, fmt.Errorf("%w: invalid base64 encoded data", icalerr.ErrParseErrorInComponent)
 		}
 		// Store the base64-encoded binary data (store original, not padded)
 		attachment.Binary = value
@@ -57,7 +58,7 @@ func parseAttachment(value string, params map[string]string) (*model.Attachment,
 		// Parse as URI
 		parsedURI, err := url.Parse(value)
 		if err != nil {
-			return nil, fmt.Errorf("%w: ATTACH property URI", errParseErrorInComponent)
+			return nil, fmt.Errorf("%w: ATTACH property URI", icalerr.ErrParseErrorInComponent)
 		}
 		attachment.URI = parsedURI
 	}

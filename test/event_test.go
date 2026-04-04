@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/michael-gallo/simpleical/rrule"
 	"github.com/stretchr/testify/assert"
@@ -208,68 +209,83 @@ func TestValidEvent(t *testing.T) {
 
 func TestInvalidEvent(t *testing.T) {
 	testCases := []struct {
-		name  string
-		input string
+		name        string
+		input       string
+		expectedErr error
 	}{
 		{
 			name:  "Invalid organizer",
 			input: testIcalInvalidOrganizerInput,
 		},
 		{
-			name:  "Invalid start date",
-			input: testIcalInvalidStartInput,
+			name:        "Invalid start date",
+			input:       testIcalInvalidStartInput,
+			expectedErr: icalerr.ErrParseErrorInComponent,
 		},
 		{
-			name:  "Invalid end date",
-			input: testIcalInvalidEndInput,
+			name:        "Invalid end date",
+			input:       testIcalInvalidEndInput,
+			expectedErr: icalerr.ErrParseErrorInComponent,
 		},
 		{
-			name:  "Content after END:VCALENDAR",
-			input: testIcalContentAfterEndBlockInput,
+			name:        "Content after END:VCALENDAR",
+			input:       testIcalContentAfterEndBlockInput,
+			expectedErr: icalerr.ErrContentAfterEndBlock,
 		},
 		{
-			name:  "Duplicate UID",
-			input: testIcalDuplicateUIDInput,
+			name:        "Duplicate UID",
+			input:       testIcalDuplicateUIDInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "Duplicate sequence",
-			input: testIcalDuplicateSequenceInput,
+			name:        "Duplicate sequence",
+			input:       testIcalDuplicateSequenceInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "Both duration and end date are specified, DTEND first",
-			input: testIcalBothDurationAndEndInput,
+			name:        "Both duration and end date are specified, DTEND first",
+			input:       testIcalBothDurationAndEndInput,
+			expectedErr: icalerr.ErrInvalidDurationPropertyDtend,
 		},
 		{
-			name:  "Both duration and end date are specified, DURATION first",
-			input: testIcalBothDurationAndEndDurationFirstInput,
+			name:        "Both duration and end date are specified, DURATION first",
+			input:       testIcalBothDurationAndEndDurationFirstInput,
+			expectedErr: icalerr.ErrInvalidDurationPropertyDtend,
 		},
 		{
-			name:  "Missing colon in event property line",
-			input: testIcalMissingColonInput,
+			name:        "Missing colon in event property line",
+			input:       testIcalMissingColonInput,
+			expectedErr: icalerr.ErrInvalidPropertyLine,
 		},
 		{
-			name:  "Missing UID",
-			input: testIcalMissingUIDInput,
+			name:        "Missing UID",
+			input:       testIcalMissingUIDInput,
+			expectedErr: icalerr.ErrMissingEventUIDProperty,
 		},
 		{
-			name:  "Missing DTSTART",
-			input: testIcalMissingDTStartInput,
+			name:        "Missing DTSTART",
+			input:       testIcalMissingDTStartInput,
+			expectedErr: icalerr.ErrMissingEventDTStartProperty,
 		},
 		{
-			name:  "VALARM missing ACTION",
-			input: testEventAlarmMissingActionInput,
+			name:        "VALARM missing ACTION",
+			input:       testEventAlarmMissingActionInput,
+			expectedErr: icalerr.ErrMissingAlarmActionProperty,
 		},
 		{
-			name:  "VALARM DISPLAY missing DESCRIPTION",
-			input: testEventAlarmMissingDescriptionDisplayInput,
+			name:        "VALARM DISPLAY missing DESCRIPTION",
+			input:       testEventAlarmMissingDescriptionDisplayInput,
+			expectedErr: icalerr.ErrMissingAlarmDescriptionForDisplay,
 		},
 		{
-			name:  "VALARM EMAIL missing ATTENDEE",
-			input: testEventAlarmMissingAttendeeEmailInput,
+			name:        "VALARM EMAIL missing ATTENDEE",
+			input:       testEventAlarmMissingAttendeeEmailInput,
+			expectedErr: icalerr.ErrMissingAlarmAttendeesForEmail,
 		},
 		{
-			name:  "VALARM multiple DESCRIPTION",
-			input: testEventAlarmInvalidMultipleDescriptionInput,
+			name:        "VALARM multiple DESCRIPTION",
+			input:       testEventAlarmInvalidMultipleDescriptionInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
 			name:  "Invalid RRULE",
@@ -279,8 +295,12 @@ func TestInvalidEvent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Error(t, err)
 			assert.Nil(t, calendar)
+			if tc.expectedErr != nil {
+				assert.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }

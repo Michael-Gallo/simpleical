@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/michael-gallo/simpleical/rrule"
 	"github.com/stretchr/testify/assert"
@@ -131,46 +132,55 @@ func TestValidTodo(t *testing.T) {
 
 func TestInvalidTodo(t *testing.T) {
 	testCases := []struct {
-		name  string
-		input string
+		name        string
+		input       string
+		expectedErr error
 	}{
 		{
-			name:  "VTODO missing UID",
-			input: testTodoMissingUIDInput,
+			name:        "VTODO missing UID",
+			input:       testTodoMissingUIDInput,
+			expectedErr: icalerr.ErrMissingTodoUIDProperty,
 		},
 		{
-			name:  "VTODO both DUE and DURATION",
-			input: testTodoBothDueAndDurationInput,
+			name:        "VTODO both DUE and DURATION",
+			input:       testTodoBothDueAndDurationInput,
+			expectedErr: icalerr.ErrInvalidDurationPropertyDue,
 		},
 		{
-			name:  "VTODO invalid GEO",
-			input: testTodoInvalidGeoInput,
+			name:        "VTODO invalid GEO",
+			input:       testTodoInvalidGeoInput,
+			expectedErr: icalerr.ErrInvalidGeoProperty,
 		},
 		{
-			name:  "VTODO duplicate UID",
-			input: testTodoDuplicateUIDInput,
+			name:        "VTODO duplicate UID",
+			input:       testTodoDuplicateUIDInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "VTODO Organizer set twice",
-			input: testTodoDuplicateOrganizerInput,
+			name:        "VTODO Organizer set twice",
+			input:       testTodoDuplicateOrganizerInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "VTODO Status set twice",
-			input: testTodoDuplicateStatusInput,
+			name:        "VTODO Status set twice",
+			input:       testTodoDuplicateStatusInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "VTODO DURATION without DTSTART",
-			input: testTodoDurationWithoutDTStartInput,
+			name:        "VTODO DURATION without DTSTART",
+			input:       testTodoDurationWithoutDTStartInput,
+			expectedErr: icalerr.ErrDurationRequiresDTStart,
 		},
 		{
-			name:  "VTODO missing DTSTAMP",
-			input: testTodoMissingDTStampInput,
+			name:        "VTODO missing DTSTAMP",
+			input:       testTodoMissingDTStampInput,
+			expectedErr: icalerr.ErrMissingTodoDTStampProperty,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Error(t, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}

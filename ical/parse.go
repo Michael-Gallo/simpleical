@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -50,7 +51,7 @@ func FromFileName(filename string) (*model.Calendar, error) {
 func FromString(input string) (*model.Calendar, error) {
 	// Handle empty input
 	if input == "" {
-		return nil, errNoCalendarFound
+		return nil, icalerr.ErrNoCalendarFound
 	}
 
 	// Use the reader-based parser for consistency
@@ -67,19 +68,19 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 	scanner := bufio.NewScanner(reader)
 
 	if !scanner.Scan() {
-		return nil, errNoCalendarFound
+		return nil, icalerr.ErrNoCalendarFound
 	}
 
 	line := strings.TrimRight(scanner.Text(), " ")
 	if line != "BEGIN:VCALENDAR" {
-		return nil, errInvalidCalendarFormatMissingBegin
+		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
 	}
 
 	for scanner.Scan() {
 		line := strings.TrimRight(scanner.Text(), " ")
 
 		if line == "" {
-			return nil, errInvalidCalendarEmptyLine
+			return nil, icalerr.ErrInvalidCalendarEmptyLine
 		}
 
 		// Clear the reusable parameter map before each use
@@ -99,7 +100,7 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 			continue
 		case "END":
 			if currentState == stateFinished {
-				return nil, errContentAfterEndBlock
+				return nil, icalerr.ErrContentAfterEndBlock
 			}
 			if err := handleEndBlock(value, &currentState, calendar); err != nil {
 				return nil, err
@@ -107,7 +108,7 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 			continue
 		default:
 			if currentState == stateFinished {
-				return nil, errContentAfterEndBlock
+				return nil, icalerr.ErrContentAfterEndBlock
 			}
 			if err := parsePropertyLine(propertyName, value, params, currentState, calendar); err != nil {
 				return nil, err
@@ -123,7 +124,7 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 
 	// Verify that the last line was a END:VCALENDAR
 	if currentState != stateFinished {
-		return nil, errInvalidCalendarFormatMissingEnd
+		return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
 	}
 
 	return calendar, nil
@@ -176,20 +177,20 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		switch *currentState {
 		case stateEvent:
 			if len(calendar.Events) == 0 {
-				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
+				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
 			*currentState = stateEventAlarm
 			calendar.Events[len(calendar.Events)-1].Alarms = append(calendar.Events[len(calendar.Events)-1].Alarms, model.Alarm{})
 		case stateTodo:
 			if len(calendar.Todos) == 0 {
-				return fmt.Errorf("%w: VALARM", errUnexpectedBeginBlock)
+				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
 			*currentState = stateTodoAlarm
 			calendar.Todos[len(calendar.Todos)-1].Alarms = append(calendar.Todos[len(calendar.Todos)-1].Alarms, model.Alarm{})
 		case stateJournal:
-			return fmt.Errorf("%w: VALARM not supported inside VJOURNAL", errUnexpectedBeginBlock)
+			return fmt.Errorf("%w: VALARM not supported inside VJOURNAL", icalerr.ErrUnexpectedBeginBlock)
 		default:
-			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", errUnexpectedBeginBlock)
+			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", icalerr.ErrUnexpectedBeginBlock)
 		}
 	case string(model.SectionTokenVJournal):
 		*currentState = stateJournal
@@ -199,18 +200,18 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		calendar.Todos = append(calendar.Todos, model.Todo{})
 	case string(model.SectionTokenVStandard):
 		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
-			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", errUnexpectedBeginBlock)
+			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
 		}
 		*currentState = stateStandard
 		calendar.TimeZones[len(calendar.TimeZones)-1].Standard = append(calendar.TimeZones[len(calendar.TimeZones)-1].Standard, model.TimeZoneProperty{})
 	case string(model.SectionTokenVDaylight):
 		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
-			return fmt.Errorf("%w: DAYLIGHT must be inside VTIMEZONE", errUnexpectedBeginBlock)
+			return fmt.Errorf("%w: DAYLIGHT must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
 		}
 		*currentState = stateDaylight
 		calendar.TimeZones[len(calendar.TimeZones)-1].Daylight = append(calendar.TimeZones[len(calendar.TimeZones)-1].Daylight, model.TimeZoneProperty{})
 	default:
-		return fmt.Errorf("%w: %s", errTemplateInvalidStartBlock, beginValue)
+		return fmt.Errorf("%w: %s", icalerr.ErrTemplateInvalidStartBlock, beginValue)
 	}
 	return nil
 }
@@ -220,7 +221,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):
 		if *currentState != stateEvent || len(calendar.Events) == 0 {
-			return fmt.Errorf("%w: END:VEVENT", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VEVENT", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateEvent(calendar.Events[len(calendar.Events)-1]); err != nil {
 			return err
@@ -228,7 +229,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVCalendar):
 		if *currentState != stateCalendar {
-			return fmt.Errorf("%w: END:VCALENDAR", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VCALENDAR", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateCalendar(calendar); err != nil {
 			return err
@@ -236,7 +237,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateFinished
 	case string(model.SectionTokenVTimezone):
 		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
-			return fmt.Errorf("%w: END:VTIMEZONE", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VTIMEZONE", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateTimeZone(&calendar.TimeZones[len(calendar.TimeZones)-1]); err != nil {
 			return err
@@ -244,7 +245,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVFreebusy):
 		if *currentState != stateFreebusy || len(calendar.FreeBusys) == 0 {
-			return fmt.Errorf("%w: END:VFREEBUSY", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VFREEBUSY", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateFreeBusy(&calendar.FreeBusys[len(calendar.FreeBusys)-1]); err != nil {
 			return err
@@ -255,11 +256,11 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		switch *currentState {
 		case stateEventAlarm:
 			if len(calendar.Events) == 0 {
-				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 			}
 			ev := &calendar.Events[len(calendar.Events)-1]
 			if len(ev.Alarms) == 0 {
-				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 			}
 			if err := validateAlarm(&ev.Alarms[len(ev.Alarms)-1]); err != nil {
 				return err
@@ -267,22 +268,22 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 			*currentState = stateEvent // Return to parent state.
 		case stateTodoAlarm:
 			if len(calendar.Todos) == 0 {
-				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 			}
 			todo := &calendar.Todos[len(calendar.Todos)-1]
 			if len(todo.Alarms) == 0 {
-				return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 			}
 			if err := validateAlarm(&todo.Alarms[len(todo.Alarms)-1]); err != nil {
 				return err
 			}
 			*currentState = stateTodo // Return to parent state.
 		default:
-			return fmt.Errorf("%w: END:VALARM", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 		}
 	case string(model.SectionTokenVJournal):
 		if *currentState != stateJournal || len(calendar.Journals) == 0 {
-			return fmt.Errorf("%w: END:VJOURNAL", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VJOURNAL", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateJournal(&calendar.Journals[len(calendar.Journals)-1]); err != nil {
 			return err
@@ -290,7 +291,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVTodo):
 		if *currentState != stateTodo || len(calendar.Todos) == 0 {
-			return fmt.Errorf("%w: END:VTODO", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:VTODO", icalerr.ErrUnexpectedEndBlock)
 		}
 		if err := validateTodo(&calendar.Todos[len(calendar.Todos)-1]); err != nil {
 			return err
@@ -298,16 +299,16 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVStandard):
 		if *currentState != stateStandard || len(calendar.TimeZones) == 0 {
-			return fmt.Errorf("%w: END:STANDARD", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:STANDARD", icalerr.ErrUnexpectedEndBlock)
 		}
 		*currentState = stateTimezone
 	case string(model.SectionTokenVDaylight):
 		if *currentState != stateDaylight || len(calendar.TimeZones) == 0 {
-			return fmt.Errorf("%w: END:DAYLIGHT", errUnexpectedEndBlock)
+			return fmt.Errorf("%w: END:DAYLIGHT", icalerr.ErrUnexpectedEndBlock)
 		}
 		*currentState = stateTimezone
 	default:
-		return fmt.Errorf("%w: %s", errTemplateInvalidEndBlock, endLineValue)
+		return fmt.Errorf("%w: %s", icalerr.ErrTemplateInvalidEndBlock, endLineValue)
 	}
 	return nil
 }

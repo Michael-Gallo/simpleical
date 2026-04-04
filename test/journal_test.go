@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -96,26 +97,30 @@ func TestValidJournal(t *testing.T) {
 
 func TestInvalidJournal(t *testing.T) {
 	testCases := []struct {
-		name  string
-		input string
+		name        string
+		input       string
+		expectedErr error
 	}{
 		{
-			name:  "VJOURNAL missing UID",
-			input: testJournalMissingUIDInput,
+			name:        "VJOURNAL missing UID",
+			input:       testJournalMissingUIDInput,
+			expectedErr: icalerr.ErrMissingJournalUIDProperty,
 		},
 		{
-			name:  "VJOURNAL duplicate UID",
-			input: testJournalDuplicateUIDInput,
+			name:        "VJOURNAL duplicate UID",
+			input:       testJournalDuplicateUIDInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "VJOURNAL missing DTSTAMP",
-			input: testJournalMissingDTStampInput,
+			name:        "VJOURNAL missing DTSTAMP",
+			input:       testJournalMissingDTStampInput,
+			expectedErr: icalerr.ErrMissingJournalDTStampProperty,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Error(t, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}

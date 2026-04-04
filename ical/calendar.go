@@ -1,6 +1,9 @@
 package ical
 
-import "github.com/michael-gallo/simpleical/model"
+import (
+	"github.com/michael-gallo/simpleical/internal/icalerr"
+	"github.com/michael-gallo/simpleical/model"
+)
 
 // parseCalendarProperty parses a single property line and sets its value in the provided vcalendar.
 func parseCalendarProperty(propertyName string, value string, _ map[string]string, calendar *model.Calendar) error {
@@ -19,10 +22,10 @@ func parseCalendarProperty(propertyName string, value string, _ map[string]strin
 
 func validateCalendar(calendar *model.Calendar) error {
 	if calendar.Version == "" {
-		return errMissingCalendarVersionProperty
+		return icalerr.ErrMissingCalendarVersionProperty
 	}
 	if calendar.ProdID == "" {
-		return errMissingCalendarProdIDProperty
+		return icalerr.ErrMissingCalendarProdIDProperty
 	}
 	return nil
 }
