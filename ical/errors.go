@@ -60,7 +60,7 @@ var (
 
 	errMissingJournalUIDProperty = errors.New("journal must have a UID property")
 
-	errMissingJournalDTStartProperty = errors.New("journal must have a DTSTART property")
+	errMissingJournalDTStampProperty = errors.New("journal must have a DTSTAMP property")
 )
 
 // FreeBusy-specific errors.

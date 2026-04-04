@@ -84,8 +84,8 @@ func validateJournal(journal *model.Journal) error {
 	if journal.UID == "" {
 		return errMissingJournalUIDProperty
 	}
-	if time.Time.IsZero(journal.DTStart) {
-		return errMissingJournalDTStartProperty
+	if time.Time.IsZero(journal.DTStamp) {
+		return errMissingJournalDTStampProperty
 	}
 	return nil
 }
