@@ -87,7 +87,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
 	case model.TodoTokenTransp:

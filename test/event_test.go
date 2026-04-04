@@ -214,8 +214,9 @@ func TestInvalidEvent(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:  "Invalid organizer",
-			input: testIcalInvalidOrganizerInput,
+			name:        "Invalid organizer",
+			input:       testIcalInvalidOrganizerInput,
+			expectedErr: icalerr.ErrInvalidOrganizer,
 		},
 		{
 			name:        "Invalid start date",
@@ -288,8 +289,9 @@ func TestInvalidEvent(t *testing.T) {
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
-			name:  "Invalid RRULE",
-			input: testIcalInvalidRRuleInput,
+			name:        "Invalid RRULE",
+			input:       testIcalInvalidRRuleInput,
+			expectedErr: icalerr.ErrInvalidRRule,
 		},
 	}
 	for _, tc := range testCases {

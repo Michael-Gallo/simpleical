@@ -66,7 +66,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		event.Categories = append(event.Categories, strings.Split(value, ",")...)
 	case model.EventTokenGeo:
 		if event.Geo != nil {
-			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateProperty, propertyName)
+			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, eventLocation)
 		}
 		// Geo must be two floats separated by a semicolon
 		latitudeString, longitudeString, found := strings.Cut(value, ";")
@@ -85,7 +85,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.EventTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&event.RRule, rule, propertyName, eventLocation)
 	case model.EventTokenAttach:
@@ -111,7 +111,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 		case "DIR":
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 			}
 			organizer.Directory = parsedURI
 		case "LANGUAGE":
@@ -119,7 +119,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 		case "SENT-BY":
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 			}
 			organizer.SentBy = parsedURI
 		default:
@@ -132,7 +132,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 
 	parsedURI, err := url.Parse(value)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 	}
 	organizer.CalAddress = parsedURI
 
