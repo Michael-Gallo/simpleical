@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,26 +78,30 @@ func TestValidTimezone(t *testing.T) {
 
 func TestInvalidTimezone(t *testing.T) {
 	testCases := []struct {
-		name  string
-		input string
+		name        string
+		input       string
+		expectedErr error
 	}{
 		{
-			name:  "VTIMEZONE missing TZID",
-			input: testTimezoneMissingTZIDInput,
+			name:        "VTIMEZONE missing TZID",
+			input:       testTimezoneMissingTZIDInput,
+			expectedErr: icalerr.ErrMissingTimezoneTZIDProperty,
 		},
 		{
-			name:  "VTIMEZONE invalid DTSTART",
-			input: testTimezoneInvalidDTStartInput,
+			name:        "VTIMEZONE invalid DTSTART",
+			input:       testTimezoneInvalidDTStartInput,
+			expectedErr: icalerr.ErrParseErrorInComponent,
 		},
 		{
-			name:  "VTIMEZONE duplicate TZID",
-			input: testTimezoneDuplicateTZIDInput,
+			name:        "VTIMEZONE duplicate TZID",
+			input:       testTimezoneDuplicateTZIDInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Error(t, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}

@@ -3,6 +3,8 @@ package ical
 import (
 	"fmt"
 	"strings"
+
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 )
 
 // parseIcalLineWithReusableMap parses a single property line using a reusable parameter map.
@@ -11,7 +13,7 @@ func parseIcalLineWithReusableMap(line string, reusableParams map[string]string)
 	// Find the first colon that is not inside quotes
 	colonIndex := findUnquotedColonIndex(line)
 	if colonIndex == -1 {
-		err = fmt.Errorf("%w: %s", errInvalidPropertyLine, line)
+		err = fmt.Errorf("%w: %s", icalerr.ErrInvalidPropertyLine, line)
 		return "", nil, "", err
 	}
 

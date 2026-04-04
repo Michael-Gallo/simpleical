@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/michael-gallo/simpleical/icaldur"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -51,7 +52,7 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 	case model.FreeBusyTokenRequestStatus:
 		freeBusy.RequestStatus = append(freeBusy.RequestStatus, value)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidFreeBusyProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidFreeBusyProperty, propertyName)
 	}
 	return nil
 }
@@ -63,7 +64,7 @@ func parseFreeBusyTime(value string) (model.FreeBusyTime, error) {
 	// Extract start time (everything before first '/')
 	startStr, remaining, found := strings.Cut(value, "/")
 	if !found {
-		return model.FreeBusyTime{}, fmt.Errorf("%w: %s", errInvalidFreeBusyFormat, value)
+		return model.FreeBusyTime{}, fmt.Errorf("%w: %s", icalerr.ErrInvalidFreeBusyFormat, value)
 	}
 
 	startTime, err := icaldur.ParseIcalTime(startStr)
@@ -97,10 +98,10 @@ func parseFreeBusyTime(value string) (model.FreeBusyTime, error) {
 // validateFreeBusy ensures that all required values are present for a freebusy.
 func validateFreeBusy(freeBusy *model.FreeBusy) error {
 	if freeBusy.UID == "" {
-		return errMissingFreeBusyUIDProperty
+		return icalerr.ErrMissingFreeBusyUIDProperty
 	}
 	if freeBusy.DTStart.IsZero() {
-		return errMissingFreeBusyDTStartProperty
+		return icalerr.ErrMissingFreeBusyDTStartProperty
 	}
 	return nil
 }

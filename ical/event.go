@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/michael-gallo/simpleical/rrule"
 )
@@ -24,12 +25,12 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	// End and Duration are mutually exclusive
 	case model.EventTokenDtend:
 		if event.Duration != 0 {
-			return errInvalidDurationPropertyDtend
+			return icalerr.ErrInvalidDurationPropertyDtend
 		}
 		return setOnceTimeProperty(&event.End, value, propertyName, eventLocation)
 	case model.EventTokenDuration:
 		if event.End != (time.Time{}) {
-			return errInvalidDurationPropertyDtend
+			return icalerr.ErrInvalidDurationPropertyDtend
 		}
 		return setOnceDurationProperty(&event.Duration, value, propertyName, eventLocation)
 	case model.EventTokenLastModified:
@@ -65,26 +66,26 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		event.Categories = append(event.Categories, strings.Split(value, ",")...)
 	case model.EventTokenGeo:
 		if event.Geo != nil {
-			return fmt.Errorf("%w: %s", errDuplicateProperty, propertyName)
+			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, eventLocation)
 		}
-		// Geo must be two floats separted by a colon
+		// Geo must be two floats separated by a semicolon
 		latitudeString, longitudeString, found := strings.Cut(value, ";")
 		if !found {
-			return errInvalidGeoProperty
+			return icalerr.ErrInvalidGeoProperty
 		}
 		latitude, err := strconv.ParseFloat(latitudeString, 64)
 		if err != nil {
-			return errInvalidGeoPropertyLatitude
+			return icalerr.ErrInvalidGeoPropertyLatitude
 		}
 		longitude, err := strconv.ParseFloat(longitudeString, 64)
 		if err != nil {
-			return errInvalidGeoPropertyLongitude
+			return icalerr.ErrInvalidGeoPropertyLongitude
 		}
 		event.Geo = append(event.Geo, latitude, longitude)
 	case model.EventTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&event.RRule, rule, propertyName, eventLocation)
 	case model.EventTokenAttach:
@@ -95,7 +96,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		event.Attach = append(event.Attach, *attachment)
 		return nil
 	default:
-		return fmt.Errorf("%w: %s", errInvalidEventProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidEventProperty, propertyName)
 	}
 	return nil
 }
@@ -110,7 +111,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 		case "DIR":
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 			}
 			organizer.Directory = parsedURI
 		case "LANGUAGE":
@@ -118,7 +119,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 		case "SENT-BY":
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 			}
 			organizer.SentBy = parsedURI
 		default:
@@ -131,7 +132,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 
 	parsedURI, err := url.Parse(value)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 	}
 	organizer.CalAddress = parsedURI
 
@@ -141,10 +142,10 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 // validateEvent ensures that all required values are present for an event
 func validateEvent(event model.Event) error {
 	if event.UID == "" {
-		return errMissingEventUIDProperty
+		return icalerr.ErrMissingEventUIDProperty
 	}
 	if event.Start.IsZero() {
-		return errMissingEventDTStartProperty
+		return icalerr.ErrMissingEventDTStartProperty
 	}
 	return nil
 }

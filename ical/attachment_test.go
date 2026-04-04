@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,7 +71,7 @@ func TestParseAttachment(t *testing.T) {
 				"VALUE":    "BINARY",
 			},
 			expectedAttachment: nil,
-			expectedError:      fmt.Errorf("%w: invalid base64 encoded data", errParseErrorInComponent),
+			expectedError:      fmt.Errorf("%w: invalid base64 encoded data", icalerr.ErrParseErrorInComponent),
 		},
 	}
 	for _, testCase := range testCases {

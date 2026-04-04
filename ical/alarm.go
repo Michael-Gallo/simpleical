@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -38,7 +39,7 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		}
 		alarm.Attendees = append(alarm.Attendees, *parsedURL)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidAlarmProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidAlarmProperty, propertyName)
 	}
 	return nil
 }
@@ -46,27 +47,27 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 // validateAlarm ensures that all required values are present for an alarm.
 func validateAlarm(alarm *model.Alarm) error {
 	if alarm.Action == "" {
-		return errMissingAlarmActionProperty
+		return icalerr.ErrMissingAlarmActionProperty
 	}
 	if alarm.Trigger == "" {
-		return errMissingAlarmTriggerProperty
+		return icalerr.ErrMissingAlarmTriggerProperty
 	}
 
 	// Validate action-specific requirements
 	switch alarm.Action {
 	case model.AlarmActionDisplay:
 		if len(alarm.Description) == 0 {
-			return errMissingAlarmDescriptionForDisplay
+			return icalerr.ErrMissingAlarmDescriptionForDisplay
 		}
 	case model.AlarmActionEmail:
 		if len(alarm.Description) == 0 {
-			return errMissingAlarmDescriptionForEmail
+			return icalerr.ErrMissingAlarmDescriptionForEmail
 		}
 		if alarm.Summary == "" {
-			return errMissingAlarmSummaryForEmail
+			return icalerr.ErrMissingAlarmSummaryForEmail
 		}
 		if len(alarm.Attendees) == 0 {
-			return errMissingAlarmAttendeesForEmail
+			return icalerr.ErrMissingAlarmAttendeesForEmail
 		}
 	}
 

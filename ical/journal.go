@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -73,7 +74,7 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.JournalTokenRequestStatus:
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidJournalProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidJournalProperty, propertyName)
 	}
 	return nil
 }
@@ -81,10 +82,10 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 // validateJournal ensures that all required values are present for a journal.
 func validateJournal(journal *model.Journal) error {
 	if journal.UID == "" {
-		return errMissingJournalUIDProperty
+		return icalerr.ErrMissingJournalUIDProperty
 	}
 	if journal.DTStamp.IsZero() {
-		return errMissingJournalDTStampProperty
+		return icalerr.ErrMissingJournalDTStampProperty
 	}
 	return nil
 }

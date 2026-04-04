@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/michael-gallo/simpleical/icaldur"
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
 
@@ -36,7 +37,7 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 		}
 		return setOnceProperty(&timezone.TimeZoneURL, parsedURL, propertyName, timezoneLocation)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidTimezoneProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
 	}
 }
 
@@ -54,13 +55,13 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 	case model.TimezoneTokenRdate:
 		parsedTime, err := icaldur.ParseIcalTime(value)
 		if err != nil {
-			return fmt.Errorf("%w: %s", errInvalidTimezoneProperty, err.Error())
+			return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, err.Error())
 		}
 		tzProp.Rdate = append(tzProp.Rdate, parsedTime)
 	case model.TimezoneTokenTimeZoneName:
 		tzProp.TimeZoneName = append(tzProp.TimeZoneName, value)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidTimezoneProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
 	}
 	return nil
 }
@@ -68,7 +69,7 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 // validateTimeZone ensures that all required values are present for a timezone.
 func validateTimeZone(timezone *model.TimeZone) error {
 	if timezone.TimeZoneID == "" {
-		return errMissingTimezoneTZIDProperty
+		return icalerr.ErrMissingTimezoneTZIDProperty
 	}
 	return nil
 }

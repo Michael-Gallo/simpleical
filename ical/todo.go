@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/michael-gallo/simpleical/rrule"
 )
@@ -39,26 +40,26 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		return setOnceTimeProperty(&todo.Due, value, propertyName, todoLocation)
 	case model.TodoTokenDuration:
 		if todo.Due != (time.Time{}) {
-			return errInvalidDurationPropertyDue
+			return icalerr.ErrInvalidDurationPropertyDue
 		}
 		return setOnceDurationProperty(&todo.Duration, value, propertyName, todoLocation)
 
 	case model.TodoTokenGeo:
 		if todo.Geo != nil {
-			return fmt.Errorf("%w: %s", errDuplicateProperty, propertyName)
+			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateProperty, propertyName)
 		}
 		// Geo must be two floats separated by a semicolon
 		latitudeString, longitudeString, found := strings.Cut(value, ";")
 		if !found {
-			return errInvalidGeoProperty
+			return icalerr.ErrInvalidGeoProperty
 		}
 		latitude, err := strconv.ParseFloat(latitudeString, 64)
 		if err != nil {
-			return errInvalidGeoPropertyLatitude
+			return icalerr.ErrInvalidGeoPropertyLatitude
 		}
 		longitude, err := strconv.ParseFloat(longitudeString, 64)
 		if err != nil {
-			return errInvalidGeoPropertyLongitude
+			return icalerr.ErrInvalidGeoPropertyLongitude
 		}
 		todo.Geo = append(todo.Geo, latitude, longitude)
 	case model.TodoTokenLastModified:
@@ -86,7 +87,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
 	case model.TodoTokenTransp:
@@ -125,7 +126,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenRdate:
 		return appendTimeProperty(&todo.Rdate, value, propertyName, todoLocation)
 	default:
-		return fmt.Errorf("%w: %s", errInvalidTodoProperty, propertyName)
+		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTodoProperty, propertyName)
 	}
 	return nil
 }
@@ -136,18 +137,18 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 // DTstamp and uid are always required.
 func validateTodo(todo *model.Todo) error {
 	if todo.UID == "" {
-		return errMissingTodoUIDProperty
+		return icalerr.ErrMissingTodoUIDProperty
 	}
 	if todo.DTStamp.IsZero() {
-		return errMissingTodoDTStampProperty
+		return icalerr.ErrMissingTodoDTStampProperty
 	}
 
 	if todo.Duration != 0 {
 		if todo.DTStart.IsZero() {
-			return errDurationRequiresDTStart
+			return icalerr.ErrDurationRequiresDTStart
 		}
 		if !todo.Due.IsZero() {
-			return errInvalidDurationPropertyDue
+			return icalerr.ErrInvalidDurationPropertyDue
 		}
 	}
 
