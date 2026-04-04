@@ -29,3 +29,7 @@ bench-comparative:
 
 
 pre-commit: fmt vet lint test-slow
+
+cover:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
