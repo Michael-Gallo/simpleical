@@ -16,9 +16,9 @@ import (
 type JournalStatus string
 
 const (
-	JournalStatusDraft    JournalStatus = "DRAFT"
-	JournalStatusFinal    JournalStatus = "FINAL"
-	JournalStatusCanceled JournalStatus = "CANCELED"
+	JournalStatusDraft     JournalStatus = "DRAFT"
+	JournalStatusFinal     JournalStatus = "FINAL"
+	JournalStatusCancelled JournalStatus = "CANCELLED"
 )
 
 // JournalClass represents the possible values for a VJOURNAL's CLASS field.
