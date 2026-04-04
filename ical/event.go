@@ -68,7 +68,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		if event.Geo != nil {
 			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateProperty, propertyName)
 		}
-		// Geo must be two floats separted by a colon
+		// Geo must be two floats separated by a semicolon
 		latitudeString, longitudeString, found := strings.Cut(value, ";")
 		if !found {
 			return icalerr.ErrInvalidGeoProperty
