@@ -4,7 +4,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: test/test_data/calendar/valid_calendar_trailing_whitespace\.ical$
       - id: end-of-file-fixer
+        exclude: test/test_data/calendar/valid_calendar_trailing_whitespace\.ical$
   - repo: local
     hooks:
       - id: go-fmt
