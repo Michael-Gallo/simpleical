@@ -28,6 +28,12 @@ func TestParseRRule(t *testing.T) {
 			expectError: nil,
 		},
 		{
+			name:        "Invalid rule: unknown tag",
+			input:       "FREQ=DAILY;INVALID=1",
+			want:        nil,
+			expectError: errInvalidRRuleString,
+		},
+		{
 			name:        "Invalid frequency",
 			input:       "FREQ=DALLY;INTERVAL=2;COUNT=10",
 			want:        nil,

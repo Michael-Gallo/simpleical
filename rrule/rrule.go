@@ -250,6 +250,8 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				}
 				rrule.BySecond = append(rrule.BySecond, uint8(secondInt))
 			}
+		default:
+			return nil, fmt.Errorf("%w: %s", errInvalidRRuleString, tag)
 		}
 	}
 	if err := validateRRule(rrule); err != nil {
