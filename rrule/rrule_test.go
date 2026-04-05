@@ -260,6 +260,54 @@ func TestParseRRule(t *testing.T) {
 			expectError: strconv.ErrSyntax,
 		},
 		{
+			name:        "Error: BYMONTH out of range (0)",
+			input:       "FREQ=MONTHLY;BYMONTH=0",
+			want:        nil,
+			expectError: errInvalidByMonth,
+		},
+		{
+			name:        "Error: BYMONTH out of range (13)",
+			input:       "FREQ=MONTHLY;BYMONTH=13",
+			want:        nil,
+			expectError: errInvalidByMonth,
+		},
+		{
+			name:        "Error: BYMONTHDAY out of range (0)",
+			input:       "FREQ=MONTHLY;BYMONTHDAY=0",
+			want:        nil,
+			expectError: errInvalidByMonthDay,
+		},
+		{
+			name:        "Error: BYMONTHDAY out of range (32)",
+			input:       "FREQ=MONTHLY;BYMONTHDAY=32",
+			want:        nil,
+			expectError: errInvalidByMonthDay,
+		},
+		{
+			name:        "Error: BYMONTHDAY out of range (-32)",
+			input:       "FREQ=MONTHLY;BYMONTHDAY=-32",
+			want:        nil,
+			expectError: errInvalidByMonthDay,
+		},
+		{
+			name:        "Error: BYYEARDAY out of range (0)",
+			input:       "FREQ=YEARLY;BYYEARDAY=0",
+			want:        nil,
+			expectError: errInvalidByYearDay,
+		},
+		{
+			name:        "Error: BYYEARDAY out of range (367)",
+			input:       "FREQ=YEARLY;BYYEARDAY=367",
+			want:        nil,
+			expectError: errInvalidByYearDay,
+		},
+		{
+			name:        "Error: BYYEARDAY out of range (-367)",
+			input:       "FREQ=YEARLY;BYYEARDAY=-367",
+			want:        nil,
+			expectError: errInvalidByYearDay,
+		},
+		{
 			name:  "Success: every 15th and 35th second",
 			input: "FREQ=DAILY;BYSECOND=15,35",
 			want: &RRule{

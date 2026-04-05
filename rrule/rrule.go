@@ -157,6 +157,9 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				if err != nil {
 					return nil, err
 				}
+				if monthInt < 1 || monthInt > 12 {
+					return nil, errInvalidByMonth
+				}
 				rrule.ByMonth = append(rrule.ByMonth, monthInt)
 			}
 		case "BYMONTHDAY":
@@ -167,6 +170,9 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				if err != nil {
 					return nil, err
 				}
+				if !validByMonthDay(monthdayInt) {
+					return nil, errInvalidByMonthDay
+				}
 				rrule.ByMonthDay = append(rrule.ByMonthDay, monthdayInt)
 			}
 		case "BYYEARDAY":
@@ -176,6 +182,9 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				yeardayInt, err := strconv.Atoi(yearday)
 				if err != nil {
 					return nil, err
+				}
+				if !validByYearDay(yeardayInt) {
+					return nil, errInvalidByYearDay
 				}
 				rrule.ByYearDay = append(rrule.ByYearDay, yeardayInt)
 			}
@@ -263,6 +272,14 @@ func validateRRule(rrule *RRule) error {
 		return errInvalidInterval
 	}
 	return nil
+}
+
+func validByMonthDay(v int) bool {
+	return (v >= 1 && v <= 31) || (v <= -1 && v >= -31)
+}
+
+func validByYearDay(v int) bool {
+	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
 }
 
 // parseByDay parses a BYDAY value string and returns the interval and weekday.

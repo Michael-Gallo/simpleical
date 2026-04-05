@@ -38,4 +38,10 @@ var (
 	errInvalidByHour = errors.New("BYHOUR must be between 0 and 23")
 
 	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 59")
+
+	errInvalidByMonth = errors.New("BYMONTH out of range: must be 1..12")
+
+	errInvalidByMonthDay = errors.New("BYMONTHDAY out of range: must be -31..-1 or 1..31")
+
+	errInvalidByYearDay = errors.New("BYYEARDAY out of range: must be -366..-1 or 1..366")
 )
