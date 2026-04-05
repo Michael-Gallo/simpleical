@@ -11,6 +11,7 @@ import (
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/michael-gallo/simpleical/rrule"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -297,12 +298,8 @@ func TestInvalidEvent(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.Nil(t, calendar)
-			if tc.expectedErr != nil {
-				assert.ErrorIs(t, err, tc.expectedErr)
-			} else {
-				assert.Error(t, err)
-			}
+			require.Nil(t, calendar)
+			require.ErrorIs(t, err, tc.expectedErr)
 		})
 	}
 }
