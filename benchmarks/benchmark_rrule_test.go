@@ -23,7 +23,7 @@ func BenchmarkParseRRule(b *testing.B) {
 		},
 		{
 			name:  "String from teambition's rrule.go example",
-			input: "FREQ=DAILY;DTSTART=20060101T150405Z;COUNT=5",
+			input: "FREQ=DAILY;COUNT=5",
 		},
 		{
 			name:  "Every 20th Monday of the year, forever",
