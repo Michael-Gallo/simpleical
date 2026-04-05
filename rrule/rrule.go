@@ -88,14 +88,14 @@ type RRule struct {
 
 	// ByWeekNo is the week number that the event occurs on.
 	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
-	ByWeekNo int8
+	ByWeekNo []int8
 
 	// The ByMonth(s) of the year that the event occurs on.
 	ByMonth []int
 
 	// BySetPos (by set position) is the position of the last BY- component to use.
 	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
-	BySetPos int
+	BySetPos []int16
 	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
 	WKST Weekday
 }
@@ -214,25 +214,29 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYWEEKNO":
-			weekno, err := strconv.ParseInt(value, 10, 8)
+			weekNumbers, err := parseSignedInt8List(value)
 			if err != nil {
 				return nil, err
 			}
-			if weekno < -53 || weekno > 53 || weekno == 0 {
-				return nil, errInvalidWeekno
+			for _, weekno := range weekNumbers {
+				if !validByWeekNo(weekno) {
+					return nil, errInvalidWeekno
+				}
 			}
-			if err := setOnceValue(&rrule.ByWeekNo, int8(weekno), tag); err != nil {
+			if err := setOnceSlice(&rrule.ByWeekNo, weekNumbers, tag); err != nil {
 				return nil, err
 			}
 		case "BYSETPOS":
-			bySetPos, err := strconv.Atoi(value)
+			bySetPos, err := parseSignedInt16List(value)
 			if err != nil {
 				return nil, err
 			}
-			if bySetPos < -366 || bySetPos > 366 || bySetPos == 0 {
-				return nil, errInvalidBySetPos
+			for _, pos := range bySetPos {
+				if !validBySetPos(pos) {
+					return nil, errInvalidBySetPos
+				}
 			}
-			if err := setOnceValue(&rrule.BySetPos, bySetPos, tag); err != nil {
+			if err := setOnceSlice(&rrule.BySetPos, bySetPos, tag); err != nil {
 				return nil, err
 			}
 		case "BYMINUTE":
@@ -334,7 +338,7 @@ func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
 	}
-	if rrule.ByWeekNo != 0 && rrule.Frequency != FrequencyYearly {
+	if len(rrule.ByWeekNo) > 0 && rrule.Frequency != FrequencyYearly {
 		return errByWeekNoWithInvalidFrequency
 	}
 	if rrule.Count != nil && rrule.Until != nil {
@@ -352,6 +356,40 @@ func validByMonthDay(v int) bool {
 
 func validByYearDay(v int) bool {
 	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
+}
+
+func validByWeekNo(v int8) bool {
+	return (v >= 1 && v <= 53) || (v <= -1 && v >= -53)
+}
+
+func validBySetPos(v int16) bool {
+	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
+}
+
+func parseSignedInt8List(value string) ([]int8, error) {
+	values := strings.Split(value, ",")
+	parsed := make([]int8, 0, len(values))
+	for _, part := range values {
+		intValue, err := strconv.ParseInt(part, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, int8(intValue))
+	}
+	return parsed, nil
+}
+
+func parseSignedInt16List(value string) ([]int16, error) {
+	values := strings.Split(value, ",")
+	parsed := make([]int16, 0, len(values))
+	for _, part := range values {
+		intValue, err := strconv.ParseInt(part, 10, 16)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, int16(intValue))
+	}
+	return parsed, nil
 }
 
 // parseByDay parses a BYDAY value string and returns the interval and weekday.

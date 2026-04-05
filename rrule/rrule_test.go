@@ -153,7 +153,17 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByWeekNo:  -2,
+				ByWeekNo:  []int8{-2},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Multiple week numbers are parsed",
+			input: "FREQ=YEARLY;BYWEEKNO=1,-2",
+			want: &RRule{
+				Frequency: FrequencyYearly,
+				Interval:  1,
+				ByWeekNo:  []int8{1, -2},
 			},
 			expectError: nil,
 		},
@@ -169,7 +179,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByWeekNo:  -53,
+				ByWeekNo:  []int8{-53},
 			},
 			expectError: nil,
 		},
@@ -179,7 +189,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByWeekNo:  53,
+				ByWeekNo:  []int8{53},
 			},
 			expectError: nil,
 		},
@@ -634,7 +644,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByWeekNo:  20,
+				ByWeekNo:  []int8{20},
 				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1}},
 			},
 			expectError: nil,
@@ -651,7 +661,22 @@ func TestParseRRule(t *testing.T) {
 					{Weekday: WeekdayWednesday, Interval: 1},
 					{Weekday: WeekdayThursday, Interval: 1},
 				},
-				BySetPos: 3,
+				BySetPos: []int16{3},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Multiple set positions are parsed",
+			input: "FREQ=MONTHLY;BYDAY=TU,WE,TH;BYSETPOS=1,-1",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+				BySetPos: []int16{1, -1},
 			},
 			expectError: nil,
 		},
@@ -668,7 +693,7 @@ func TestParseRRule(t *testing.T) {
 					{Weekday: WeekdayThursday, Interval: 1},
 					{Weekday: WeekdayFriday, Interval: 1},
 				},
-				BySetPos: -2,
+				BySetPos: []int16{-2},
 			},
 			expectError: nil,
 		},
