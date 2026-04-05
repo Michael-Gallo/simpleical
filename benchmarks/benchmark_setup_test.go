@@ -51,7 +51,7 @@ func benchmarkFile(b *testing.B, fileName string, description string) {
 
 	for i := 0; i < b.N; i++ {
 		reader.Reset(fileContent)
-		cal, err := ical.IcalReader(&reader)
+		cal, err := ical.Read(&reader)
 		if err != nil {
 			b.Fatalf("Failed to parse %s: %v", description, err)
 		}
@@ -93,7 +93,7 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 	b.Run(fmt.Sprintf("%s - SimpleIcal", testName), func(b *testing.B) {
 		for b.Loop() {
 			reader.Reset(fileContent)
-			_, err := ical.IcalReader(&reader)
+			_, err := ical.Read(&reader)
 			if err != nil {
 				panic(err)
 			}
