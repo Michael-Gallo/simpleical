@@ -32,8 +32,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenCreated:
 		return setOnceTimeProperty(&todo.Created, value, propertyName, todoLocation)
 	case model.TodoTokenDescription:
-		todo.Description = append(todo.Description, value)
-		return nil
+		return setOnceProperty(&todo.Description, value, propertyName, todoLocation)
 	case model.TodoTokenDTStart:
 		return setOnceTimeProperty(&todo.DTStart, value, propertyName, todoLocation)
 	case model.TodoTokenDue:

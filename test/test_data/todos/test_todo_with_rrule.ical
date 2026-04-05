@@ -6,7 +6,6 @@ UID:todo123@example.com
 DTSTAMP:20240101T000000Z
 SUMMARY:Complete project documentation
 DESCRIPTION:Write comprehensive documentation for the new API
-DESCRIPTION:Include examples and usage patterns
 LOCATION:Office
 CLASS:CONFIDENTIAL
 STATUS:IN-PROCESS
