@@ -33,7 +33,6 @@ const (
 // Event represents a VEVENT component in the iCalendar format.
 // For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1.
 type Event struct {
-
 	// DTStamp defines the date and time that the event was created.
 	// Note: This is mandatory in RFC5545, but that is not enforced in this parser.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2

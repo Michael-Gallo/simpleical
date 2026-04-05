@@ -9,9 +9,9 @@ repos:
         exclude: test/test_data/calendar/valid_calendar_trailing_whitespace\.ical$
   - repo: local
     hooks:
-      - id: go-fmt
-        name: go fmt
-        entry: go fmt ./...
+      - id: go-fumpt
+        name: go fumpt
+        entry: gofumpt -l -w .
         language: system
         types: [go]
         pass_filenames: false
