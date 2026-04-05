@@ -86,7 +86,7 @@ func BenchmarkComparativeAll(b *testing.B) {
 func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
-		panic("Invalid File")
+		b.Fatalf("Invalid File: %v", err)
 	}
 	var reader bytes.Reader
 
@@ -95,7 +95,7 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 			reader.Reset(fileContent)
 			_, err := ical.Read(&reader)
 			if err != nil {
-				panic(err)
+				b.Fatalf("Failed to parse %s: %v", testName, err)
 			}
 		}
 	})
@@ -107,7 +107,7 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 			c.SkipBounds = true // Parse all events regardless of date
 			err := c.Parse()
 			if err != nil {
-				panic(err)
+				b.Fatalf("Failed to parse %s: %v", testName, err)
 			}
 		}
 	})
@@ -117,7 +117,7 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 			reader.Reset(fileContent)
 			_, err := golangical.ParseCalendar(&reader)
 			if err != nil {
-				panic(err)
+				b.Fatalf("Failed to parse %s: %v", testName, err)
 			}
 		}
 	})
