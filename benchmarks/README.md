@@ -5,11 +5,13 @@ This directory contains comparative benchmarks against other Go iCalendar parser
 ## Setup
 
 1. Install dependencies:
+
 ```bash
 go mod tidy
 ```
 
 2. Install gocal:
+
 ```bash
 go get github.com/apognu/gocal
 ```
@@ -17,11 +19,13 @@ go get github.com/apognu/gocal
 ## Running Benchmarks
 
 ### Run All Benchmarks
+
 ```bash
 go test -bench=. -benchmem
 ```
 
 ### Run Specific Parser Benchmarks
+
 ```bash
 # Your parser only
 go test -bench=BenchmarkAllSimpleIcal -benchmem
@@ -34,17 +38,20 @@ go test -bench=BenchmarkComparative -benchmem
 ```
 
 ### Memory Usage Comparison
+
 ```bash
 go test -bench=BenchmarkMemoryUsage -benchmem
 ```
 
 ### Run with CPU Profiling
+
 ```bash
 go test -bench=. -cpuprofile=cpu.prof
 go tool pprof cpu.prof
 ```
 
 ### Run with Memory Profiling
+
 ```bash
 go test -bench=. -memprofile=mem.prof
 go tool pprof mem.prof
