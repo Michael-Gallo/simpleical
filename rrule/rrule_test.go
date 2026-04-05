@@ -34,6 +34,24 @@ func TestParseRRule(t *testing.T) {
 			expectError: errInvalidRRuleString,
 		},
 		{
+			name:        "Invalid rule: duplicate FREQ",
+			input:       "FREQ=DAILY;FREQ=WEEKLY",
+			want:        nil,
+			expectError: errDuplicateRRulePart,
+		},
+		{
+			name:        "Invalid rule: duplicate INTERVAL",
+			input:       "FREQ=DAILY;INTERVAL=1;INTERVAL=2",
+			want:        nil,
+			expectError: errDuplicateRRulePart,
+		},
+		{
+			name:        "Invalid rule: duplicate BYDAY",
+			input:       "FREQ=WEEKLY;BYDAY=MO;BYDAY=TU",
+			want:        nil,
+			expectError: errDuplicateRRulePart,
+		},
+		{
 			name:        "Invalid frequency",
 			input:       "FREQ=DALLY;INTERVAL=2;COUNT=10",
 			want:        nil,

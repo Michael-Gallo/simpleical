@@ -11,6 +11,9 @@ var (
 	// errInvalidRRuleString is returned when the rrule string format is invalid.
 	errInvalidRRuleString = errors.New("invalid rrule string")
 
+	// errDuplicateRRulePart is returned when the same recur-rule-part appears more than once (RFC 5545).
+	errDuplicateRRulePart = errors.New("duplicate RRULE part")
+
 	// errFrequencyRequired is returned when the frequency property is missing.
 	errFrequencyRequired = errors.New("frequency is required")
 
