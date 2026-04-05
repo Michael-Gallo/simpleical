@@ -2,7 +2,6 @@ package icaldur
 
 import (
 	"testing"
-
 	"time"
 
 	"github.com/stretchr/testify/assert"

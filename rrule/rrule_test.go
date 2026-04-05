@@ -16,7 +16,6 @@ func TestParseRRule(t *testing.T) {
 		want        *RRule
 		expectError error
 	}{
-
 		{
 			name:  "Valid daily rule with interval set",
 			input: "FREQ=DAILY;INTERVAL=2;COUNT=10",

@@ -65,11 +65,13 @@ func TestFindUnquotedColonIndex(t *testing.T) {
 		line          string
 		expectedIndex int
 	}{
-		{name: "Valid line",
+		{
+			name:          "Valid line",
 			line:          "DTSTART:20250928T183000Z",
 			expectedIndex: 7,
 		},
-		{name: "Valid line with quote string",
+		{
+			name:          "Valid line with quote string",
 			line:          "\":\":",
 			expectedIndex: 3,
 		},

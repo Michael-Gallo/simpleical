@@ -12,7 +12,7 @@ import (
 // for more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.3
 type Organizer struct {
 	// denoted by CN
-	//See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.2
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.2
 	CommonName string
 	// Note: Any Valid URI
 	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.3

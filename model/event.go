@@ -18,7 +18,7 @@ type EventStatus string
 const (
 	EventStatusConfirmed EventStatus = "CONFIRMED"
 	EventStatusTentative EventStatus = "TENTATIVE"
-	EventStatusCancelled EventStatus = "CANCELED"
+	EventStatusCancelled EventStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
 // EventTransp represents VEVENT TRANSP values. Note VTODO TRANSP values are different.
@@ -33,7 +33,6 @@ const (
 // Event represents a VEVENT component in the iCalendar format.
 // For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1.
 type Event struct {
-
 	// DTStamp defines the date and time that the event was created.
 	// Note: This is mandatory in RFC5545, but that is not enforced in this parser.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
