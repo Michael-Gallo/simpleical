@@ -19,6 +19,8 @@ var (
 	testValidCalendarInput string
 	//go:embed test_data/calendar/valid_empty_calendar.ical
 	testEmptyCalendarInput string
+	//go:embed test_data/calendar/invalid_calendar_double_begin.ical
+	testCalendarDoubleBeginInput string
 	//go:embed test_data/calendar/valid_calendar_trailing_whitespace.ical
 	testTrailingWithSpaceInput string
 	//go:embed test_data/calendar/no_begin_calendar.ical
@@ -169,6 +171,11 @@ func TestParseCalendarError(t *testing.T) {
 			name:        "Empty input",
 			input:       "",
 			expectedErr: icalerr.ErrNoCalendarFound,
+		},
+		{
+			name:        "Two BEGIN:VCALENDAR at top",
+			input:       testCalendarDoubleBeginInput,
+			expectedErr: icalerr.ErrNestedBeginVCalendar,
 		},
 	}
 	for _, tc := range testCases {

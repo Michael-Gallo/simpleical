@@ -164,8 +164,9 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 	case string(model.SectionTokenVEvent):
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
+	// We have already verified that the first line is a BEGIN:VCALENDAR, so this is an error case
 	case string(model.SectionTokenVCalendar):
-		*currentState = stateCalendar
+		return icalerr.ErrNestedBeginVCalendar
 	case string(model.SectionTokenVTimezone):
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
