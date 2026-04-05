@@ -18,7 +18,7 @@ type EventStatus string
 const (
 	EventStatusConfirmed EventStatus = "CONFIRMED"
 	EventStatusTentative EventStatus = "TENTATIVE"
-	EventStatusCancelled EventStatus = "CANCELED"
+	EventStatusCancelled EventStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
 // EventTransp represents VEVENT TRANSP values. Note VTODO TRANSP values are different.
