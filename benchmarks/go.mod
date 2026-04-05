@@ -1,6 +1,6 @@
 module github.com/michael-gallo/simpleical/benchmarks
 
-go 1.25.1
+go 1.26.0
 
 require (
 	github.com/apognu/gocal v0.9.1

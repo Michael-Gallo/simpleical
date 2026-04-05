@@ -16,7 +16,7 @@ vet:
 	go vet ./...
 
 bench:
-	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem 
+	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem
 
 bench-profile:
 	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof
@@ -28,7 +28,8 @@ bench-comparative:
 	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
 
 
-pre-commit: fmt vet lint test-slow
+pre-commit:
+	pre-commit run --all-files
 
 cover:
 	go test -coverprofile=coverage.out ./...

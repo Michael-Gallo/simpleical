@@ -19,7 +19,7 @@ const (
 	TodoStatusNeedsAction TodoStatus = "NEEDS-ACTION"
 	TodoStatusCompleted   TodoStatus = "COMPLETED"
 	TodoStatusInProcess   TodoStatus = "IN-PROCESS"
-	TodoStatusCancelled   TodoStatus = "CANCELLED"
+	TodoStatusCancelled   TodoStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
 // TodoClass represents the possible values for a VTODO's CLASS field.
@@ -70,10 +70,10 @@ type Todo struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.1
 	Created time.Time
 
-	// OPTIONAL, MAY occur more than once
+	// OPTIONAL, MUST NOT occur more than once
 	// Used to capture lengthy textual descriptions associated with the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
-	Description []string
+	Description string
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component begins.

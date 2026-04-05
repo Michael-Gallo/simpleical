@@ -1,7 +1,7 @@
 goos: linux
 goarch: amd64
 pkg: github.com/michael-gallo/simpleical/benchmarks
-cpu: AMD Ryzen 7 5700X3D 8-Core Processor           
+cpu: AMD Ryzen 7 5700X3D 8-Core Processor
 BenchmarkAllScenarios/Simple_Event-16         	  854440	      1436 ns/op	    5080 B/op	      13 allocs/op
 BenchmarkAllScenarios/Simple_Event-16         	  782661	      1441 ns/op	    5080 B/op	      13 allocs/op
 BenchmarkAllScenarios/Simple_Event-16         	  731724	      1431 ns/op	    5080 B/op	      13 allocs/op
