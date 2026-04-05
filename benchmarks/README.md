@@ -72,4 +72,3 @@ Test data is loaded from `../parse/test_data/` directory. To add new test cases:
 
 1. Add the `.ical` file to the test data directory
 2. Update the `testCases` slice in `LoadTestData()` function
-
