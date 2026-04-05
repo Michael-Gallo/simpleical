@@ -19,7 +19,7 @@ const (
 	TodoStatusNeedsAction TodoStatus = "NEEDS-ACTION"
 	TodoStatusCompleted   TodoStatus = "COMPLETED"
 	TodoStatusInProcess   TodoStatus = "IN-PROCESS"
-	TodoStatusCancelled   TodoStatus = "CANCELLED"
+	TodoStatusCancelled   TodoStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
 // TodoClass represents the possible values for a VTODO's CLASS field.

@@ -18,7 +18,7 @@ type JournalStatus string
 const (
 	JournalStatusDraft     JournalStatus = "DRAFT"
 	JournalStatusFinal     JournalStatus = "FINAL"
-	JournalStatusCancelled JournalStatus = "CANCELLED"
+	JournalStatusCancelled JournalStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
 // JournalClass represents the possible values for a VJOURNAL's CLASS field.
