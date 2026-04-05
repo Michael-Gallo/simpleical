@@ -9,15 +9,12 @@ import (
 
 	"github.com/apognu/gocal"
 	golangical "github.com/arran4/golang-ical"
-	"github.com/michael-gallo/simpleical/parse"
+	"github.com/michael-gallo/simpleical/ical"
 )
 
 const commonName = "Org"
 
 const (
-	singleEventFileName    = "./test_event.ical"
-	multipleEventsFileName = "./test_multiple_events.ical"
-
 	// An extremely minimal ical file, with a single event with only required properties
 	simpleFileName   = "./test_simple.ical"
 	singleFileName   = "./test_event.ical"
@@ -54,7 +51,7 @@ func benchmarkFile(b *testing.B, fileName string, description string) {
 
 	for i := 0; i < b.N; i++ {
 		reader.Reset(fileContent)
-		cal, err := parse.IcalReader(&reader)
+		cal, err := ical.IcalReader(&reader)
 		if err != nil {
 			b.Fatalf("Failed to parse %s: %v", description, err)
 		}
@@ -75,8 +72,8 @@ func BenchmarkComparativeAll(b *testing.B) {
 		fileName string
 		testName string
 	}{
-		{singleEventFileName, "Single Event"},
-		{multipleEventsFileName, "Multiple Events"},
+		{singleFileName, "Single Event"},
+		{multipleFileName, "Multiple Events"},
 		{simpleFileName, "Simple Event"},
 		{complexFileName, "Complex Calendar"},
 	}
@@ -96,7 +93,7 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 	b.Run(fmt.Sprintf("%s - SimpleIcal", testName), func(b *testing.B) {
 		for b.Loop() {
 			reader.Reset(fileContent)
-			_, err := parse.IcalReader(&reader)
+			_, err := ical.IcalReader(&reader)
 			if err != nil {
 				panic(err)
 			}
