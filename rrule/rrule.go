@@ -88,14 +88,14 @@ type RRule struct {
 
 	// ByWeekNo is the week number that the event occurs on.
 	// eg: 20th week of the year, negative numbers are allowed to indicate the last week of the year.
-	ByWeekNo int8
+	ByWeekNo []int8
 
 	// The ByMonth(s) of the year that the event occurs on.
 	ByMonth []int
 
 	// BySetPos (by set position) is the position of the last BY- component to use.
 	// eg: if FREQ=WEEKLY, BYDAY=TU,WE,TH and BySetPos=1, then the event will happen on the first Tuesday, Wednesday, or Thursday of the week
-	BySetPos int
+	BySetPos []int16
 	// WKST (Week Start) is the first day of the work week. If not set, it defaults to Monday.
 	WKST Weekday
 }
@@ -104,10 +104,8 @@ type RRule struct {
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.10.
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3.
 func ParseRRule(rruleString string) (*RRule, error) {
-	rrule := &RRule{
-		// Default to 1 if not present
-		Interval: 1,
-	}
+	rrule := &RRule{}
+	intervalSet := false
 	for part := range strings.SplitSeq(rruleString, ";") {
 		tag, value, found := strings.Cut(part, "=")
 		if !found {
@@ -115,96 +113,135 @@ func ParseRRule(rruleString string) (*RRule, error) {
 		}
 		switch tag {
 		case "FREQ":
+			if err := setOnceValue(&rrule.Frequency, Frequency(value), tag); err != nil {
+				return nil, err
+			}
 			// Validate the frequency is valid
-			if !isValidFrequency(Frequency(value)) {
+			if !isValidFrequency(rrule.Frequency) {
 				return nil, fmt.Errorf("%w: %s", errInvalidFrequency, value)
 			}
-			rrule.Frequency = Frequency(value)
 		case "INTERVAL":
 			interval, err := strconv.Atoi(value)
 			if err != nil {
 				return nil, err
 			}
-			rrule.Interval = interval
+			if err := setOnceInterval(&rrule.Interval, &intervalSet, interval, tag); err != nil {
+				return nil, err
+			}
 		case "COUNT":
 			count, err := strconv.Atoi(value)
 			if err != nil {
 				return nil, err
 			}
-			rrule.Count = &count
+			if err := setOncePointer(&rrule.Count, count, tag); err != nil {
+				return nil, err
+			}
 		case "UNTIL":
 			until, err := icaldur.ParseIcalTime(value)
 			if err != nil {
 				return nil, err
 			}
-			rrule.Until = &until
+			if err := setOncePointer(&rrule.Until, until, tag); err != nil {
+				return nil, err
+			}
 		case "BYDAY":
 			weekdays := strings.Split(value, ",")
-			rrule.ByDay = make([]ByDay, 0, len(weekdays))
+			byDay := make([]ByDay, 0, len(weekdays))
 			for _, weekday := range weekdays {
 				// if there is an interval other than 1, it can be expressed as the number at the start of the string
 				interval, weekday, err := parseByDay(weekday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.ByDay = append(rrule.ByDay, ByDay{Weekday: weekday, Interval: interval})
+				byDay = append(byDay, ByDay{Weekday: weekday, Interval: interval})
+			}
+			if err := setOnceSlice(&rrule.ByDay, byDay, tag); err != nil {
+				return nil, err
 			}
 		case "BYMONTH":
 			months := strings.Split(value, ",")
-			rrule.ByMonth = make([]int, 0, len(months))
+			byMonth := make([]int, 0, len(months))
 			for _, month := range months {
 				monthInt, err := strconv.Atoi(month)
 				if err != nil {
 					return nil, err
 				}
-				rrule.ByMonth = append(rrule.ByMonth, monthInt)
+				if monthInt < 1 || monthInt > 12 {
+					return nil, errInvalidByMonth
+				}
+				byMonth = append(byMonth, monthInt)
+			}
+			if err := setOnceSlice(&rrule.ByMonth, byMonth, tag); err != nil {
+				return nil, err
 			}
 		case "BYMONTHDAY":
 			monthdays := strings.Split(value, ",")
-			rrule.ByMonthDay = make([]int, 0, len(monthdays))
+			byMonthDay := make([]int, 0, len(monthdays))
 			for _, monthday := range monthdays {
 				monthdayInt, err := strconv.Atoi(monthday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.ByMonthDay = append(rrule.ByMonthDay, monthdayInt)
+				if !validByMonthDay(monthdayInt) {
+					return nil, errInvalidByMonthDay
+				}
+				byMonthDay = append(byMonthDay, monthdayInt)
+			}
+			if err := setOnceSlice(&rrule.ByMonthDay, byMonthDay, tag); err != nil {
+				return nil, err
 			}
 		case "BYYEARDAY":
 			yeardays := strings.Split(value, ",")
-			rrule.ByYearDay = make([]int, 0, len(yeardays))
+			byYearDay := make([]int, 0, len(yeardays))
 			for _, yearday := range yeardays {
 				yeardayInt, err := strconv.Atoi(yearday)
 				if err != nil {
 					return nil, err
 				}
-				rrule.ByYearDay = append(rrule.ByYearDay, yeardayInt)
+				if !validByYearDay(yeardayInt) {
+					return nil, errInvalidByYearDay
+				}
+				byYearDay = append(byYearDay, yeardayInt)
+			}
+			if err := setOnceSlice(&rrule.ByYearDay, byYearDay, tag); err != nil {
+				return nil, err
 			}
 		case "WKST":
 			if !isValidWeekday(Weekday(value)) {
 				return nil, errInvalidWeekday
 			}
-			rrule.WKST = Weekday(value)
+			if err := setOnceValue(&rrule.WKST, Weekday(value), tag); err != nil {
+				return nil, err
+			}
 		case "BYWEEKNO":
-			weekno, err := strconv.ParseInt(value, 10, 8)
+			weekNumbers, err := parseSignedInt8List(value)
 			if err != nil {
 				return nil, err
 			}
-			if weekno < -53 || weekno > 53 || weekno == 0 {
-				return nil, errInvalidWeekno
+			for _, weekno := range weekNumbers {
+				if !validByWeekNo(weekno) {
+					return nil, errInvalidWeekno
+				}
 			}
-			rrule.ByWeekNo = int8(weekno)
+			if err := setOnceSlice(&rrule.ByWeekNo, weekNumbers, tag); err != nil {
+				return nil, err
+			}
 		case "BYSETPOS":
-			bySetPos, err := strconv.Atoi(value)
+			bySetPos, err := parseSignedInt16List(value)
 			if err != nil {
 				return nil, err
 			}
-			if bySetPos < -366 || bySetPos > 366 || bySetPos == 0 {
-				return nil, errInvalidBySetPos
+			for _, pos := range bySetPos {
+				if !validBySetPos(pos) {
+					return nil, errInvalidBySetPos
+				}
 			}
-			rrule.BySetPos = bySetPos
+			if err := setOnceSlice(&rrule.BySetPos, bySetPos, tag); err != nil {
+				return nil, err
+			}
 		case "BYMINUTE":
 			minutes := strings.Split(value, ",")
-			rrule.ByMinute = make([]uint8, 0, len(minutes))
+			byMinute := make([]uint8, 0, len(minutes))
 			for _, minute := range minutes {
 				minuteInt, err := strconv.ParseUint(minute, 10, 8)
 				if err != nil {
@@ -213,11 +250,14 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				if minuteInt > 59 {
 					return nil, errInvalidByMinute
 				}
-				rrule.ByMinute = append(rrule.ByMinute, uint8(minuteInt))
+				byMinute = append(byMinute, uint8(minuteInt))
+			}
+			if err := setOnceSlice(&rrule.ByMinute, byMinute, tag); err != nil {
+				return nil, err
 			}
 		case "BYHOUR":
 			hours := strings.Split(value, ",")
-			rrule.ByHour = make([]uint8, 0, len(hours))
+			byHour := make([]uint8, 0, len(hours))
 			for _, hour := range hours {
 				hourInt, err := strconv.ParseUint(hour, 10, 8)
 				if err != nil {
@@ -226,11 +266,14 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				if hourInt > 23 {
 					return nil, errInvalidByHour
 				}
-				rrule.ByHour = append(rrule.ByHour, uint8(hourInt))
+				byHour = append(byHour, uint8(hourInt))
+			}
+			if err := setOnceSlice(&rrule.ByHour, byHour, tag); err != nil {
+				return nil, err
 			}
 		case "BYSECOND":
 			seconds := strings.Split(value, ",")
-			rrule.BySecond = make([]uint8, 0, len(seconds))
+			bySecond := make([]uint8, 0, len(seconds))
 			for _, second := range seconds {
 				secondInt, err := strconv.ParseUint(second, 10, 8)
 				if err != nil {
@@ -239,9 +282,17 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				if secondInt > 59 {
 					return nil, errInvalidBySecond
 				}
-				rrule.BySecond = append(rrule.BySecond, uint8(secondInt))
+				bySecond = append(bySecond, uint8(secondInt))
 			}
+			if err := setOnceSlice(&rrule.BySecond, bySecond, tag); err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("%w: %s", errInvalidRRuleString, tag)
 		}
+	}
+	if !intervalSet {
+		rrule.Interval = 1
 	}
 	if err := validateRRule(rrule); err != nil {
 		return nil, err
@@ -249,11 +300,45 @@ func ParseRRule(rruleString string) (*RRule, error) {
 	return rrule, nil
 }
 
+func setOnceValue[T comparable](field *T, value T, tag string) error {
+	var zero T
+	if *field != zero {
+		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
+	}
+	*field = value
+	return nil
+}
+
+func setOnceInterval(field *int, isSet *bool, value int, tag string) error {
+	if *isSet {
+		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
+	}
+	*field = value
+	*isSet = true
+	return nil
+}
+
+func setOncePointer[T any](field **T, value T, tag string) error {
+	if *field != nil {
+		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
+	}
+	*field = &value
+	return nil
+}
+
+func setOnceSlice[T any](field *[]T, value []T, tag string) error {
+	if *field != nil {
+		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
+	}
+	*field = value
+	return nil
+}
+
 func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
 	}
-	if rrule.ByWeekNo != 0 && rrule.Frequency != FrequencyYearly {
+	if len(rrule.ByWeekNo) > 0 && rrule.Frequency != FrequencyYearly {
 		return errByWeekNoWithInvalidFrequency
 	}
 	if rrule.Count != nil && rrule.Until != nil {
@@ -263,6 +348,48 @@ func validateRRule(rrule *RRule) error {
 		return errInvalidInterval
 	}
 	return nil
+}
+
+func validByMonthDay(v int) bool {
+	return (v >= 1 && v <= 31) || (v <= -1 && v >= -31)
+}
+
+func validByYearDay(v int) bool {
+	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
+}
+
+func validByWeekNo(v int8) bool {
+	return (v >= 1 && v <= 53) || (v <= -1 && v >= -53)
+}
+
+func validBySetPos(v int16) bool {
+	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
+}
+
+func parseSignedInt8List(value string) ([]int8, error) {
+	values := strings.Split(value, ",")
+	parsed := make([]int8, 0, len(values))
+	for _, part := range values {
+		intValue, err := strconv.ParseInt(part, 10, 8)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, int8(intValue))
+	}
+	return parsed, nil
+}
+
+func parseSignedInt16List(value string) ([]int16, error) {
+	values := strings.Split(value, ",")
+	parsed := make([]int16, 0, len(values))
+	for _, part := range values {
+		intValue, err := strconv.ParseInt(part, 10, 16)
+		if err != nil {
+			return nil, err
+		}
+		parsed = append(parsed, int16(intValue))
+	}
+	return parsed, nil
 }
 
 // parseByDay parses a BYDAY value string and returns the interval and weekday.

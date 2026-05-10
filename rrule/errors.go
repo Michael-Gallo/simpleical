@@ -11,6 +11,9 @@ var (
 	// errInvalidRRuleString is returned when the rrule string format is invalid.
 	errInvalidRRuleString = errors.New("invalid rrule string")
 
+	// errDuplicateRRulePart is returned when the same recur-rule-part appears more than once (RFC 5545).
+	errDuplicateRRulePart = errors.New("duplicate RRULE part")
+
 	// errFrequencyRequired is returned when the frequency property is missing.
 	errFrequencyRequired = errors.New("frequency is required")
 
@@ -38,4 +41,10 @@ var (
 	errInvalidByHour = errors.New("BYHOUR must be between 0 and 23")
 
 	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 59")
+
+	errInvalidByMonth = errors.New("BYMONTH out of range: must be 1..12")
+
+	errInvalidByMonthDay = errors.New("BYMONTHDAY out of range: must be -31..-1 or 1..31")
+
+	errInvalidByYearDay = errors.New("BYYEARDAY out of range: must be -366..-1 or 1..366")
 )
