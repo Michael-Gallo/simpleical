@@ -140,7 +140,7 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 }
 
 // validateEvent ensures that all required values are present for an event
-func validateEvent(event model.Event) error {
+func validateEvent(event *model.Event) error {
 	if event.UID == "" {
 		return icalerr.ErrMissingEventUIDProperty
 	}

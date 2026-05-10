@@ -224,7 +224,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		if *currentState != stateEvent || len(calendar.Events) == 0 {
 			return fmt.Errorf("%w: END:VEVENT", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateEvent(calendar.Events[len(calendar.Events)-1]); err != nil {
+		if err := validateEvent(&calendar.Events[len(calendar.Events)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
