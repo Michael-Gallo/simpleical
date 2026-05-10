@@ -21,6 +21,10 @@ var (
 	testTimezoneMissingTZIDInput string
 	//go:embed test_data/timezones/test_timezone_duplicate_tzid.ical
 	testTimezoneDuplicateTZIDInput string
+	//go:embed test_data/timezones/test_timezone_duplicate_tzoffsetfrom.ical
+	testTimezoneDuplicateTZOffsetFromInput string
+	//go:embed test_data/timezones/test_timezone_duplicate_tzoffsetto.ical
+	testTimezoneDuplicateTZOffsetToInput string
 	//go:embed test_data/timezones/test_timezone_invalid_dtstart.ical
 	testTimezoneInvalidDTStartInput string
 )
@@ -81,6 +85,7 @@ func TestInvalidTimezone(t *testing.T) {
 		name        string
 		input       string
 		expectedErr error
+		errContains string
 	}{
 		{
 			name:        "VTIMEZONE missing TZID",
@@ -97,11 +102,26 @@ func TestInvalidTimezone(t *testing.T) {
 			input:       testTimezoneDuplicateTZIDInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
+		{
+			name:        "VTIMEZONE duplicate TZOFFSETFROM",
+			input:       testTimezoneDuplicateTZOffsetFromInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+			errContains: "TZOFFSETFROM",
+		},
+		{
+			name:        "VTIMEZONE duplicate TZOFFSETTO",
+			input:       testTimezoneDuplicateTZOffsetToInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+			errContains: "TZOFFSETTO",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
 			assert.ErrorIs(t, err, tc.expectedErr)
+			if tc.errContains != "" {
+				assert.ErrorContains(t, err, tc.errContains)
+			}
 			assert.Nil(t, calendar)
 		})
 	}

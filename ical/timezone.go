@@ -45,9 +45,9 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[string]string, tzProp *model.TimeZoneProperty) error {
 	switch model.TimezoneToken(propertyName) {
 	case model.TimezoneTokenTimeZoneOffsetFrom:
-		tzProp.TimeZoneOffsetFrom = value
+		return setOnceProperty(&tzProp.TimeZoneOffsetFrom, value, propertyName, timezoneLocation)
 	case model.TimezoneTokenTimeZoneOffsetTo:
-		tzProp.TimeZoneOffsetTo = value
+		return setOnceProperty(&tzProp.TimeZoneOffsetTo, value, propertyName, timezoneLocation)
 	case model.TimezoneTokenDTStart:
 		return setOnceTimeProperty(&tzProp.DTStart, value, propertyName, timezoneLocation)
 	case model.TimezoneTokenComment:
