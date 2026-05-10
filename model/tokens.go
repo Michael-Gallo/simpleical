@@ -79,8 +79,8 @@ const (
 	TodoTokenComment         TodoToken = "COMMENT"
 	TodoTokenContact         TodoToken = "CONTACT"
 	TodoTokenExceptionDates  TodoToken = "EXDATE"
-	TodoTokenRequestStatus   TodoToken = "RSTATUS"
-	TodoTokenRelated         TodoToken = "RELATED"
+	TodoTokenRequestStatus   TodoToken = "REQUEST-STATUS"
+	TodoTokenRelated         TodoToken = "RELATED-TO"
 	TodoTokenResources       TodoToken = "RESOURCES"
 	TodoTokenRdate           TodoToken = "RDATE"
 )
@@ -109,9 +109,9 @@ const (
 	JournalTokenContact        JournalToken = "CONTACT"
 	JournalTokenDescription    JournalToken = "DESCRIPTION"
 	JournalTokenExceptionDates JournalToken = "EXDATE"
-	JournalTokenRelated        JournalToken = "RELATED"
+	JournalTokenRelated        JournalToken = "RELATED-TO"
 	JournalTokenRdate          JournalToken = "RDATE"
-	JournalTokenRequestStatus  JournalToken = "RSTATUS"
+	JournalTokenRequestStatus  JournalToken = "REQUEST-STATUS"
 )
 
 // FreeBusyToken represents the names of the properties in a VFREEBUSY
@@ -129,7 +129,7 @@ const (
 	FreeBusyTokenAttendee      FreeBusyToken = "ATTENDEE"
 	FreeBusyTokenComment       FreeBusyToken = "COMMENT"
 	FreeBusyTokenFreeBusy      FreeBusyToken = "FREEBUSY"
-	FreeBusyTokenRequestStatus FreeBusyToken = "RSTATUS"
+	FreeBusyTokenRequestStatus FreeBusyToken = "REQUEST-STATUS"
 )
 
 // TimezoneToken represents the names of the properties in a VTIMEZONE
