@@ -23,6 +23,10 @@ var (
 	testJournalMultipleExdatesInput string
 	//go:embed test_data/journals/test_journal_missing_dtstamp.ical
 	testJournalMissingDTStampInput string
+	//go:embed test_data/journals/test_journal_duplicate_status.ical
+	testJournalDuplicateStatusInput string
+	//go:embed test_data/journals/test_journal_duplicate_organizer.ical
+	testJournalDuplicateOrganizerInput string
 )
 
 func TestValidJournal(t *testing.T) {
@@ -115,6 +119,16 @@ func TestInvalidJournal(t *testing.T) {
 			name:        "VJOURNAL missing DTSTAMP",
 			input:       testJournalMissingDTStampInput,
 			expectedErr: icalerr.ErrMissingJournalDTStampProperty,
+		},
+		{
+			name:        "VJOURNAL duplicate STATUS",
+			input:       testJournalDuplicateStatusInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "VJOURNAL duplicate ORGANIZER",
+			input:       testJournalDuplicateOrganizerInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 	}
 	for _, tc := range testCases {
