@@ -86,6 +86,8 @@ var (
 var (
 	ErrInvalidAlarmProperty = errors.New("invalid alarm property")
 
+	ErrUnknownAlarmAction = errors.New("unknown alarm action")
+
 	ErrMissingAlarmActionProperty = errors.New("alarm must have an ACTION property")
 
 	ErrMissingAlarmTriggerProperty = errors.New("alarm must have a TRIGGER property")

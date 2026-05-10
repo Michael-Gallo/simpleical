@@ -69,6 +69,8 @@ func validateAlarm(alarm *model.Alarm) error {
 		if len(alarm.Attendees) == 0 {
 			return icalerr.ErrMissingAlarmAttendeesForEmail
 		}
+	default:
+		return fmt.Errorf("%w: %s", icalerr.ErrUnknownAlarmAction, alarm.Action)
 	}
 
 	return nil
