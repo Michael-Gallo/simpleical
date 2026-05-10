@@ -209,6 +209,28 @@ func TestValidEvent(t *testing.T) {
 }
 
 func TestInvalidEvent(t *testing.T) {
+	duplicateStatusInput := `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Event Calendar//EN
+BEGIN:VEVENT
+UID:duplicate-status@example.com
+DTSTART:20240101T090000Z
+STATUS:CONFIRMED
+STATUS:TENTATIVE
+END:VEVENT
+END:VCALENDAR`
+
+	duplicateOrganizerInput := `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Event Calendar//EN
+BEGIN:VEVENT
+UID:duplicate-organizer@example.com
+DTSTART:20240101T090000Z
+ORGANIZER:mailto:first@example.com
+ORGANIZER:mailto:second@example.com
+END:VEVENT
+END:VCALENDAR`
+
 	testCases := []struct {
 		name        string
 		input       string
@@ -242,6 +264,16 @@ func TestInvalidEvent(t *testing.T) {
 		{
 			name:        "Duplicate sequence",
 			input:       testIcalDuplicateSequenceInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "Duplicate STATUS",
+			input:       duplicateStatusInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "Duplicate ORGANIZER",
+			input:       duplicateOrganizerInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{

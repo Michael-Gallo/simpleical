@@ -49,7 +49,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		return nil
 
 	case model.EventTokenStatus:
-		event.Status = model.EventStatus(value)
+		return setOnceProperty(&event.Status, model.EventStatus(value), propertyName, eventLocation)
 	case model.EventTokenTransp:
 		return setOnceProperty(&event.Transp, model.EventTransp(value), propertyName, eventLocation)
 	case model.EventTokenSequence:
@@ -59,7 +59,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		if err != nil {
 			return err
 		}
-		event.Organizer = organizer
+		return setOnceProperty(&event.Organizer, organizer, propertyName, eventLocation)
 	case model.EventTokenComment:
 		event.Comment = append(event.Comment, value)
 	case model.EventTokenCategories:
