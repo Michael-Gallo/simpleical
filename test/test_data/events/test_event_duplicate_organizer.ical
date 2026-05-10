@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Event Calendar//EN
+BEGIN:VEVENT
+UID:duplicate-organizer@example.com
+DTSTART:20240101T090000Z
+ORGANIZER:mailto:first@example.com
+ORGANIZER:mailto:second@example.com
+END:VEVENT
+END:VCALENDAR

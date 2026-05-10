@@ -30,6 +30,10 @@ var (
 	testIcalDuplicateUIDInput string
 	//go:embed test_data/events/test_event_duplicate_sequence.ical
 	testIcalDuplicateSequenceInput string
+	//go:embed test_data/events/test_event_duplicate_status.ical
+	testIcalDuplicateStatusInput string
+	//go:embed test_data/events/test_event_duplicate_organizer.ical
+	testIcalDuplicateOrganizerInput string
 	//go:embed test_data/events/test_event_both_duration_and_end.ical
 	testIcalBothDurationAndEndInput string
 	//go:embed test_data/events/test_event_both_duration_and_end_duration_first.ical
@@ -209,28 +213,6 @@ func TestValidEvent(t *testing.T) {
 }
 
 func TestInvalidEvent(t *testing.T) {
-	duplicateStatusInput := `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Test//Event Calendar//EN
-BEGIN:VEVENT
-UID:duplicate-status@example.com
-DTSTART:20240101T090000Z
-STATUS:CONFIRMED
-STATUS:TENTATIVE
-END:VEVENT
-END:VCALENDAR`
-
-	duplicateOrganizerInput := `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Test//Event Calendar//EN
-BEGIN:VEVENT
-UID:duplicate-organizer@example.com
-DTSTART:20240101T090000Z
-ORGANIZER:mailto:first@example.com
-ORGANIZER:mailto:second@example.com
-END:VEVENT
-END:VCALENDAR`
-
 	testCases := []struct {
 		name        string
 		input       string
@@ -268,12 +250,12 @@ END:VCALENDAR`
 		},
 		{
 			name:        "Duplicate STATUS",
-			input:       duplicateStatusInput,
+			input:       testIcalDuplicateStatusInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
 			name:        "Duplicate ORGANIZER",
-			input:       duplicateOrganizerInput,
+			input:       testIcalDuplicateOrganizerInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
