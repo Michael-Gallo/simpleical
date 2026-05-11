@@ -4,7 +4,7 @@ This is an icalendar parser focused on performance and compliance with the RFC55
 
 # Setting Properties
 
-- We have `setOnce` functions in property_setters.go, this handles errors having to do with setting duplicate properties, please use this when appropriate
+- We have `setOnce` functions in property_setters.go, which handle errors related to setting duplicate properties; please use these when appropriate
 
 # Tests
 
