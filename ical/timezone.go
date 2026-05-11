@@ -64,11 +64,11 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 	case model.TimezonePropertyTimeZoneName:
 		tzProp.TimeZoneName = append(tzProp.TimeZoneName, value)
 	case model.TimezonePropertyRRule:
-		rrule, err := rrule.ParseRRule(value)
+		rule, err := rrule.ParseRRule(value)
 		if err != nil {
 			return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, err.Error())
 		}
-		tzProp.RRule = rrule
+		return setOnceProperty(&tzProp.RRule, rule, propertyName, timezoneLocation)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
 	}

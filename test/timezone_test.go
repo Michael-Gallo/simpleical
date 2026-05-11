@@ -27,6 +27,8 @@ var (
 	testTimezoneDuplicateTZOffsetToInput string
 	//go:embed test_data/timezones/test_timezone_invalid_dtstart.ical
 	testTimezoneInvalidDTStartInput string
+	//go:embed test_data/timezones/test_timezone_duplicate_rrule.ical
+	testTimezoneDuplicateRRuleInput string
 )
 
 func TestValidTimezone(t *testing.T) {
@@ -113,6 +115,12 @@ func TestInvalidTimezone(t *testing.T) {
 			input:       testTimezoneDuplicateTZOffsetToInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 			errContains: "TZOFFSETTO",
+		},
+		{
+			name:        "VTIMEZONE duplicate RRULE",
+			input:       testTimezoneDuplicateRRuleInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+			errContains: "RRULE",
 		},
 	}
 	for _, tc := range testCases {
