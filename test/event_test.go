@@ -54,6 +54,8 @@ var (
 	testEventAlarmMissingDescriptionDisplayInput string
 	//go:embed test_data/events/test_event_alarm_missing_attendee_email.ical
 	testEventAlarmMissingAttendeeEmailInput string
+	//go:embed test_data/events/test_event_alarm_missing_attach_audio.ical
+	testEventAlarmMissingAttachAudioInput string
 	//go:embed test_data/events/test_event_invalid_alarm_multiple_description.ical
 	testEventAlarmInvalidMultipleDescriptionInput string
 	//go:embed test_data/events/valid_test_event_with_rrule.ical
@@ -297,6 +299,11 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "VALARM EMAIL missing ATTENDEE",
 			input:       testEventAlarmMissingAttendeeEmailInput,
 			expectedErr: icalerr.ErrMissingAlarmAttendeesForEmail,
+		},
+		{
+			name:        "VALARM AUDIO missing ATTACH",
+			input:       testEventAlarmMissingAttachAudioInput,
+			expectedErr: icalerr.ErrMissingAlarmAttachForAudio,
 		},
 		{
 			name:        "VALARM multiple DESCRIPTION",

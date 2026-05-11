@@ -99,6 +99,8 @@ var (
 	ErrMissingAlarmSummaryForEmail = errors.New("EMAIL alarm must have a SUMMARY property")
 
 	ErrMissingAlarmAttendeesForEmail = errors.New("EMAIL alarm must have at least one ATTENDEE property")
+
+	ErrMissingAlarmAttachForAudio = errors.New("AUDIO alarm must have at least one ATTACH property")
 )
 
 // Property Setter errors.
