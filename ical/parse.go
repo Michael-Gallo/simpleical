@@ -153,9 +153,12 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateStandard, stateDaylight:
 		// These are handled within timezone parsing
 		return parseTimezoneProperty(propertyName, value, params, currentState, &calendar.TimeZones[len(calendar.TimeZones)-1])
-	default: // StateCalendar
+	case stateFinished:
+		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
+	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
 	}
+	return nil
 }
 
 // handleBeginBlock processes BEGIN blocks and updates the parser state.
@@ -254,7 +257,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVAlarm):
 		// Validate alarm based on current state.
-		switch *currentState {
+		switch *currentState { //nolint:exhaustive // it is an error condition to end a VALARM block if the state isn't an alarm state
 		case stateEventAlarm:
 			if len(calendar.Events) == 0 {
 				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
