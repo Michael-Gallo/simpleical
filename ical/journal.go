@@ -31,13 +31,13 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		if err != nil {
 			return err
 		}
-		journal.Organizer = organizer
+		return setOnceProperty(&journal.Organizer, organizer, propertyName, journalLocation)
 	case model.JournalTokenRecurrenceID:
 		return setOnceTimeProperty(&journal.RecurrenceID, value, propertyName, journalLocation)
 	case model.JournalTokenSequence:
 		return setOnceIntProperty(&journal.Sequence, value, propertyName, journalLocation)
 	case model.JournalTokenStatus:
-		journal.Status = model.JournalStatus(value)
+		return setOnceProperty(&journal.Status, model.JournalStatus(value), propertyName, journalLocation)
 	case model.JournalTokenSummary:
 		return setOnceProperty(&journal.Summary, value, propertyName, journalLocation)
 	case model.JournalTokenURL:

@@ -32,11 +32,11 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 // setOnceTimeProperty sets a time.Time field only if it hasn't been set before.
 // this is intended for properties that according to the spec must only be set once
 func setOnceTimeProperty(field *time.Time, value, propertyName string, componentType string) error {
-	time, err := icaldur.ParseIcalTime(value)
+	parsedTime, err := icaldur.ParseIcalTime(value)
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
-	return setOnceProperty(field, time, propertyName, componentType)
+	return setOnceProperty(field, parsedTime, propertyName, componentType)
 }
 
 // setOnceDurationProperty sets a duration field only if it hasn't been set before.

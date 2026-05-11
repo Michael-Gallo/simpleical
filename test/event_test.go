@@ -30,6 +30,10 @@ var (
 	testIcalDuplicateUIDInput string
 	//go:embed test_data/events/test_event_duplicate_sequence.ical
 	testIcalDuplicateSequenceInput string
+	//go:embed test_data/events/test_event_duplicate_status.ical
+	testIcalDuplicateStatusInput string
+	//go:embed test_data/events/test_event_duplicate_organizer.ical
+	testIcalDuplicateOrganizerInput string
 	//go:embed test_data/events/test_event_both_duration_and_end.ical
 	testIcalBothDurationAndEndInput string
 	//go:embed test_data/events/test_event_both_duration_and_end_duration_first.ical
@@ -50,6 +54,8 @@ var (
 	testEventAlarmMissingDescriptionDisplayInput string
 	//go:embed test_data/events/test_event_alarm_missing_attendee_email.ical
 	testEventAlarmMissingAttendeeEmailInput string
+	//go:embed test_data/events/test_event_alarm_missing_attach_audio.ical
+	testEventAlarmMissingAttachAudioInput string
 	//go:embed test_data/events/test_event_invalid_alarm_multiple_description.ical
 	testEventAlarmInvalidMultipleDescriptionInput string
 	//go:embed test_data/events/valid_test_event_with_rrule.ical
@@ -245,6 +251,16 @@ func TestInvalidEvent(t *testing.T) {
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 		{
+			name:        "Duplicate STATUS",
+			input:       testIcalDuplicateStatusInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "Duplicate ORGANIZER",
+			input:       testIcalDuplicateOrganizerInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
 			name:        "Both duration and end date are specified, DTEND first",
 			input:       testIcalBothDurationAndEndInput,
 			expectedErr: icalerr.ErrInvalidDurationPropertyDtend,
@@ -283,6 +299,11 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "VALARM EMAIL missing ATTENDEE",
 			input:       testEventAlarmMissingAttendeeEmailInput,
 			expectedErr: icalerr.ErrMissingAlarmAttendeesForEmail,
+		},
+		{
+			name:        "VALARM AUDIO missing ATTACH",
+			input:       testEventAlarmMissingAttachAudioInput,
+			expectedErr: icalerr.ErrMissingAlarmAttachForAudio,
 		},
 		{
 			name:        "VALARM multiple DESCRIPTION",

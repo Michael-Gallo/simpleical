@@ -75,6 +75,11 @@ func TestFindUnquotedColonIndex(t *testing.T) {
 			line:          "\":\":",
 			expectedIndex: 3,
 		},
+		{
+			name:          "No colon",
+			line:          "no colon here",
+			expectedIndex: -1,
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {

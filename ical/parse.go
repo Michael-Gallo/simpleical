@@ -153,29 +153,32 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateStandard, stateDaylight:
 		// These are handled within timezone parsing
 		return parseTimezoneProperty(propertyName, value, params, currentState, &calendar.TimeZones[len(calendar.TimeZones)-1])
-	default: // StateCalendar
+	case stateFinished:
+		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
+	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
 	}
+	return nil
 }
 
 // handleBeginBlock processes BEGIN blocks and updates the parser state.
 func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar) error {
-	switch beginValue {
-	case string(model.SectionTokenVEvent):
+	switch model.SectionToken(beginValue) {
+	case model.SectionTokenVEvent:
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
 	// We have already verified that the first line is a BEGIN:VCALENDAR, so this is an error case
-	case string(model.SectionTokenVCalendar):
+	case model.SectionTokenVCalendar:
 		return icalerr.ErrNestedBeginVCalendar
-	case string(model.SectionTokenVTimezone):
+	case model.SectionTokenVTimezone:
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
-	case string(model.SectionTokenVFreebusy):
+	case model.SectionTokenVFreebusy:
 		*currentState = stateFreebusy
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
-	case string(model.SectionTokenVAlarm):
+	case model.SectionTokenVAlarm:
 		// Determine which parent component to add the alarm to based on current state.
-		switch *currentState {
+		switch *currentState { //nolint:exhaustive // it is an error condition to begin a VALARM block if we are not in an event or todo
 		case stateEvent:
 			if len(calendar.Events) == 0 {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
@@ -193,19 +196,19 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		default:
 			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", icalerr.ErrUnexpectedBeginBlock)
 		}
-	case string(model.SectionTokenVJournal):
+	case model.SectionTokenVJournal:
 		*currentState = stateJournal
 		calendar.Journals = append(calendar.Journals, model.Journal{})
-	case string(model.SectionTokenVTodo):
+	case model.SectionTokenVTodo:
 		*currentState = stateTodo
 		calendar.Todos = append(calendar.Todos, model.Todo{})
-	case string(model.SectionTokenVStandard):
+	case model.SectionTokenVStandard:
 		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
 			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
 		}
 		*currentState = stateStandard
 		calendar.TimeZones[len(calendar.TimeZones)-1].Standard = append(calendar.TimeZones[len(calendar.TimeZones)-1].Standard, model.TimeZoneProperty{})
-	case string(model.SectionTokenVDaylight):
+	case model.SectionTokenVDaylight:
 		if *currentState != stateTimezone || len(calendar.TimeZones) == 0 {
 			return fmt.Errorf("%w: DAYLIGHT must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
 		}
@@ -224,7 +227,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		if *currentState != stateEvent || len(calendar.Events) == 0 {
 			return fmt.Errorf("%w: END:VEVENT", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateEvent(calendar.Events[len(calendar.Events)-1]); err != nil {
+		if err := validateEvent(&calendar.Events[len(calendar.Events)-1]); err != nil {
 			return err
 		}
 		*currentState = stateCalendar
@@ -254,7 +257,7 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		*currentState = stateCalendar
 	case string(model.SectionTokenVAlarm):
 		// Validate alarm based on current state.
-		switch *currentState {
+		switch *currentState { //nolint:exhaustive // it is an error condition to end a VALARM block if the state isn't an alarm state
 		case stateEventAlarm:
 			if len(calendar.Events) == 0 {
 				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)

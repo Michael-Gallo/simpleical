@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//Journal Calendar//EN
+BEGIN:VJOURNAL
+UID:duplicate-organizer@example.com
+DTSTAMP:20240101T000000Z
+ORGANIZER:mailto:first@example.com
+ORGANIZER:mailto:second@example.com
+END:VJOURNAL
+END:VCALENDAR

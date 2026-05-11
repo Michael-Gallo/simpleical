@@ -38,7 +38,7 @@ type Alarm struct {
 	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
 	// Provides the capability to associate a document object with an alarm.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1
-	Attach []Attachment
+	Attach *Attachment
 
 	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
 	// Specifies a positive duration of time for repeating alarms.

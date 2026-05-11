@@ -79,8 +79,8 @@ const (
 	TodoTokenComment         TodoToken = "COMMENT"
 	TodoTokenContact         TodoToken = "CONTACT"
 	TodoTokenExceptionDates  TodoToken = "EXDATE"
-	TodoTokenRequestStatus   TodoToken = "RSTATUS"
-	TodoTokenRelated         TodoToken = "RELATED"
+	TodoTokenRequestStatus   TodoToken = "REQUEST-STATUS"
+	TodoTokenRelated         TodoToken = "RELATED-TO"
 	TodoTokenResources       TodoToken = "RESOURCES"
 	TodoTokenRdate           TodoToken = "RDATE"
 )
@@ -109,9 +109,9 @@ const (
 	JournalTokenContact        JournalToken = "CONTACT"
 	JournalTokenDescription    JournalToken = "DESCRIPTION"
 	JournalTokenExceptionDates JournalToken = "EXDATE"
-	JournalTokenRelated        JournalToken = "RELATED"
+	JournalTokenRelated        JournalToken = "RELATED-TO"
 	JournalTokenRdate          JournalToken = "RDATE"
-	JournalTokenRequestStatus  JournalToken = "RSTATUS"
+	JournalTokenRequestStatus  JournalToken = "REQUEST-STATUS"
 )
 
 // FreeBusyToken represents the names of the properties in a VFREEBUSY
@@ -129,7 +129,7 @@ const (
 	FreeBusyTokenAttendee      FreeBusyToken = "ATTENDEE"
 	FreeBusyTokenComment       FreeBusyToken = "COMMENT"
 	FreeBusyTokenFreeBusy      FreeBusyToken = "FREEBUSY"
-	FreeBusyTokenRequestStatus FreeBusyToken = "RSTATUS"
+	FreeBusyTokenRequestStatus FreeBusyToken = "REQUEST-STATUS"
 )
 
 // TimezoneToken represents the names of the properties in a VTIMEZONE
@@ -137,15 +137,23 @@ const (
 type TimezoneToken string
 
 const (
-	TimezoneTokenTimeZoneID         TimezoneToken = "TZID"
-	TimezoneTokenLastMod            TimezoneToken = "LAST-MODIFIED"
-	TimezoneTokenTimeZoneURL        TimezoneToken = "TZURL"
-	TimezoneTokenTimeZoneOffsetFrom TimezoneToken = "TZOFFSETFROM"
-	TimezoneTokenTimeZoneOffsetTo   TimezoneToken = "TZOFFSETTO"
-	TimezoneTokenDTStart            TimezoneToken = "DTSTART"
-	TimezoneTokenComment            TimezoneToken = "COMMENT"
-	TimezoneTokenRdate              TimezoneToken = "RDATE"
-	TimezoneTokenTimeZoneName       TimezoneToken = "TZNAME"
+	TimezoneTokenTimeZoneID  TimezoneToken = "TZID"
+	TimezoneTokenLastMod     TimezoneToken = "LAST-MODIFIED"
+	TimezoneTokenTimeZoneURL TimezoneToken = "TZURL"
+)
+
+// TimezonePropertyToken represents the names of the properties in a VTIMEZONE sub-component.
+// see tzprop in : https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
+type TimezonePropertyToken string
+
+const (
+	TimezonePropertyTokenDTStart            TimezonePropertyToken = "DTSTART"
+	TimezonePropertyTokenTimeZoneOffsetFrom TimezonePropertyToken = "TZOFFSETFROM"
+	TimezonePropertyTokenTimeZoneOffsetTo   TimezonePropertyToken = "TZOFFSETTO"
+	TimezonePropertyRRule                   TimezonePropertyToken = "RRULE"
+	TimezonePropertyComment                 TimezonePropertyToken = "COMMENT"
+	TimezonePropertyRdate                   TimezonePropertyToken = "RDATE"
+	TimezonePropertyTimeZoneName            TimezonePropertyToken = "TZNAME"
 )
 
 // AlarmToken represents the names of the properties in a VALARM

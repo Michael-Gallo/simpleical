@@ -24,10 +24,11 @@ var (
 
 // General parsing errors.
 var (
-	ErrInvalidPropertyLine = errors.New("invalid property line in iCal data")
-	ErrDuplicateProperty   = errors.New("duplicate property")
-	ErrInvalidOrganizer    = errors.New("invalid organizer property")
-	ErrInvalidRRule        = errors.New("invalid rrule property")
+	ErrInvalidPropertyLine       = errors.New("invalid property line in iCal data")
+	ErrDuplicateProperty         = errors.New("duplicate property")
+	ErrInvalidOrganizer          = errors.New("invalid organizer property")
+	ErrInvalidRRule              = errors.New("invalid rrule property")
+	ErrPropertyWhenNotInCalendar = errors.New("property found when not in a calendar")
 )
 
 // Event-specific errors.
@@ -86,6 +87,8 @@ var (
 var (
 	ErrInvalidAlarmProperty = errors.New("invalid alarm property")
 
+	ErrUnknownAlarmAction = errors.New("unknown alarm action")
+
 	ErrMissingAlarmActionProperty = errors.New("alarm must have an ACTION property")
 
 	ErrMissingAlarmTriggerProperty = errors.New("alarm must have a TRIGGER property")
@@ -97,6 +100,8 @@ var (
 	ErrMissingAlarmSummaryForEmail = errors.New("EMAIL alarm must have a SUMMARY property")
 
 	ErrMissingAlarmAttendeesForEmail = errors.New("EMAIL alarm must have at least one ATTENDEE property")
+
+	ErrMissingAlarmAttachForAudio = errors.New("AUDIO alarm must have at least one ATTACH property")
 )
 
 // Property Setter errors.

@@ -22,8 +22,7 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		if err != nil {
 			return err
 		}
-		alarm.Attach = append(alarm.Attach, *attachment)
-		return nil
+		return setOnceProperty(&alarm.Attach, attachment, propertyName, alarmLocation)
 	case model.AlarmTokenDuration:
 		return setOnceDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)
 	case model.AlarmTokenDescription:
@@ -45,6 +44,16 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 }
 
 // validateAlarm ensures that all required values are present for an alarm.
+// An alarm has the following requirements:
+//
+//   - The "VALARM" calendar component MUST include the "ACTION" and "TRIGGER" properties
+//
+// This requirement is modified based on the action in the following way.
+//   - The "DISPLAY" action MUST include the "DESCRIPTION" property
+//   - The "EMAIL" action MUST include the "DESCRIPTION" and "SUMMARY" properties
+//   - The "EMAIL" action MUST include at least one "ATTENDEE" property
+//   - The "AUDIO" action MUST include a single "ATTACH" property
+//   - The "PROCEDURE" action does not have any additional requirements
 func validateAlarm(alarm *model.Alarm) error {
 	if alarm.Action == "" {
 		return icalerr.ErrMissingAlarmActionProperty
@@ -69,6 +78,13 @@ func validateAlarm(alarm *model.Alarm) error {
 		if len(alarm.Attendees) == 0 {
 			return icalerr.ErrMissingAlarmAttendeesForEmail
 		}
+	case model.AlarmActionProcedure:
+	case model.AlarmActionAudio:
+		if alarm.Attach == nil {
+			return icalerr.ErrMissingAlarmAttachForAudio
+		}
+	default:
+		return fmt.Errorf("%w: %s", icalerr.ErrUnknownAlarmAction, alarm.Action)
 	}
 
 	return nil

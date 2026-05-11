@@ -27,11 +27,13 @@ func TestParseIcalTime(t *testing.T) {
 			expectError: false,
 		},
 		{
+			name:        "UTC end of 2023",
 			input:       "20231231T235959Z",
 			want:        time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
 			expectError: false,
 		},
 		{
+			name:        "Y2K noon UTC",
 			input:       "20000101T120000Z",
 			want:        time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC),
 			expectError: false,
