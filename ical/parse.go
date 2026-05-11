@@ -178,7 +178,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 	case model.SectionTokenVAlarm:
 		// Determine which parent component to add the alarm to based on current state.
-		switch *currentState {
+		switch *currentState { //nolint:exhaustive // it is an error condition to begin a VALARM block if we are not in an event or todo
 		case stateEvent:
 			if len(calendar.Events) == 0 {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
