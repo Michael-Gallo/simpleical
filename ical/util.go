@@ -2,6 +2,7 @@ package ical
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -75,6 +76,23 @@ func splitParametersWithReusableMap(paramString string, params map[string]string
 	if current.Len() > 0 {
 		params[currentKey] = current.String()
 	}
+}
+
+// parseGeo parses a GEO property value "lat;lng" into two floats.
+func parseGeo(value string) ([]float64, error) {
+	latitudeString, longitudeString, found := strings.Cut(value, ";")
+	if !found {
+		return nil, icalerr.ErrInvalidGeoProperty
+	}
+	latitude, err := strconv.ParseFloat(latitudeString, 64)
+	if err != nil {
+		return nil, icalerr.ErrInvalidGeoPropertyLatitude
+	}
+	longitude, err := strconv.ParseFloat(longitudeString, 64)
+	if err != nil {
+		return nil, icalerr.ErrInvalidGeoPropertyLongitude
+	}
+	return []float64{latitude, longitude}, nil
 }
 
 // findUnquotedColonIndex finds the first colon that is not encapsulated in quotations.
