@@ -214,7 +214,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYWEEKNO":
-			weekNumbers, err := parseSignedInt8List(value)
+			weekNumbers, err := parseSignedIntList[int8](value, 8)
 			if err != nil {
 				return nil, err
 			}
@@ -227,7 +227,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYSETPOS":
-			bySetPos, err := parseSignedInt16List(value)
+			bySetPos, err := parseSignedIntList[int16](value, 16)
 			if err != nil {
 				return nil, err
 			}
@@ -366,28 +366,15 @@ func validBySetPos(v int16) bool {
 	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
 }
 
-func parseSignedInt8List(value string) ([]int8, error) {
+func parseSignedIntList[T int8 | int16](value string, bits int) ([]T, error) {
 	values := strings.Split(value, ",")
-	parsed := make([]int8, 0, len(values))
+	parsed := make([]T, 0, len(values))
 	for _, part := range values {
-		intValue, err := strconv.ParseInt(part, 10, 8)
+		intValue, err := strconv.ParseInt(part, 10, bits)
 		if err != nil {
 			return nil, err
 		}
-		parsed = append(parsed, int8(intValue))
-	}
-	return parsed, nil
-}
-
-func parseSignedInt16List(value string) ([]int16, error) {
-	values := strings.Split(value, ",")
-	parsed := make([]int16, 0, len(values))
-	for _, part := range values {
-		intValue, err := strconv.ParseInt(part, 10, 16)
-		if err != nil {
-			return nil, err
-		}
-		parsed = append(parsed, int16(intValue))
+		parsed = append(parsed, T(intValue))
 	}
 	return parsed, nil
 }

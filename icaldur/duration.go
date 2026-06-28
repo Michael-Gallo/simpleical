@@ -7,6 +7,7 @@ package icaldur
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -96,7 +97,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 
 	// Special-case weeks: PnW and nothing else
 	// Detect if there's a 'W' anywhere; if present, it must be the only unit
-	if wpos := indexByteFrom(s, 'W', i); wpos != -1 {
+	if rel := strings.IndexByte(s[i:], 'W'); rel != -1 {
+		wpos := i + rel
 		// Ensure there are only digits between i and wpos, and nothing after W
 		numStart := i
 		if numStart >= wpos {
@@ -206,14 +208,4 @@ func ParseICalDuration(s string) (time.Duration, error) {
 	}
 
 	return time.Duration(sign * dur), nil
-}
-
-// indexByteFrom finds the first index of b in s starting at from, or -1.
-func indexByteFrom(s string, b byte, from int) int {
-	for j := from; j < len(s); j++ {
-		if s[j] == b {
-			return j
-		}
-	}
-	return -1
 }

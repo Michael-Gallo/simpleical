@@ -3,7 +3,6 @@ package ical
 import (
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -68,20 +67,11 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		if event.Geo != nil {
 			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, eventLocation)
 		}
-		// Geo must be two floats separated by a semicolon
-		latitudeString, longitudeString, found := strings.Cut(value, ";")
-		if !found {
-			return icalerr.ErrInvalidGeoProperty
-		}
-		latitude, err := strconv.ParseFloat(latitudeString, 64)
+		geo, err := parseGeo(value)
 		if err != nil {
-			return icalerr.ErrInvalidGeoPropertyLatitude
+			return err
 		}
-		longitude, err := strconv.ParseFloat(longitudeString, 64)
-		if err != nil {
-			return icalerr.ErrInvalidGeoPropertyLongitude
-		}
-		event.Geo = append(event.Geo, latitude, longitude)
+		event.Geo = geo
 	case model.EventTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {

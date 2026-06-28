@@ -3,7 +3,6 @@ package ical
 import (
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -47,20 +46,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		if todo.Geo != nil {
 			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateProperty, propertyName)
 		}
-		// Geo must be two floats separated by a semicolon
-		latitudeString, longitudeString, found := strings.Cut(value, ";")
-		if !found {
-			return icalerr.ErrInvalidGeoProperty
-		}
-		latitude, err := strconv.ParseFloat(latitudeString, 64)
+		geo, err := parseGeo(value)
 		if err != nil {
-			return icalerr.ErrInvalidGeoPropertyLatitude
+			return err
 		}
-		longitude, err := strconv.ParseFloat(longitudeString, 64)
-		if err != nil {
-			return icalerr.ErrInvalidGeoPropertyLongitude
-		}
-		todo.Geo = append(todo.Geo, latitude, longitude)
+		todo.Geo = geo
 	case model.TodoTokenLastModified:
 		return setOnceTimeProperty(&todo.LastModified, value, propertyName, todoLocation)
 	case model.TodoTokenLocation:
