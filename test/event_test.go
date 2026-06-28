@@ -62,6 +62,8 @@ var (
 	testEventWithRRuleInput string
 	//go:embed test_data/events/valid_test_event_with_attachment.ical
 	testEventWithAttachmentInput string
+	//go:embed test_data/events/test_event_invalid_attach_value.ical
+	testEventInvalidAttachValueInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -314,6 +316,11 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "Invalid RRULE",
 			input:       testIcalInvalidRRuleInput,
 			expectedErr: icalerr.ErrInvalidRRule,
+		},
+		{
+			name:        "VEVENT with invalid ATTACH VALUE parameter",
+			input:       testEventInvalidAttachValueInput,
+			expectedErr: icalerr.ErrParseErrorInComponent,
 		},
 	}
 	for _, tc := range testCases {
