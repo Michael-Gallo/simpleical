@@ -97,7 +97,8 @@ func ParseICalDuration(s string) (time.Duration, error) {
 
 	// Special-case weeks: PnW and nothing else
 	// Detect if there's a 'W' anywhere; if present, it must be the only unit
-	if wpos := strings.IndexByte(s[i:], 'W'); wpos != -1 {
+	if rel := strings.IndexByte(s[i:], 'W'); rel != -1 {
+		wpos := i + rel
 		// Ensure there are only digits between i and wpos, and nothing after W
 		numStart := i
 		if numStart >= wpos {

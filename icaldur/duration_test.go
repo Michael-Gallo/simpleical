@@ -34,6 +34,13 @@ func TestParseICalDuration(t *testing.T) {
 		{name: "T without time part", input: "P1DT", expectError: errTWithoutTimePart},
 		{name: "duplicate T in time-only duration", input: "PTT1H", expectError: errDuplicateT},
 		{name: "duplicate T after date part", input: "P1DTT1H", expectError: errDuplicateT},
+		{name: "weeks only single digit", input: "P2W", want: 2 * 7 * 24 * time.Hour},
+		{name: "weeks only multi digit", input: "P10W", want: 10 * 7 * 24 * time.Hour},
+		{name: "weeks positive prefix", input: "+P1W", want: 1 * 7 * 24 * time.Hour},
+		{name: "weeks negative prefix", input: "-P3W", want: -3 * 7 * 24 * time.Hour},
+		{name: "weeks zero", input: "P0W", want: 0},
+		{name: "weeks mixed with other components", input: "P2W1D", expectError: errMixedWeeks},
+		{name: "weeks missing unit", input: "PW", expectError: errMissingUnit},
 	}
 	for _, test := range tests {
 		test := test
