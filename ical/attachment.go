@@ -19,22 +19,28 @@ import (
 func parseAttachment(value string, params map[string]string) (*model.Attachment, error) {
 	attachment := &model.Attachment{}
 
-	// Extract VALUE parameter (defaults to "URI" if not specified)
-	if val, ok := params["VALUE"]; ok {
-		attachment.Value = val
+	// Extract VALUE parameter (defaults to "URI" if not specified).
+	// Validate against the closed set allowed for ATTACH (URI | BINARY).
+	if val, ok := params[model.ParamValue]; ok {
+		switch v := model.AttachValue(val); v {
+		case model.AttachValueURI, model.AttachValueBinary:
+			attachment.Value = v
+		default:
+			return nil, fmt.Errorf("%w: invalid VALUE parameter %q for ATTACH", icalerr.ErrParseErrorInComponent, val)
+		}
 	} else {
-		attachment.Value = "URI"
+		attachment.Value = model.AttachValueURI
 	}
 
 	// Extract ENCODING parameter if present
-	if enc, ok := params["ENCODING"]; ok {
+	if enc, ok := params[model.ParamEncoding]; ok {
 		attachment.Encoding = enc
 	}
 
 	// Check if this is a binary attachment
 	isBinary := false
-	if attachment.Value == "BINARY" {
-		if attachment.Encoding == "BASE64" {
+	if attachment.Value == model.AttachValueBinary {
+		if attachment.Encoding == model.EncodingBase64 {
 			isBinary = true
 		} else {
 			return nil, fmt.Errorf("%w: ATTACH property with VALUE=BINARY must have ENCODING=BASE64", icalerr.ErrParseErrorInComponent)
@@ -64,14 +70,16 @@ func parseAttachment(value string, params map[string]string) (*model.Attachment,
 	}
 
 	// Extract FMTTYPE parameter if present
-	if fmtType, ok := params["FMTTYPE"]; ok {
+	if fmtType, ok := params[model.ParamFmtType]; ok {
 		attachment.FormatType = fmtType
 	}
 
 	// Store other parameters (excluding VALUE, ENCODING, and FMTTYPE which we've already handled)
 	attachment.OtherParams = make(map[string]string)
 	for paramName, paramValue := range params {
-		if paramName != "VALUE" && paramName != "ENCODING" && paramName != "FMTTYPE" {
+		if paramName != model.ParamValue &&
+			paramName != model.ParamEncoding &&
+			paramName != model.ParamFmtType {
 			attachment.OtherParams[paramName] = paramValue
 		}
 	}

@@ -22,7 +22,7 @@ func TestParseAttachment(t *testing.T) {
 			name:  "valid attachment, CID URI",
 			value: "CID:part1.970409T232345@example.com",
 			expectedAttachment: &model.Attachment{
-				Value: "URI",
+				Value: model.AttachValueURI,
 				URI: &url.URL{
 					Scheme: "cid",
 					Opaque: "part1.970409T232345@example.com",
@@ -37,7 +37,7 @@ func TestParseAttachment(t *testing.T) {
 				"FMTTYPE": "application/postscript",
 			},
 			expectedAttachment: &model.Attachment{
-				Value: "URI",
+				Value: model.AttachValueURI,
 				URI: &url.URL{
 					Scheme: "ftp",
 					Host:   "example.com",
@@ -56,8 +56,8 @@ func TestParseAttachment(t *testing.T) {
 				"VALUE":    "BINARY",
 			},
 			expectedAttachment: &model.Attachment{
-				Value:      "BINARY",
-				Encoding:   "BASE64",
+				Value:      model.AttachValueBinary,
+				Encoding:   model.EncodingBase64,
 				Binary:     "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZy4",
 				FormatType: "text/plain",
 			},
@@ -72,6 +72,15 @@ func TestParseAttachment(t *testing.T) {
 			},
 			expectedAttachment: nil,
 			expectedError:      fmt.Errorf("%w: invalid base64 encoded data", icalerr.ErrParseErrorInComponent),
+		},
+		{
+			name:  "invalid VALUE parameter",
+			value: "ftp://example.com/pub/reports/r-960812.ps",
+			params: map[string]string{
+				"VALUE": "TEXT",
+			},
+			expectedAttachment: nil,
+			expectedError:      fmt.Errorf("%w: invalid VALUE parameter \"TEXT\" for ATTACH", icalerr.ErrParseErrorInComponent),
 		},
 	}
 	for _, testCase := range testCases {

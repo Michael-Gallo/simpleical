@@ -139,7 +139,7 @@ func TestValidEvent(t *testing.T) {
 						Attach: []model.Attachment{
 							{
 								FormatType: "application/pdf",
-								Value:      "URI",
+								Value:      model.AttachValueURI,
 								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/report.pdf"},
 							},
 						},
