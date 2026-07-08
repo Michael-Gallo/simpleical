@@ -358,8 +358,14 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 	i := 0
 	for i < len(value) {
 		neg := false
-		if value[i] == '-' {
+		switch value[i] {
+		case '-':
 			neg = true
+			i++
+			if i == len(value) {
+				return nil, strconv.ErrSyntax
+			}
+		case '+':
 			i++
 			if i == len(value) {
 				return nil, strconv.ErrSyntax
