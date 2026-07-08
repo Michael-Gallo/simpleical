@@ -52,6 +52,11 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				expectError: errInvalidWeekno,
 			},
 			{
+				name:        "overflowing int8 magnitude is rejected",
+				input:       "130",
+				expectError: errInvalidWeekno,
+			},
+			{
 				name:        "below min is rejected",
 				input:       "-54",
 				expectError: errInvalidWeekno,

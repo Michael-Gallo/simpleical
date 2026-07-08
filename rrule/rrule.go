@@ -350,10 +350,11 @@ func validByYearDay(v int) bool {
 
 // parseSignedIntListBounded parses a comma-separated list of signed integers into a
 // compact slice type. This is a perf micro-optimization: a single-pass parser avoids
-// strings.Split and strconv, accumulates digits directly into int8/int16, and rejects
-// out-of-range values during parsing. Used for BYWEEKNO and BYSETPOS.
+// strings.Split and strconv, validates RFC ranges during parsing, and stores values as
+// int8/int16. Used for BYWEEKNO and BYSETPOS.
 func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRange error) ([]T, error) {
 	parsed := make([]T, 0, 4)
+	maxInt := int(maxVal)
 	i := 0
 	for i < len(value) {
 		neg := false
@@ -366,10 +367,10 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 		}
 
 		start := i
-		var n T
+		n := 0
 		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
-			n = n*10 + T(value[i]-'0')
-			if n > maxVal {
+			n = n*10 + int(value[i]-'0')
+			if n > maxInt {
 				return nil, outOfRange
 			}
 			i++
@@ -378,7 +379,7 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 			return nil, strconv.ErrSyntax
 		}
 		if neg {
-			if n > maxVal {
+			if n > maxInt {
 				return nil, outOfRange
 			}
 			n = -n
@@ -386,7 +387,7 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 		if n == 0 {
 			return nil, outOfRange
 		}
-		parsed = append(parsed, n)
+		parsed = append(parsed, T(n))
 
 		if i == len(value) {
 			break
