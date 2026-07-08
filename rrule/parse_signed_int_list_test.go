@@ -22,6 +22,16 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				want:  []int8{20},
 			},
 			{
+				name:  "explicit positive sign",
+				input: "+1",
+				want:  []int8{1},
+			},
+			{
+				name:  "multiple values with explicit positive sign",
+				input: "+1,-2,+53",
+				want:  []int8{1, -2, 53},
+			},
+			{
 				name:  "single negative value",
 				input: "-2",
 				want:  []int8{-2},
@@ -110,6 +120,11 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				name:  "single positive value",
 				input: "3",
 				want:  []int16{3},
+			},
+			{
+				name:  "explicit positive sign",
+				input: "+366",
+				want:  []int16{366},
 			},
 			{
 				name:  "multiple comma-separated values",
