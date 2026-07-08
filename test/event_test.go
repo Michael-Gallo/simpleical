@@ -64,6 +64,8 @@ var (
 	testEventWithAttachmentInput string
 	//go:embed test_data/events/test_event_invalid_attach_value.ical
 	testEventInvalidAttachValueInput string
+	//go:embed test_data/events/valid_test_event_with_rrule_byweekno_bysetpos.ical
+	testEventWithRRuleByWeekNoBySetPosInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -201,6 +203,48 @@ func TestValidEvent(t *testing.T) {
 							Count:     new(10),
 						},
 						Summary:     "Event with recurrence rule",
+						Description: "Event Description",
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VEVENT with RRULE BYWEEKNO and BYSETPOS lists",
+			input: testEventWithRRuleByWeekNoBySetPosInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "13235@example.com",
+						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						RRule: &rrule.RRule{
+							Frequency: rrule.FrequencyYearly,
+							Interval:  1,
+							ByWeekNo:  []int8{1, -2, 53},
+							ByDay:     []rrule.ByDay{{Weekday: rrule.WeekdayMonday, Interval: 1}},
+						},
+						Summary:     "Event with multi-value BYWEEKNO",
+						Description: "Event Description",
+					},
+					{
+						UID:     "13236@example.com",
+						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						RRule: &rrule.RRule{
+							Frequency: rrule.FrequencyMonthly,
+							Interval:  1,
+							ByDay: []rrule.ByDay{
+								{Weekday: rrule.WeekdayTuesday, Interval: 1},
+								{Weekday: rrule.WeekdayWednesday, Interval: 1},
+								{Weekday: rrule.WeekdayThursday, Interval: 1},
+							},
+							BySetPos: []int16{1, -1, 366},
+						},
+						Summary:     "Event with multi-value BYSETPOS",
 						Description: "Event Description",
 					},
 				},
