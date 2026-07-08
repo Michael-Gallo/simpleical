@@ -158,6 +158,16 @@ func TestParseRRule(t *testing.T) {
 			expectError: nil,
 		},
 		{
+			name:  "Week Number with explicit positive sign",
+			input: "FREQ=YEARLY;BYWEEKNO=+1",
+			want: &RRule{
+				Frequency: FrequencyYearly,
+				Interval:  1,
+				ByWeekNo:  []int8{1},
+			},
+			expectError: nil,
+		},
+		{
 			name:  "Multiple week numbers are parsed",
 			input: "FREQ=YEARLY;BYWEEKNO=1,-2",
 			want: &RRule{
@@ -202,6 +212,12 @@ func TestParseRRule(t *testing.T) {
 		{
 			name:        "ERROR: Week Number > 53",
 			input:       "FREQ=YEARLY;BYWEEKNO=54",
+			want:        nil,
+			expectError: errInvalidWeekno,
+		},
+		{
+			name:        "ERROR: Week Number overflows int8 before range check",
+			input:       "FREQ=YEARLY;BYWEEKNO=130",
 			want:        nil,
 			expectError: errInvalidWeekno,
 		},
@@ -662,6 +678,21 @@ func TestParseRRule(t *testing.T) {
 					{Weekday: WeekdayThursday, Interval: 1},
 				},
 				BySetPos: []int16{3},
+			},
+			expectError: nil,
+		},
+		{
+			name:  "Set position with explicit positive sign",
+			input: "FREQ=MONTHLY;BYDAY=TU,WE,TH;BYSETPOS=+366",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay: []ByDay{
+					{Weekday: WeekdayTuesday, Interval: 1},
+					{Weekday: WeekdayWednesday, Interval: 1},
+					{Weekday: WeekdayThursday, Interval: 1},
+				},
+				BySetPos: []int16{366},
 			},
 			expectError: nil,
 		},

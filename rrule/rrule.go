@@ -214,27 +214,17 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYWEEKNO":
-			weekNumbers, err := parseSignedIntList[int8](value, 8)
+			weekNumbers, err := parseSignedIntListBounded(value, int8(53), errInvalidWeekno)
 			if err != nil {
 				return nil, err
-			}
-			for _, weekno := range weekNumbers {
-				if !validByWeekNo(weekno) {
-					return nil, errInvalidWeekno
-				}
 			}
 			if err := setOnceSlice(&rrule.ByWeekNo, weekNumbers, tag); err != nil {
 				return nil, err
 			}
 		case "BYSETPOS":
-			bySetPos, err := parseSignedIntList[int16](value, 16)
+			bySetPos, err := parseSignedIntListBounded(value, int16(366), errInvalidBySetPos)
 			if err != nil {
 				return nil, err
-			}
-			for _, pos := range bySetPos {
-				if !validBySetPos(pos) {
-					return nil, errInvalidBySetPos
-				}
 			}
 			if err := setOnceSlice(&rrule.BySetPos, bySetPos, tag); err != nil {
 				return nil, err
@@ -358,23 +348,63 @@ func validByYearDay(v int) bool {
 	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
 }
 
-func validByWeekNo(v int8) bool {
-	return (v >= 1 && v <= 53) || (v <= -1 && v >= -53)
-}
-
-func validBySetPos(v int16) bool {
-	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
-}
-
-func parseSignedIntList[T int8 | int16](value string, bits int) ([]T, error) {
-	values := strings.Split(value, ",")
-	parsed := make([]T, 0, len(values))
-	for _, part := range values {
-		intValue, err := strconv.ParseInt(part, 10, bits)
-		if err != nil {
-			return nil, err
+// parseSignedIntListBounded parses a comma-separated list of signed integers into a
+// compact slice type. This is a perf micro-optimization: a single-pass parser avoids
+// strings.Split and strconv, validates RFC ranges during parsing, and stores values as
+// int8/int16. Used for BYWEEKNO and BYSETPOS.
+func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRange error) ([]T, error) {
+	parsed := make([]T, 0, 4)
+	maxInt := int(maxVal)
+	i := 0
+	for i < len(value) {
+		neg := false
+		switch value[i] {
+		case '-':
+			neg = true
+			i++
+			if i == len(value) {
+				return nil, strconv.ErrSyntax
+			}
+		case '+':
+			i++
+			if i == len(value) {
+				return nil, strconv.ErrSyntax
+			}
 		}
-		parsed = append(parsed, T(intValue))
+
+		start := i
+		n := 0
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			n = n*10 + int(value[i]-'0')
+			if n > maxInt {
+				return nil, outOfRange
+			}
+			i++
+		}
+		if i == start {
+			return nil, strconv.ErrSyntax
+		}
+		if neg {
+			if n > maxInt {
+				return nil, outOfRange
+			}
+			n = -n
+		}
+		if n == 0 {
+			return nil, outOfRange
+		}
+		parsed = append(parsed, T(n))
+
+		if i == len(value) {
+			break
+		}
+		if value[i] != ',' {
+			return nil, strconv.ErrSyntax
+		}
+		i++
+	}
+	if len(parsed) == 0 {
+		return nil, strconv.ErrSyntax
 	}
 	return parsed, nil
 }
