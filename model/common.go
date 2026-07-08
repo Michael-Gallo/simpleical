@@ -43,7 +43,7 @@ type Organizer struct {
 type Attachment struct {
 	// Value is the VALUE parameter, which can be "URI" (default) or "BINARY".
 	// When Value is "BINARY", Encoding must be "BASE64".
-	Value string
+	Value AttachValue
 
 	// Encoding is the ENCODING parameter, which is "BASE64" for binary attachments.
 	// This will be empty for URI attachments.

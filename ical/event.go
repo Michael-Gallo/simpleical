@@ -96,9 +96,9 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 	organizer := &model.Organizer{}
 	for propName, propValue := range params {
 		switch propName {
-		case "CN":
+		case model.ParamCN:
 			organizer.CommonName = propValue
-		case "DIR":
+		case model.ParamDir:
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
 				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
