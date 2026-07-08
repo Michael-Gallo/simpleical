@@ -37,29 +37,29 @@ All tests were ran on a 5700X3D Processor with 32GB of RAM.
 ### Calendar File With Minimal Event
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 1.522µ ± 1% | 4.770µ ± 1% | 9.344µ ± 0% |
-| B/op    | 5.023Ki ± 0% | 7.028Ki ± 0% | 7.987Ki ± 0% |
+| sec/op  | 1.454µ ± 0% | 4.736µ ± 0% | 9.506µ ± 0% |
+| B/op    | 5.023Ki ± 0% | 7.028Ki ± 0% | 7.988Ki ± 0% |
 |allocs/op| 13.00 ± 0% | 70.00 ± 0% | 144.00 ± 0% |
 
 ### Calendar File with single representative event
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 5.601µ ± 1% | 14.379µ ± 1% | 31.425µ ± 1% |
-| B/op    | 7.086Ki ± 0% | 13.119Ki ± 0% | 19.373Ki ± 0% |
+| sec/op  | 5.670µ ± 3% | 14.407µ ± 1% | 31.828µ ± 1% |
+| B/op    | 7.086Ki ± 0% | 13.119Ki ± 0% | 19.375Ki ± 0% |
 |allocs/op| 62.00 ± 0% | 241.00 ± 0% | 465.00 ± 0% |
 
 
 ### Calendar File with Multiple Events
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 7.593µ ± 1% | 22.739µ ± 0% | 47.493µ ± 0% |
-| B/op    | 9.156Ki ± 0% | 18.147Ki ± 0% | 27.934Ki ± 0% |
+| sec/op  | 7.398µ ± 1% | 23.020µ ± 2% | 48.202µ ± 1% |
+| B/op    | 9.156Ki ± 0% | 18.147Ki ± 0% | 27.941Ki ± 0% |
 |allocs/op| 91.00 ± 0% | 382.00 ± 0% | 712.00 ± 0% |
 
 
 ### Calendar File with Events and TODOs
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 9.136µ ± 1% | 21.910µ ± 0% | 62.964µ ± 1% |
-| B/op    | 10.266Ki ± 0% | 19.015Ki ± 0% | 33.545Ki ± 0% |
+| sec/op  | 8.944µ ± 1% | 21.573µ ± 0% | 64.367µ ± 0% |
+| B/op    | 10.266Ki ± 0% | 19.015Ki ± 0% | 33.549Ki ± 0% |
 |allocs/op| 109.00 ± 0% | 418.00 ± 0% | 970.00 ± 0% |
