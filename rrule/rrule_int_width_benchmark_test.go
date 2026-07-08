@@ -21,7 +21,7 @@ func BenchmarkParseByWeekNo(b *testing.B) {
 	b.Run("split_plus_Atoi", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			if err := parseSignedIntListAtoi(value); err != nil {
+			if err := parseSignedIntListAtoi(value, 53, errInvalidWeekno); err != nil {
 				b.Fatal(err)
 			}
 		}
@@ -43,18 +43,22 @@ func BenchmarkParseBySetPos(b *testing.B) {
 	b.Run("split_plus_Atoi", func(b *testing.B) {
 		b.ReportAllocs()
 		for b.Loop() {
-			if err := parseSignedIntListAtoi(value); err != nil {
+			if err := parseSignedIntListAtoi(value, 366, errInvalidBySetPos); err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
 }
 
-func parseSignedIntListAtoi(value string) error {
+func parseSignedIntListAtoi(value string, maxVal int, outOfRange error) error {
 	values := strings.Split(value, ",")
 	for _, part := range values {
-		if _, err := strconv.Atoi(part); err != nil {
+		n, err := strconv.Atoi(part)
+		if err != nil {
 			return err
+		}
+		if n == 0 || n > maxVal || n < -maxVal {
+			return outOfRange
 		}
 	}
 	return nil
