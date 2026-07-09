@@ -64,8 +64,10 @@ func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 		}
 		return nil, icalerr.ErrNoCalendarFound
 	}
-	line = strings.TrimRight(line, " ")
 	if line != beginVCalendarLine {
+		if line == "" {
+			return nil, icalerr.ErrInvalidCalendarEmptyLine
+		}
 		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
 	}
 
@@ -77,7 +79,7 @@ func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 	// Exactly one calendar is allowed: any remaining content (including a
 	// second BEGIN:VCALENDAR) is an error.
 	if line, ok = nextLogicalLine(scanner, &pending, &hasPending); ok {
-		if strings.TrimRight(line, " ") == "" {
+		if line == "" {
 			return nil, icalerr.ErrInvalidCalendarEmptyLine
 		}
 		return nil, icalerr.ErrContentAfterEndBlock
@@ -108,7 +110,6 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 		if !ok {
 			break
 		}
-		line = strings.TrimRight(line, " ")
 		if line != beginVCalendarLine {
 			if line == "" {
 				return nil, icalerr.ErrInvalidCalendarEmptyLine
@@ -151,7 +152,6 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		if !ok {
 			break
 		}
-		line = strings.TrimRight(line, " ")
 
 		if line == "" {
 			return nil, icalerr.ErrInvalidCalendarEmptyLine
@@ -191,7 +191,8 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 	return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
 }
 
-// nextLogicalLine returns the next RFC 5545 content line after unfolding.
+// nextLogicalLine returns the next RFC 5545 content line after unfolding,
+// with trailing spaces trimmed.
 // Folded physical lines (CRLF followed by a single SPACE or HTAB) are joined
 // by stripping that leading white-space and appending the remainder.
 func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) (string, bool) {
@@ -223,9 +224,9 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 		break
 	}
 	if folded {
-		return b.String(), true
+		return strings.TrimRight(b.String(), " "), true
 	}
-	return line, true
+	return strings.TrimRight(line, " "), true
 }
 
 // parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.

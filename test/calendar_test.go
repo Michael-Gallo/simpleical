@@ -228,6 +228,11 @@ func TestParseCalendarError(t *testing.T) {
 			input:       testMultipleCalendarsInput,
 			expectedErr: icalerr.ErrContentAfterEndBlock,
 		},
+		{
+			name:        "Empty line before BEGIN:VCALENDAR",
+			input:       "\n" + testValidCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarEmptyLine,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -326,6 +331,11 @@ func TestParseMultipleCalendarsError(t *testing.T) {
 			name:        "Content between calendars",
 			input:       testMultipleCalendarsContentBetweenInput,
 			expectedErr: icalerr.ErrContentAfterEndBlock,
+		},
+		{
+			name:        "Empty line before BEGIN:VCALENDAR",
+			input:       "\n" + testValidCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarEmptyLine,
 		},
 		{
 			name:        "Second calendar missing END:VCALENDAR",
