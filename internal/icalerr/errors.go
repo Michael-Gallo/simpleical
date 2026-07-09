@@ -81,6 +81,10 @@ var (
 var (
 	ErrInvalidTimezoneProperty     = errors.New("invalid timezone property")
 	ErrMissingTimezoneTZIDProperty = errors.New("timezone must have a TZID property")
+	// ErrTimezoneLocalTimeRequired is returned when DTSTART or RDATE in a
+	// STANDARD/DAYLIGHT sub-component uses a UTC timestamp (trailing "Z").
+	// RFC 5545 requires these values to be local wall time.
+	ErrTimezoneLocalTimeRequired = errors.New("timezone STANDARD/DAYLIGHT DTSTART and RDATE must be specified as local time")
 )
 
 // Alarm-specific errors.

@@ -2,6 +2,8 @@ package test
 
 import (
 	_ "embed"
+	"errors"
+	"io"
 	"net/url"
 	"testing"
 	"time"
@@ -10,7 +12,19 @@ import (
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+var errBoom = errors.New("boom")
+
+// errReader always fails on Read, used to verify I/O errors are preserved.
+type errReader struct {
+	err error
+}
+
+func (r errReader) Read([]byte) (int, error) {
+	return 0, r.err
+}
 
 var (
 	//go:embed test_data/calendar/valid_calendar_with_event_and_timezone.ical
@@ -208,4 +222,18 @@ func TestParseCalendarError(t *testing.T) {
 			assert.Nil(t, calendar)
 		})
 	}
+}
+
+func TestReadPreservesInitialScanIOError(t *testing.T) {
+	calendar, err := ical.Read(errReader{err: errBoom})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errBoom)
+	assert.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	assert.Nil(t, calendar)
+}
+
+func TestReadEmptyReaderReturnsNoCalendarFound(t *testing.T) {
+	calendar, err := ical.Read(io.MultiReader())
+	assert.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	assert.Nil(t, calendar)
 }

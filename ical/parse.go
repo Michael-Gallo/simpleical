@@ -71,6 +71,9 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 
 	line, ok := nextLogicalLine(scanner, &pending, &hasPending)
 	if !ok {
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading iCalendar data: %w", err)
+		}
 		return nil, icalerr.ErrNoCalendarFound
 	}
 	line = strings.TrimRight(line, " ")
