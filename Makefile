@@ -1,4 +1,4 @@
-.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative check install-hooks
+.PHONY: test-slow test lint fmt fmt-check vet bench bench-profile bench-long bench-comparative check install-hooks
 
 test-slow:
 	go test ./... --race --count 1
@@ -11,6 +11,9 @@ lint:
 
 fmt:
 	golangci-lint fmt
+
+fmt-check:
+	golangci-lint fmt --diff
 
 vet:
 	go vet ./...
@@ -27,7 +30,7 @@ bench-long:
 bench-comparative:
 	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
 
-check: fmt vet lint test-slow
+check: fmt-check vet lint test-slow
 
 install-hooks:
 	git config core.hooksPath .githooks
