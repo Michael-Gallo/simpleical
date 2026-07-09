@@ -167,7 +167,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				assert.Contains(t, tc.input, "\r\n", "fixture must retain CRLF line endings")
 			}
 			calendar, err := ical.FromString(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
 	}
@@ -218,7 +218,7 @@ func TestParseCalendarError(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.ErrorIs(t, err, tc.expectedErr)
+			require.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}

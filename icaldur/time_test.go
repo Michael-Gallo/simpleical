@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseIcalTime(t *testing.T) {
@@ -75,10 +76,10 @@ func TestParseIcalTime(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := ParseIcalTime(test.input)
 			if test.expectError {
-				assert.Error(t, err, "expected error for input: %s", test.input)
+				require.Error(t, err, "expected error for input: %s", test.input)
 				return
 			}
-			assert.NoError(t, err, "unexpected error for input: %s", test.input)
+			require.NoError(t, err, "unexpected error for input: %s", test.input)
 			assert.Equal(t, test.want, got, "mismatch for input: %s", test.input)
 		})
 	}

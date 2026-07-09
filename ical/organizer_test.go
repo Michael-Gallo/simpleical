@@ -6,6 +6,7 @@ import (
 
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkParseOrganizer(b *testing.B) {
@@ -82,11 +83,11 @@ func TestParseOrganizer(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			organizer, err := parseOrganizer(testCase.value, testCase.params)
 			if testCase.expectedError != nil {
-				assert.ErrorIs(t, err, testCase.expectedError)
+				require.ErrorIs(t, err, testCase.expectedError)
 				assert.Nil(t, organizer)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			assert.Equal(t, testCase.expectedOrganizer, organizer)
 		})

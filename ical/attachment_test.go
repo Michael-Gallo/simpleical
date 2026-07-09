@@ -8,6 +8,7 @@ import (
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseAttachment(t *testing.T) {
@@ -87,11 +88,11 @@ func TestParseAttachment(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			attachment, err := parseAttachment(testCase.value, testCase.params)
 			if testCase.expectedError != nil {
-				assert.Error(t, err)
+				require.Error(t, err)
 				assert.Equal(t, testCase.expectedError, err)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, testCase.expectedAttachment, attachment)
 		})
 	}

@@ -11,6 +11,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            benchmarks/go.sum
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -24,7 +41,7 @@ jobs:
             benchmarks/go.sum
 
       - name: Run tests
-        run: go test ./...
+        run: go test -race ./...
 
       - name: Run benchmarks (smoke)
         working-directory: benchmarks

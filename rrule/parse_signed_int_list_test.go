@@ -98,7 +98,7 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				got, err := parseSignedIntListBounded(test.input, int8(53), errInvalidWeekno)
 				if test.expectError != nil {
 					require.Error(t, err)
-					assert.ErrorContains(t, err, test.expectError.Error())
+					require.ErrorContains(t, err, test.expectError.Error())
 					assert.Nil(t, got)
 					return
 				}
@@ -158,7 +158,7 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				got, err := parseSignedIntListBounded(test.input, int16(366), errInvalidBySetPos)
 				if test.expectError != nil {
 					require.Error(t, err)
-					assert.ErrorContains(t, err, test.expectError.Error())
+					require.ErrorContains(t, err, test.expectError.Error())
 					assert.Nil(t, got)
 					return
 				}
