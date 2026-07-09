@@ -74,19 +74,17 @@ func parseAttachment(value string, params map[string]string) (*model.Attachment,
 		attachment.FormatType = fmtType
 	}
 
-	// Store other parameters (excluding VALUE, ENCODING, and FMTTYPE which we've already handled)
-	attachment.OtherParams = make(map[string]string)
+	// Store other parameters only when unknown params exist.
 	for paramName, paramValue := range params {
-		if paramName != model.ParamValue &&
-			paramName != model.ParamEncoding &&
-			paramName != model.ParamFmtType {
-			attachment.OtherParams[paramName] = paramValue
+		if paramName == model.ParamValue ||
+			paramName == model.ParamEncoding ||
+			paramName == model.ParamFmtType {
+			continue
 		}
-	}
-
-	// If no other params, set to nil to avoid empty map
-	if len(attachment.OtherParams) == 0 {
-		attachment.OtherParams = nil
+		if attachment.OtherParams == nil {
+			attachment.OtherParams = make(map[string]string, 1)
+		}
+		attachment.OtherParams[paramName] = paramValue
 	}
 
 	return attachment, nil
