@@ -354,6 +354,9 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 			return nil, strconv.ErrSyntax
 		}
 		i++
+		if i == len(value) {
+			return nil, strconv.ErrSyntax
+		}
 	}
 	if len(parsed) == 0 {
 		return nil, strconv.ErrSyntax
@@ -388,6 +391,9 @@ func parseUint8List(value string, maxVal uint8, outOfRange error) ([]uint8, erro
 			return nil, strconv.ErrSyntax
 		}
 		i++
+		if i == len(value) {
+			return nil, strconv.ErrSyntax
+		}
 	}
 	if len(parsed) == 0 {
 		return nil, strconv.ErrSyntax
@@ -424,6 +430,9 @@ func parseUnsignedIntList(value string, minVal, maxVal int, outOfRange error) ([
 			return nil, strconv.ErrSyntax
 		}
 		i++
+		if i == len(value) {
+			return nil, strconv.ErrSyntax
+		}
 	}
 	if len(parsed) == 0 {
 		return nil, strconv.ErrSyntax
@@ -479,6 +488,9 @@ func parseSignedIntListCustom(value string, valid func(int) bool, outOfRange err
 			return nil, strconv.ErrSyntax
 		}
 		i++
+		if i == len(value) {
+			return nil, strconv.ErrSyntax
+		}
 	}
 	if len(parsed) == 0 {
 		return nil, strconv.ErrSyntax
