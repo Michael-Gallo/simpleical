@@ -48,19 +48,19 @@ func parseAttendee(value string, params map[string]string) (*model.Attendee, err
 		case model.ParamMember:
 			addresses, err := parseCalAddressList(propValue)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+				return nil, err
 			}
 			attendee.Member = addresses
 		case model.ParamDelegatedTo:
 			addresses, err := parseCalAddressList(propValue)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+				return nil, err
 			}
 			attendee.DelegatedTo = addresses
 		case model.ParamDelegatedFrom:
 			addresses, err := parseCalAddressList(propValue)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+				return nil, err
 			}
 			attendee.DelegatedFrom = addresses
 		default:
@@ -95,7 +95,7 @@ func parseCalAddressList(propValue string) ([]*url.URL, error) {
 		if part == "" {
 			continue
 		}
-		parsedURI, err := url.Parse(part)
+		parsedURI, err := parseCalAddress(part)
 		if err != nil {
 			return nil, err
 		}
