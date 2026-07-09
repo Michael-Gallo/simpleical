@@ -51,6 +51,14 @@ var (
 	testValidCalendarWithCarriageReturnsInput string
 	//go:embed test_data/calendar/valid_calendar_folded_lines.ical
 	testValidCalendarFoldedLinesInput string
+	//go:embed test_data/calendar/valid_multiple_calendars.ical
+	testMultipleCalendarsInput string
+	//go:embed test_data/calendar/invalid_multiple_calendars_content_between.ical
+	testMultipleCalendarsContentBetweenInput string
+	//go:embed test_data/calendar/invalid_multiple_calendars_missing_end.ical
+	testMultipleCalendarsMissingEndInput string
+	//go:embed test_data/calendar/invalid_multiple_calendars_nested_begin.ical
+	testMultipleCalendarsNestedBeginInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
@@ -214,6 +222,11 @@ func TestParseCalendarError(t *testing.T) {
 			input:       testCalendarDoubleBeginInput,
 			expectedErr: icalerr.ErrNestedBeginVCalendar,
 		},
+		{
+			name:        "Second calendar after END:VCALENDAR",
+			input:       testMultipleCalendarsInput,
+			expectedErr: icalerr.ErrContentAfterEndBlock,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -222,6 +235,124 @@ func TestParseCalendarError(t *testing.T) {
 			assert.Nil(t, calendar)
 		})
 	}
+}
+
+func TestParseMultipleCalendarsSuccess(t *testing.T) {
+	testCases := []struct {
+		name              string
+		input             string
+		expectedCalendars []*model.Calendar
+	}{
+		{
+			name:  "Two sequential calendars",
+			input: testMultipleCalendarsInput,
+			expectedCalendars: []*model.Calendar{
+				{
+					ProdID:   "-//Event//Event Calendar//EN",
+					Version:  "2.0",
+					Method:   "REQUEST",
+					CalScale: "GREGORIAN",
+				},
+				{
+					ProdID:  "-//Second//Second Calendar//EN",
+					Version: "2.0",
+					Events: []model.Event{
+						{
+							DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+							UID:     "13235@example.com",
+							Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+							End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+							Summary: "Event Summary",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Single calendar",
+			input: testValidCalendarInput,
+			expectedCalendars: []*model.Calendar{
+				{
+					ProdID:   "-//Event//Event Calendar//EN",
+					Version:  "2.0",
+					Method:   "REQUEST",
+					CalScale: "GREGORIAN",
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			calendars, err := ical.FromStringAll(tc.input)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedCalendars, calendars)
+		})
+	}
+}
+
+func TestParseMultipleCalendarsError(t *testing.T) {
+	testCases := []struct {
+		name        string
+		input       string
+		expectedErr error
+	}{
+		{
+			name:        "Empty input",
+			input:       "",
+			expectedErr: icalerr.ErrNoCalendarFound,
+		},
+		{
+			name:        "Calendar with no BEGIN:VCALENDAR",
+			input:       testInvalidBeginCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarFormatMissingBegin,
+		},
+		{
+			name:        "Calendar with no END:VCALENDAR",
+			input:       testInvalidEndCalendarInput,
+			expectedErr: icalerr.ErrInvalidCalendarFormatMissingEnd,
+		},
+		{
+			name:        "Nested BEGIN:VCALENDAR in first calendar",
+			input:       testCalendarDoubleBeginInput,
+			expectedErr: icalerr.ErrNestedBeginVCalendar,
+		},
+		{
+			name:        "Nested BEGIN:VCALENDAR in second calendar",
+			input:       testMultipleCalendarsNestedBeginInput,
+			expectedErr: icalerr.ErrNestedBeginVCalendar,
+		},
+		{
+			name:        "Content between calendars",
+			input:       testMultipleCalendarsContentBetweenInput,
+			expectedErr: icalerr.ErrContentAfterEndBlock,
+		},
+		{
+			name:        "Second calendar missing END:VCALENDAR",
+			input:       testMultipleCalendarsMissingEndInput,
+			expectedErr: icalerr.ErrInvalidCalendarFormatMissingEnd,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			calendars, err := ical.FromStringAll(tc.input)
+			require.ErrorIs(t, err, tc.expectedErr)
+			assert.Nil(t, calendars)
+		})
+	}
+}
+
+func TestReadAllPreservesIOError(t *testing.T) {
+	calendars, err := ical.ReadAll(errReader{err: errBoom})
+	require.Error(t, err)
+	require.ErrorIs(t, err, errBoom)
+	require.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	assert.Nil(t, calendars)
+}
+
+func TestReadAllEmptyReaderReturnsNoCalendarFound(t *testing.T) {
+	calendars, err := ical.ReadAll(io.MultiReader())
+	require.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	assert.Nil(t, calendars)
 }
 
 func TestReadPreservesInitialScanIOError(t *testing.T) {
