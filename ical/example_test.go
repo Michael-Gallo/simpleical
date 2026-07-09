@@ -2,6 +2,7 @@ package ical_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/ical"
@@ -35,8 +36,40 @@ END:VEVENT
 END:VCALENDAR
 `
 
-func ExampleFromString() {
-	calendar, err := ical.FromString(testIcalString)
+func ExampleRead() {
+	// A single iCalendar stream may contain multiple sequential VCALENDAR objects
+	multiCalendarStream := `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//First//Calendar//EN
+END:VCALENDAR
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Second//Calendar//EN
+BEGIN:VEVENT
+UID:13235@example.com
+DTSTART:20250928T183000Z
+SUMMARY:Event Summary
+END:VEVENT
+END:VCALENDAR
+`
+	reader := strings.NewReader(multiCalendarStream)
+	calendars, err := ical.Read(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(len(calendars))
+	fmt.Println(calendars[0].ProdID)
+	fmt.Println(calendars[1].Events[0].Summary)
+	// Output:
+	// 2
+	// -//First//Calendar//EN
+	// Event Summary
+}
+
+func ExampleReadSingle() {
+	reader := strings.NewReader(testIcalString)
+	calendar, err := ical.ReadSingle(reader)
 	if err != nil {
 		panic(err)
 	}
@@ -50,8 +83,15 @@ func ExampleFromString() {
 	// Event Summary
 }
 
-func ExampleFromFileName() {
-	calendar, err := ical.FromFileName("../test/test_data/calendar/valid_calendar.ical")
+// ExampleReadSingle_file demonstrates parsing a calendar from a file.
+func ExampleReadSingle_file() {
+	file, err := os.Open("../test/test_data/calendar/valid_calendar.ical")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	calendar, err := ical.ReadSingle(file)
 	if err != nil {
 		panic(err)
 	}
@@ -61,20 +101,4 @@ func ExampleFromFileName() {
 	// Output:
 	// -//Event//Event Calendar//EN
 	// GREGORIAN
-}
-
-func ExampleRead() {
-	reader := strings.NewReader(testIcalString)
-	calendar, err := ical.Read(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(calendar.ProdID)
-	fmt.Println(calendar.TimeZones[0].TimeZoneID)
-	fmt.Println(calendar.Events[0].Summary)
-	// Output:
-	// -//Event//Event Calendar//EN
-	// America/Detroit
-	// Event Summary
 }

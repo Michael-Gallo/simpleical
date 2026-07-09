@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -32,32 +31,8 @@ const (
 	stateFinished
 )
 
-// FromFileName parses an iCalendar file from the given file path into a Calendar.
-// It opens the file, parses its contents, and returns a Calendar.
-// This is a convenience function that wraps Read.
-// The file is automatically closed after parsing.
-func FromFileName(filename string) (*model.Calendar, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	return Read(file)
-}
-
-// FromString takes the string representation of an ICAL and parses it into a Calendar.
-// It returns an error if the input is not a valid ICAL string.
-// This is a convenience function that wraps Read.
-func FromString(input string) (*model.Calendar, error) {
-	// Handle empty input
-	if input == "" {
-		return nil, icalerr.ErrNoCalendarFound
-	}
-
-	// Use the reader-based parser for consistency
-	reader := strings.NewReader(input)
-	return Read(reader)
-}
+// beginVCalendarLine is the content line that opens a VCALENDAR object.
+const beginVCalendarLine = "BEGIN:VCALENDAR"
 
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
@@ -71,11 +46,11 @@ type componentCursor struct {
 	tzProp   *model.TimeZoneProperty
 }
 
-// Read takes an io.Reader containing iCalendar data and parses it into a Calendar.
-func Read(reader io.Reader) (*model.Calendar, error) {
-	calendar := &model.Calendar{}
-	currentState := stateCalendar
-	var cursor componentCursor
+// ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
+// It asserts that the input contains exactly one VCALENDAR object; any content after
+// END:VCALENDAR (including another BEGIN:VCALENDAR) returns ErrContentAfterEndBlock.
+// Use Read to parse a stream that may contain multiple VCALENDAR objects.
+func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
@@ -89,17 +64,94 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 		}
 		return nil, icalerr.ErrNoCalendarFound
 	}
-	line = strings.TrimRight(line, " ")
-	if line != "BEGIN:VCALENDAR" {
+	if line != beginVCalendarLine {
+		if line == "" {
+			return nil, icalerr.ErrInvalidCalendarEmptyLine
+		}
 		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
 	}
 
+	calendar, err := parseOneCalendar(scanner, &pending, &hasPending, reusableParams)
+	if err != nil {
+		return nil, err
+	}
+
+	// Exactly one calendar is allowed: any remaining content (including a
+	// second BEGIN:VCALENDAR) is an error.
+	if line, ok = nextLogicalLine(scanner, &pending, &hasPending); ok {
+		if line == "" {
+			return nil, icalerr.ErrInvalidCalendarEmptyLine
+		}
+		return nil, icalerr.ErrContentAfterEndBlock
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
+	}
+
+	return calendar, nil
+}
+
+// Read takes an io.Reader containing iCalendar data and parses it into a
+// slice of Calendars. Per RFC 5545 section 3.4, a single iCalendar stream may
+// contain multiple sequential VCALENDAR objects. Scanner state and internal
+// buffers are shared across calendars, so parsing N calendars costs no more
+// than parsing each individually.
+// Use ReadSingle to assert that the input contains exactly one VCALENDAR object.
+func Read(reader io.Reader) ([]*model.Calendar, error) {
+	// Reusable parameter map to avoid allocations on every property
+	reusableParams := make(map[string]string, 2)
+	scanner := bufio.NewScanner(reader)
+	var pending string
+	var hasPending bool
+	var calendars []*model.Calendar
+
 	for {
-		line, ok = nextLogicalLine(scanner, &pending, &hasPending)
+		line, ok := nextLogicalLine(scanner, &pending, &hasPending)
 		if !ok {
 			break
 		}
-		line = strings.TrimRight(line, " ")
+		if line != beginVCalendarLine {
+			if line == "" {
+				return nil, icalerr.ErrInvalidCalendarEmptyLine
+			}
+			if len(calendars) > 0 {
+				return nil, icalerr.ErrContentAfterEndBlock
+			}
+			return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
+		}
+
+		calendar, err := parseOneCalendar(scanner, &pending, &hasPending, reusableParams)
+		if err != nil {
+			return nil, err
+		}
+		calendars = append(calendars, calendar)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
+	}
+	if len(calendars) == 0 {
+		return nil, icalerr.ErrNoCalendarFound
+	}
+
+	return calendars, nil
+}
+
+// parseOneCalendar parses a single VCALENDAR body, starting just after its
+// BEGIN:VCALENDAR line, and returns as soon as END:VCALENDAR is validated.
+// The scanner, line-unfolding state, and parameter map are owned by the caller
+// so multiple calendars can be parsed from the same stream without
+// reallocating them.
+func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool, reusableParams map[string]string) (*model.Calendar, error) {
+	calendar := &model.Calendar{}
+	currentState := stateCalendar
+	var cursor componentCursor
+
+	for {
+		line, ok := nextLogicalLine(scanner, pending, hasPending)
+		if !ok {
+			break
+		}
 
 		if line == "" {
 			return nil, icalerr.ErrInvalidCalendarEmptyLine
@@ -116,23 +168,17 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 			if err := handleBeginBlock(value, &currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
-			continue
 		case "END":
-			if currentState == stateFinished {
-				return nil, icalerr.ErrContentAfterEndBlock
-			}
 			if err := handleEndBlock(value, &currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
-			continue
-		default:
 			if currentState == stateFinished {
-				return nil, icalerr.ErrContentAfterEndBlock
+				return calendar, nil
 			}
+		default:
 			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
-			continue
 		}
 	}
 
@@ -141,15 +187,12 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
 	}
 
-	// Verify that the last line was a END:VCALENDAR
-	if currentState != stateFinished {
-		return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
-	}
-
-	return calendar, nil
+	// Input ended before END:VCALENDAR was seen
+	return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
 }
 
-// nextLogicalLine returns the next RFC 5545 content line after unfolding.
+// nextLogicalLine returns the next RFC 5545 content line after unfolding,
+// with trailing spaces trimmed.
 // Folded physical lines (CRLF followed by a single SPACE or HTAB) are joined
 // by stripping that leading white-space and appending the remainder.
 func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) (string, bool) {
@@ -181,9 +224,9 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 		break
 	}
 	if folded {
-		return b.String(), true
+		return strings.TrimRight(b.String(), " "), true
 	}
-	return line, true
+	return strings.TrimRight(line, " "), true
 }
 
 // parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
@@ -206,7 +249,7 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateStandard, stateDaylight:
 		return parseTimeZonePropertySubComponent(propertyName, value, params, cursor.tzProp)
 	case stateFinished:
-		// Unreachable from Read (stateFinished is guarded earlier); kept as a defensive default.
+		// Unreachable: parseOneCalendar returns as soon as stateFinished is reached; kept as a defensive default.
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
