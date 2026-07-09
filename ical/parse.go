@@ -68,6 +68,9 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 	scanner := bufio.NewScanner(reader)
 
 	if !scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading iCalendar data: %w", err)
+		}
 		return nil, icalerr.ErrNoCalendarFound
 	}
 
