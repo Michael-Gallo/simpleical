@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseRRule(t *testing.T) {
@@ -810,12 +811,12 @@ func TestParseRRule(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			rule, err := ParseRRule(test.input)
 			if test.expectError != nil {
-				assert.Error(t, err)
-				assert.ErrorContains(t, err, test.expectError.Error())
+				require.Error(t, err)
+				require.ErrorContains(t, err, test.expectError.Error())
 				assert.Nil(t, rule)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, test.want, rule)
 		})
 	}
@@ -973,10 +974,10 @@ func TestParseByDay(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			interval, weekday, err := parseByDay(test.input)
 			if test.expectError != nil {
-				assert.ErrorIs(t, err, test.expectError)
+				require.ErrorIs(t, err, test.expectError)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, test.expectedInt, interval)
 			assert.Equal(t, test.expectedWeekDay, weekday)
 		})

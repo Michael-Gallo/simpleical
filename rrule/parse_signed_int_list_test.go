@@ -87,6 +87,11 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				expectError: strconv.ErrSyntax,
 			},
 			{
+				name:        "trailing comma is rejected",
+				input:       "1,",
+				expectError: strconv.ErrSyntax,
+			},
+			{
 				name:        "bare minus is rejected",
 				input:       "-",
 				expectError: strconv.ErrSyntax,
@@ -98,7 +103,7 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				got, err := parseSignedIntListBounded(test.input, int8(53), errInvalidWeekno)
 				if test.expectError != nil {
 					require.Error(t, err)
-					assert.ErrorContains(t, err, test.expectError.Error())
+					require.ErrorContains(t, err, test.expectError.Error())
 					assert.Nil(t, got)
 					return
 				}
@@ -158,7 +163,7 @@ func TestParseSignedIntListBounded(t *testing.T) {
 				got, err := parseSignedIntListBounded(test.input, int16(366), errInvalidBySetPos)
 				if test.expectError != nil {
 					require.Error(t, err)
-					assert.ErrorContains(t, err, test.expectError.Error())
+					require.ErrorContains(t, err, test.expectError.Error())
 					assert.Nil(t, got)
 					return
 				}
@@ -168,4 +173,15 @@ func TestParseSignedIntListBounded(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestListParsersRejectTrailingComma(t *testing.T) {
+	_, err := parseUint8List("15,", 59, errInvalidBySecond)
+	require.ErrorIs(t, err, strconv.ErrSyntax)
+
+	_, err = parseUnsignedIntList("1,", 1, 12, errInvalidByMonth)
+	require.ErrorIs(t, err, strconv.ErrSyntax)
+
+	_, err = parseSignedIntListCustom("1,", validByMonthDay, errInvalidByMonthDay)
+	require.ErrorIs(t, err, strconv.ErrSyntax)
 }

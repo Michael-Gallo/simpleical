@@ -4,6 +4,7 @@ run:
 linters:
   enable:
     - err113
+    - errorlint
     - goconst
     - gosec
     - exhaustive
@@ -11,9 +12,13 @@ linters:
     - nakedret
     - noctx
     - nolintlint
+    - perfsprint
     - revive
+    - staticcheck
+    - testifylint
     - unconvert
     - unparam
+    - unused
     - whitespace
   settings:
     goconst:
@@ -40,7 +45,7 @@ linters:
       - ^examples(/|$)
 formatters:
   enable:
-    - gofmt
+    - gofumpt
     - goimports
   exclusions:
     generated: lax

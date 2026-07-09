@@ -25,18 +25,12 @@ var (
 	errTWithoutTimePart = errors.New("'T' marker must be followed by time components")
 )
 
-// ParseICalDuration parses an iCal duration string according to RFC 5545 section 3.3.6 into a time.Duration.
-// The string can be prefixed with a + or - sign to indicate a positive or negative duration.
-// The string can contain the following units:
-// - D: days
-// - H: hours
-// - M: minutes
-// - S: seconds
-// ParseICalDuration parses an iCalendar (RFC 5545) duration string into a time.Duration.
-// It accepts an optional leading '+' or '-' sign, a weeks-only form `PnW` (must be the only component),
-// or the date/time form `P[nD][T[nH][nM][nS]]`. The function validates format rules such as prohibiting
-// mixed weeks with other components, rejecting duplicate units or multiple `T` markers, and requiring
-// time components to follow a `T`; invalid inputs produce an error.
+// ParseICalDuration parses an iCalendar (RFC 5545 section 3.3.6) duration string into a time.Duration.
+// An optional leading '+' or '-' sign indicates a positive or negative duration.
+// Accepted forms are a weeks-only `PnW` (must be the only component) or `P[nD][T[nH][nM][nS]]`
+// with date units D (days) and time units H (hours), M (minutes), and S (seconds) after a `T` marker.
+// Invalid inputs are rejected, including mixed weeks with other components, duplicate units,
+// multiple `T` markers, and time components without a preceding `T`.
 func ParseICalDuration(s string) (time.Duration, error) {
 	if len(s) == 0 {
 		return 0, errEmpty
@@ -81,11 +75,11 @@ func ParseICalDuration(s string) (time.Duration, error) {
 
 	// Helper to read a positive integer
 	readInt := func() (int64, bool) {
-		if i >= len(s) || !unicode.IsDigit(rune(s[i])) {
+		if i >= len(s) || s[i] < '0' || s[i] > '9' {
 			return 0, false
 		}
 		start := i
-		for i < len(s) && unicode.IsDigit(rune(s[i])) {
+		for i < len(s) && s[i] >= '0' && s[i] <= '9' {
 			i++
 		}
 		v, err := strconv.ParseInt(s[start:i], 10, 64)
@@ -105,7 +99,7 @@ func ParseICalDuration(s string) (time.Duration, error) {
 			return 0, errMissingUnit
 		}
 		for j := numStart; j < wpos; j++ {
-			if !unicode.IsDigit(rune(s[j])) {
+			if s[j] < '0' || s[j] > '9' {
 				return 0, errUnexpectedChar
 			}
 		}

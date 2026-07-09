@@ -79,7 +79,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
 				LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
 				Categories:   []string{"first", "second", "third"},
-				Geo:          []float64{37.386013, -122.082932},
+				Geo:          &[2]float64{37.386013, -122.082932},
 			},
 		},
 		TimeZones: []model.TimeZone{
@@ -167,7 +167,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				assert.Contains(t, tc.input, "\r\n", "fixture must retain CRLF line endings")
 			}
 			calendar, err := ical.FromString(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
 	}
@@ -218,7 +218,7 @@ func TestParseCalendarError(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.ErrorIs(t, err, tc.expectedErr)
+			require.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
 	}
@@ -227,13 +227,13 @@ func TestParseCalendarError(t *testing.T) {
 func TestReadPreservesInitialScanIOError(t *testing.T) {
 	calendar, err := ical.Read(errReader{err: errBoom})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errBoom)
-	assert.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	require.ErrorIs(t, err, errBoom)
+	require.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }
 
 func TestReadEmptyReaderReturnsNoCalendarFound(t *testing.T) {
 	calendar, err := ical.Read(io.MultiReader())
-	assert.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	require.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }

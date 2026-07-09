@@ -7,6 +7,7 @@ import (
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkParseAttendee(b *testing.B) {
@@ -117,11 +118,11 @@ func TestParseAttendee(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			attendee, err := parseAttendee(testCase.value, testCase.params)
 			if testCase.expectedError != nil {
-				assert.ErrorIs(t, err, testCase.expectedError)
+				require.ErrorIs(t, err, testCase.expectedError)
 				assert.Nil(t, attendee)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, testCase.expectedAttendee, attendee)
 		})
 	}

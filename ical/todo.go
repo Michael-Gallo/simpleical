@@ -43,13 +43,13 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 
 	case model.TodoTokenGeo:
 		if todo.Geo != nil {
-			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateProperty, propertyName)
+			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, todoLocation)
 		}
 		geo, err := parseGeo(value)
 		if err != nil {
 			return err
 		}
-		todo.Geo = geo
+		todo.Geo = &geo
 	case model.TodoTokenLastModified:
 		return setOnceTimeProperty(&todo.LastModified, value, propertyName, todoLocation)
 	case model.TodoTokenLocation:

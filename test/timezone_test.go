@@ -10,6 +10,7 @@ import (
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -80,7 +81,7 @@ func TestValidTimezone(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
 	}
@@ -140,9 +141,9 @@ func TestInvalidTimezone(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			calendar, err := ical.FromString(tc.input)
-			assert.ErrorIs(t, err, tc.expectedErr)
+			require.ErrorIs(t, err, tc.expectedErr)
 			if tc.errContains != "" {
-				assert.ErrorContains(t, err, tc.errContains)
+				require.ErrorContains(t, err, tc.errContains)
 			}
 			assert.Nil(t, calendar)
 		})

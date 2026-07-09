@@ -59,9 +59,9 @@ type Event struct {
 
 	// Geo specifies the latitude and longitude of the activity specified by a calendar component.
 	// Refers to the GEO property. Can be specified in Events and Todos.
-	// Must be precise up to 6 decimal places.
+	// Must be precise up to 6 decimal places. Index 0 is latitude, 1 is longitude.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.6.
-	Geo []float64
+	Geo *[2]float64
 
 	// LastModified specifies the date and time that the information associated with the calendar information was last revised.
 	// Refers to the LAST-MODIFIED property. Can be specified in Events, Todos, Journals, and TimeZones.
