@@ -7,16 +7,17 @@ cd "$REPO_ROOT" || exit 1
 export PRE_COMMIT_HOME="${PRE_COMMIT_HOME:-$REPO_ROOT/.precommit-cache}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$REPO_ROOT/.cache}"
 
-INSTALL_PYTHON=/usr/bin/python
 ARGS=(hook-impl --config=.pre-commit-config.yaml --hook-type=pre-commit)
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ARGS+=(--hook-dir "$HERE" -- "$@")
 
-if [ -x "$INSTALL_PYTHON" ]; then
-	exec "$INSTALL_PYTHON" -mpre_commit "${ARGS[@]}"
-elif command -v pre-commit >/dev/null; then
+if command -v pre-commit >/dev/null; then
 	exec pre-commit "${ARGS[@]}"
+elif command -v python3 >/dev/null; then
+	exec python3 -mpre_commit "${ARGS[@]}"
+elif command -v python >/dev/null; then
+	exec python -mpre_commit "${ARGS[@]}"
 else
 	echo '`pre-commit` not found. Did you forget to activate your virtualenv?' 1>&2
 	exit 1
