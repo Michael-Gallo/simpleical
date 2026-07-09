@@ -92,10 +92,7 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 			return nil, icalerr.ErrInvalidCalendarEmptyLine
 		}
 
-		// Clear the reusable parameter map before each use
-		for k := range reusableParams {
-			delete(reusableParams, k)
-		}
+		clear(reusableParams)
 
 		propertyName, params, value, err := parseIcalLineWithReusableMap(line, reusableParams)
 		if err != nil {
