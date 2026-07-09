@@ -2,7 +2,6 @@ package ical
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/icaldur"
@@ -36,11 +35,11 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 
 	// Repeatable properties
 	case model.FreeBusyTokenAttendee:
-		parsedURL, err := url.Parse(value)
+		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
-		freeBusy.Attendees = append(freeBusy.Attendees, *parsedURL)
+		freeBusy.Attendees = append(freeBusy.Attendees, *attendee)
 	case model.FreeBusyTokenComment:
 		freeBusy.Comment = append(freeBusy.Comment, value)
 	case model.FreeBusyTokenFreeBusy:

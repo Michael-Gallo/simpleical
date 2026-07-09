@@ -2,7 +2,6 @@ package ical
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
@@ -32,11 +31,11 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 	case model.AlarmTokenSummary:
 		return setOnceProperty(&alarm.Summary, value, propertyName, alarmLocation)
 	case model.AlarmTokenAttendee:
-		parsedURL, err := url.Parse(value)
+		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
-		alarm.Attendees = append(alarm.Attendees, *parsedURL)
+		alarm.Attendees = append(alarm.Attendees, *attendee)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidAlarmProperty, propertyName)
 	}

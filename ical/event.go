@@ -85,6 +85,13 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		}
 		event.Attach = append(event.Attach, *attachment)
 		return nil
+	case model.EventTokenAttendee:
+		attendee, err := parseAttendee(value, params)
+		if err != nil {
+			return err
+		}
+		event.Attendees = append(event.Attendees, *attendee)
+		return nil
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidEventProperty, propertyName)
 	}
@@ -104,9 +111,9 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)
 			}
 			organizer.Directory = parsedURI
-		case "LANGUAGE":
+		case model.ParamLanguage:
 			organizer.Language = propValue
-		case "SENT-BY":
+		case model.ParamSentBy:
 			parsedURI, err := url.Parse(propValue)
 			if err != nil {
 				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidOrganizer, err)

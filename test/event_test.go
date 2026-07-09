@@ -66,6 +66,8 @@ var (
 	testEventInvalidAttachValueInput string
 	//go:embed test_data/events/valid_test_event_with_rrule_byweekno_bysetpos.ical
 	testEventWithRRuleByWeekNoBySetPosInput string
+	//go:embed test_data/events/test_event_attendee_params.ical
+	testEventAttendeeParamsInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -152,6 +154,34 @@ func TestValidEvent(t *testing.T) {
 			},
 		},
 		{
+			name:  "Valid VEVENT with ATTENDEE parameters",
+			input: testEventAttendeeParamsInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "attendee-params@example.com",
+						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						Summary: "Event with Attendee Params",
+						Attendees: []model.Attendee{
+							{
+								CommonName: "Jane Doe",
+								CalAddress: &url.URL{Scheme: "mailto", Opaque: "jdoe@example.com"},
+								Role:       "REQ-PARTICIPANT",
+								PartStat:   "ACCEPTED",
+								DelegatedFrom: []*url.URL{
+									{Scheme: "mailto", Opaque: "bob@example.com"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:  "Valid VEVENT with VALARM",
 			input: testEventWithAlarmInput,
 			expectedCalendar: &model.Calendar{
@@ -178,7 +208,9 @@ func TestValidEvent(t *testing.T) {
 								Trigger:     "-PT1H",
 								Description: "Email reminder for upcoming event",
 								Summary:     "Event Reminder",
-								Attendees:   []url.URL{{Scheme: "mailto", Opaque: "user@example.com"}},
+								Attendees: []model.Attendee{
+									{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user@example.com"}},
+								},
 							},
 						},
 					},

@@ -2,7 +2,6 @@ package ical
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -93,11 +92,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		todo.Attach = append(todo.Attach, *attachment)
 		return nil
 	case model.TodoTokenAttendee:
-		parsedURL, err := url.Parse(value)
+		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
-		todo.Attendees = append(todo.Attendees, *parsedURL)
+		todo.Attendees = append(todo.Attendees, *attendee)
 	case model.TodoTokenCategories:
 		todo.Categories = append(todo.Categories, strings.Split(value, ",")...)
 	case model.TodoTokenComment:

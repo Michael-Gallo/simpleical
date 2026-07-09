@@ -27,6 +27,7 @@ var (
 	ErrInvalidPropertyLine       = errors.New("invalid property line in iCal data")
 	ErrDuplicateProperty         = errors.New("duplicate property")
 	ErrInvalidOrganizer          = errors.New("invalid organizer property")
+	ErrInvalidAttendee           = errors.New("invalid attendee property")
 	ErrInvalidRRule              = errors.New("invalid rrule property")
 	ErrPropertyWhenNotInCalendar = errors.New("property found when not in a calendar")
 )

@@ -48,8 +48,11 @@ func TestValidFreeBusy(t *testing.T) {
 							CommonName: "Calendar Owner",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "owner@example.com"},
 						},
-						Attendees: []url.URL{{Scheme: "mailto", Opaque: "user1@example.com"}, {Scheme: "mailto", Opaque: "user2@example.com"}},
-						Comment:   []string{"Available for meetings during business hours"},
+						Attendees: []model.Attendee{
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user1@example.com"}},
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user2@example.com"}},
+						},
+						Comment: []string{"Available for meetings during business hours"},
 						FreeBusy: []model.FreeBusyTime{
 							{
 								Start:  time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
