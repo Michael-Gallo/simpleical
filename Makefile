@@ -1,4 +1,4 @@
-.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative pre-commit install-hooks
+.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative check install-hooks
 
 test-slow:
 	go test ./... --race --count 1
@@ -10,7 +10,7 @@ lint:
 	golangci-lint run
 
 fmt:
-	go fmt ./...
+	golangci-lint fmt
 
 vet:
 	go vet ./...
@@ -27,12 +27,9 @@ bench-long:
 bench-comparative:
 	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
 
-
-pre-commit:
-	PRE_COMMIT_HOME="$${PRE_COMMIT_HOME:-$(CURDIR)/.precommit-cache}" XDG_CACHE_HOME="$${XDG_CACHE_HOME:-$(CURDIR)/.cache}" pre-commit run --all-files
+check: fmt vet lint test-slow
 
 install-hooks:
-	chmod +x .githooks/pre-commit
 	git config core.hooksPath .githooks
 
 cover:
