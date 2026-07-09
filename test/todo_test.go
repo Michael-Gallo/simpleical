@@ -26,6 +26,10 @@ var (
 	testTodoDuplicateUIDInput string
 	//go:embed test_data/todos/test_todo_invalid_geo.ical
 	testTodoInvalidGeoInput string
+	//go:embed test_data/todos/test_todo_invalid_geo_latitude.ical
+	testTodoInvalidGeoLatitudeInput string
+	//go:embed test_data/todos/test_todo_invalid_geo_longitude.ical
+	testTodoInvalidGeoLongitudeInput string
 	//go:embed test_data/todos/test_todo_with_rrule.ical
 	testTodoWithRRuleInput string
 	//go:embed test_data/todos/test_todo_duplicate_organizer.ical
@@ -157,6 +161,16 @@ func TestInvalidTodo(t *testing.T) {
 			name:        "VTODO invalid GEO",
 			input:       testTodoInvalidGeoInput,
 			expectedErr: icalerr.ErrInvalidGeoProperty,
+		},
+		{
+			name:        "VTODO invalid GEO latitude",
+			input:       testTodoInvalidGeoLatitudeInput,
+			expectedErr: icalerr.ErrInvalidGeoPropertyLatitude,
+		},
+		{
+			name:        "VTODO invalid GEO longitude",
+			input:       testTodoInvalidGeoLongitudeInput,
+			expectedErr: icalerr.ErrInvalidGeoPropertyLongitude,
 		},
 		{
 			name:        "VTODO duplicate UID",

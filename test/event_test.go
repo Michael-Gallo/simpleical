@@ -18,6 +18,10 @@ var (
 
 	//go:embed test_data/events/test_event_invalid_organizer.ical
 	testIcalInvalidOrganizerInput string
+	//go:embed test_data/events/test_event_invalid_geo_latitude.ical
+	testIcalInvalidGeoLatitudeInput string
+	//go:embed test_data/events/test_event_invalid_geo_longitude.ical
+	testIcalInvalidGeoLongitudeInput string
 	//go:embed test_data/events/test_event_full_organizer.ical
 	testIcalFullOrganizerInput string
 	//go:embed test_data/events/test_event_invalid_start.ical
@@ -302,6 +306,16 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "Invalid organizer",
 			input:       testIcalInvalidOrganizerInput,
 			expectedErr: icalerr.ErrInvalidOrganizer,
+		},
+		{
+			name:        "VEVENT invalid GEO latitude",
+			input:       testIcalInvalidGeoLatitudeInput,
+			expectedErr: icalerr.ErrInvalidGeoPropertyLatitude,
+		},
+		{
+			name:        "VEVENT invalid GEO longitude",
+			input:       testIcalInvalidGeoLongitudeInput,
+			expectedErr: icalerr.ErrInvalidGeoPropertyLongitude,
 		},
 		{
 			name:        "Invalid start date",

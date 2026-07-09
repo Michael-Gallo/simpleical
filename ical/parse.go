@@ -200,6 +200,7 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 		// These are handled within timezone parsing
 		return parseTimezoneProperty(propertyName, value, params, currentState, &calendar.TimeZones[len(calendar.TimeZones)-1])
 	case stateFinished:
+		// Unreachable from Read (stateFinished is guarded earlier); kept as a defensive default.
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
@@ -362,3 +363,5 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 	}
 	return nil
 }
+
+

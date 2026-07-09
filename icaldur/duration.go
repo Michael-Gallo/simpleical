@@ -25,18 +25,12 @@ var (
 	errTWithoutTimePart = errors.New("'T' marker must be followed by time components")
 )
 
-// ParseICalDuration parses an iCal duration string according to RFC 5545 section 3.3.6 into a time.Duration.
-// The string can be prefixed with a + or - sign to indicate a positive or negative duration.
-// The string can contain the following units:
-// - D: days
-// - H: hours
-// - M: minutes
-// - S: seconds
-// ParseICalDuration parses an iCalendar (RFC 5545) duration string into a time.Duration.
-// It accepts an optional leading '+' or '-' sign, a weeks-only form `PnW` (must be the only component),
-// or the date/time form `P[nD][T[nH][nM][nS]]`. The function validates format rules such as prohibiting
-// mixed weeks with other components, rejecting duplicate units or multiple `T` markers, and requiring
-// time components to follow a `T`; invalid inputs produce an error.
+// ParseICalDuration parses an iCalendar (RFC 5545 section 3.3.6) duration string into a time.Duration.
+// An optional leading '+' or '-' sign indicates a positive or negative duration.
+// Accepted forms are a weeks-only `PnW` (must be the only component) or `P[nD][T[nH][nM][nS]]`
+// with date units D (days) and time units H (hours), M (minutes), and S (seconds) after a `T` marker.
+// Invalid inputs are rejected, including mixed weeks with other components, duplicate units,
+// multiple `T` markers, and time components without a preceding `T`.
 func ParseICalDuration(s string) (time.Duration, error) {
 	if len(s) == 0 {
 		return 0, errEmpty
