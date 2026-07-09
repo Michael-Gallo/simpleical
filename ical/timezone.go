@@ -1,8 +1,10 @@
 package ical
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -52,13 +54,17 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 	case model.TimezonePropertyTokenTimeZoneOffsetTo:
 		return setOnceProperty(&tzProp.TimeZoneOffsetTo, value, propertyName, timezoneLocation)
 	case model.TimezonePropertyTokenDTStart:
-		return setOnceTimeProperty(&tzProp.DTStart, value, propertyName, timezoneLocation)
+		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&tzProp.DTStart, parsedTime, propertyName, timezoneLocation)
 	case model.TimezonePropertyComment:
 		tzProp.Comment = append(tzProp.Comment, value)
 	case model.TimezonePropertyRdate:
-		parsedTime, err := icaldur.ParseIcalTime(value)
+		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
 		if err != nil {
-			return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, err.Error())
+			return err
 		}
 		tzProp.Rdate = append(tzProp.Rdate, parsedTime)
 	case model.TimezonePropertyTimeZoneName:
@@ -73,6 +79,19 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
 	}
 	return nil
+}
+
+// parseTimezoneLocalTime parses DTSTART/RDATE values for STANDARD/DAYLIGHT.
+// RFC 5545 requires these to be local wall-time values (no trailing "Z").
+func parseTimezoneLocalTime(value, propertyName string) (time.Time, error) {
+	parsedTime, err := icaldur.ParseIcalLocalTime(value)
+	if err != nil {
+		if errors.Is(err, icaldur.ErrLocalTimeRequired) {
+			return time.Time{}, icalerr.ErrTimezoneLocalTimeRequired
+		}
+		return time.Time{}, fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName)
+	}
+	return parsedTime, nil
 }
 
 // validateTimeZone ensures that all required values are present for a timezone.
