@@ -112,7 +112,7 @@ func TestParseIcalLocalTime(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got, err := ParseIcalLocalTime(test.input)
 			if test.expectError != nil {
-				assert.ErrorIs(t, err, test.expectError)
+				require.ErrorIs(t, err, test.expectError)
 				return
 			}
 			require.NoError(t, err)
