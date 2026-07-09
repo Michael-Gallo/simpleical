@@ -71,7 +71,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		if err != nil {
 			return err
 		}
-		event.Geo = geo
+		event.Geo = &geo
 	case model.EventTokenRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {

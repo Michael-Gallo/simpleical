@@ -93,8 +93,9 @@ type Todo struct {
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Geo specifies the latitude and longitude of the activity specified by a calendar component.
+	// Index 0 is latitude, 1 is longitude.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.6
-	Geo []float64
+	Geo *[2]float64
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the information associated with the calendar component was last revised.

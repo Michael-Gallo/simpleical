@@ -79,20 +79,20 @@ func splitParametersWithReusableMap(paramString string, params map[string]string
 }
 
 // parseGeo parses a GEO property value "lat;lng" into two floats.
-func parseGeo(value string) ([]float64, error) {
+func parseGeo(value string) ([2]float64, error) {
 	latitudeString, longitudeString, found := strings.Cut(value, ";")
 	if !found {
-		return nil, icalerr.ErrInvalidGeoProperty
+		return [2]float64{}, icalerr.ErrInvalidGeoProperty
 	}
 	latitude, err := strconv.ParseFloat(latitudeString, 64)
 	if err != nil {
-		return nil, icalerr.ErrInvalidGeoPropertyLatitude
+		return [2]float64{}, icalerr.ErrInvalidGeoPropertyLatitude
 	}
 	longitude, err := strconv.ParseFloat(longitudeString, 64)
 	if err != nil {
-		return nil, icalerr.ErrInvalidGeoPropertyLongitude
+		return [2]float64{}, icalerr.ErrInvalidGeoPropertyLongitude
 	}
-	return []float64{latitude, longitude}, nil
+	return [2]float64{latitude, longitude}, nil
 }
 
 // findUnquotedColonIndex finds the first colon that is not encapsulated in quotations.

@@ -112,7 +112,7 @@ func TestValidEvent(t *testing.T) {
 						Sequence:     1,
 						Comment:      []string{"I Am", "A Comment"},
 						Categories:   []string{"first", "second", "third"},
-						Geo:          []float64{37.386013, -122.082932},
+						Geo:          &[2]float64{37.386013, -122.082932},
 						Transp:       model.EventTranspOpaque,
 						Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
 						LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),

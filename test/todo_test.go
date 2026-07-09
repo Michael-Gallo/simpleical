@@ -81,7 +81,7 @@ func TestValidTodo(t *testing.T) {
 						Categories: []string{"work", "urgent", "project"},
 						Comment:    []string{"This is a critical task for the Q1 release"},
 						Resources:  []string{"laptop", "meeting-room"},
-						Geo:        []float64{37.7749, -122.4194},
+						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
 					},
 				},
@@ -120,7 +120,7 @@ func TestValidTodo(t *testing.T) {
 						Categories: []string{"work", "urgent", "project"},
 						Comment:    []string{"This is a critical task for the Q1 release"},
 						Resources:  []string{"laptop", "meeting-room"},
-						Geo:        []float64{37.7749, -122.4194},
+						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,

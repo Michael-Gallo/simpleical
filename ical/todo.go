@@ -49,7 +49,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		if err != nil {
 			return err
 		}
-		todo.Geo = geo
+		todo.Geo = &geo
 	case model.TodoTokenLastModified:
 		return setOnceTimeProperty(&todo.LastModified, value, propertyName, todoLocation)
 	case model.TodoTokenLocation:
