@@ -29,7 +29,7 @@ bench-comparative:
 
 
 pre-commit:
-	pre-commit run --all-files
+	PRE_COMMIT_HOME="$${PRE_COMMIT_HOME:-$(CURDIR)/.precommit-cache}" XDG_CACHE_HOME="$${XDG_CACHE_HOME:-$(CURDIR)/.cache}" pre-commit run --all-files
 
 cover:
 	go test -coverprofile=coverage.out ./...

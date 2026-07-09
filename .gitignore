@@ -1,3 +1,5 @@
 .cursorrules
 .vscode
 coverage.out
+.cache/
+.precommit-cache/
