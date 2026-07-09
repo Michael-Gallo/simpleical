@@ -75,11 +75,11 @@ func ParseICalDuration(s string) (time.Duration, error) {
 
 	// Helper to read a positive integer
 	readInt := func() (int64, bool) {
-		if i >= len(s) || !unicode.IsDigit(rune(s[i])) {
+		if i >= len(s) || s[i] < '0' || s[i] > '9' {
 			return 0, false
 		}
 		start := i
-		for i < len(s) && unicode.IsDigit(rune(s[i])) {
+		for i < len(s) && s[i] >= '0' && s[i] <= '9' {
 			i++
 		}
 		v, err := strconv.ParseInt(s[start:i], 10, 64)
@@ -99,7 +99,7 @@ func ParseICalDuration(s string) (time.Duration, error) {
 			return 0, errMissingUnit
 		}
 		for j := numStart; j < wpos; j++ {
-			if !unicode.IsDigit(rune(s[j])) {
+			if s[j] < '0' || s[j] > '9' {
 				return 0, errUnexpectedChar
 			}
 		}
