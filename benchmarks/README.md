@@ -4,78 +4,97 @@ This directory contains comparative benchmarks against other Go iCalendar parser
 
 ## Setup
 
-1. Install dependencies:
+From this directory:
 
 ```bash
 go mod tidy
 ```
 
-2. Install gocal:
+Dependencies (gocal, golang-ical) are already listed in `go.mod`.
+
+## Reproducing results
+
+Run from the repository root (or `cd benchmarks` and drop the directory prefix).
+
+### Quick local run
 
 ```bash
-go get github.com/apognu/gocal
+make bench
+# equivalent:
+cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem
 ```
 
-## Running Benchmarks
-
-### Run All Benchmarks
+### Stable multi-sample run (recommended for comparisons)
 
 ```bash
-go test -bench=. -benchmem
+make bench-long
+# equivalent:
+mkdir -p benchmarks/artifacts
+cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem -count=10 > artifacts/results.txt
 ```
 
-### Run Specific Parser Benchmarks
+Comparative parsers:
 
 ```bash
-# Your parser only
-go test -bench=BenchmarkAllSimpleIcal -benchmem
-
-# gocal only
-go test -bench=BenchmarkAllGocal -benchmem
-
-# Comparative benchmarks
-go test -bench=BenchmarkComparative -benchmem
+make bench-comparative
+# equivalent:
+mkdir -p benchmarks/artifacts
+cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count=10 > artifacts/results_comparative.txt
 ```
 
-### Memory Usage Comparison
+Raw output is written under `benchmarks/artifacts/` and is **not** committed (see `.gitignore`).
+Compare runs with [benchstat](https://pkg.go.dev/golang.org/x/perf/cmd/benchstat):
 
 ```bash
-go test -bench=BenchmarkMemoryUsage -benchmem
+benchstat artifacts/results.txt
+# or against a previous local capture:
+benchstat old.txt artifacts/results.txt
 ```
 
-### Run with CPU Profiling
+### Environment notes
+
+- **Go version:** use the module’s `go` version from the repo root `go.mod`.
+- **CPU / GOMAXPROCS:** `ns/op` varies by host; allocation metrics (`B/op`, `allocs/op`) are the stable regression signal.
+- **Committed baseline:** see [`BASELINE.md`](BASELINE.md) for expected `B/op` / `allocs/op` and the no-increase regression target.
+- **CI:** `.github/workflows/ci.yml` runs a short smoke bench (`-benchtime=1x -count=1`) only; full raw results are local/CI artifacts, not source.
+
+### Other useful invocations
 
 ```bash
-go test -bench=. -cpuprofile=cpu.prof
+# Specific comparative suite
+go test -bench=BenchmarkComparativeAll -benchmem
+
+# RRULE parsing
+go test -bench=BenchmarkParseRRule -benchmem
+
+# CPU / memory profiles
+make bench-profile
+# or:
+go test -bench=BenchmarkAllScenarios -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof
 go tool pprof cpu.prof
-```
-
-### Run with Memory Profiling
-
-```bash
-go test -bench=. -memprofile=mem.prof
 go tool pprof mem.prof
 ```
 
-## Benchmark Results
+## What is measured
 
-The benchmarks compare:
-- **Parsing Speed**: Time per operation
-- **Memory Usage**: Bytes allocated per operation
-- **Allocation Count**: Number of allocations per operation
+- **Parsing speed:** time per operation (`ns/op`)
+- **Memory usage:** bytes allocated per operation (`B/op`)
+- **Allocation count:** allocations per operation (`allocs/op`)
 
-## Adding More Parsers
+Parsers compared in `BenchmarkComparativeAll`: simple-ical, [gocal](https://github.com/apognu/gocal), [golang-ical](https://github.com/arran4/golang-ical).
 
-To add another parser:
+Summarized comparative numbers also live in the root [`README.md`](../README.md#performance).
+
+## Adding more parsers
 
 1. Add the dependency to `go.mod`
 2. Create a new benchmark file (e.g., `other_parser_benchmark.go`)
 3. Implement benchmark functions following the same pattern
-4. Add to `BenchmarkComparative` function
+4. Wire them into `BenchmarkComparativeAll`
 
-## Test Data
+## Test data
 
-Test data is loaded from `../parse/test_data/` directory. To add new test cases:
+Fixture files live in this directory (`test_*.ical`). To add a scenario:
 
-1. Add the `.ical` file to the test data directory
-2. Update the `testCases` slice in `LoadTestData()` function
+1. Add the `.ical` file here
+2. Register it in the `testCases` slices in `benchmark_setup_test.go`

@@ -29,7 +29,9 @@ go get github.com/michael-gallo/simpleical
 
 
 ## Performance
-Performance tests are for simple-ical v5.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
+Performance tests are for simple-ical v5.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1).
+
+To reproduce locally (commands, environment notes, and allocation baselines), see [`benchmarks/README.md`](benchmarks/README.md) and [`benchmarks/BASELINE.md`](benchmarks/BASELINE.md). Prefer `B/op` / `allocs/op` for cross-machine comparisons; `ns/op` is host-specific.
 
 ### Specs
 All tests were ran on a 5700X3D Processor with 32GB of RAM.

@@ -3,3 +3,6 @@
 coverage.out
 .cache/
 .precommit-cache/
+
+# Host-specific raw benchmark output (use make bench-long / bench-comparative)
+benchmarks/artifacts/

@@ -21,11 +21,14 @@ bench:
 bench-profile:
 	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof
 
+# Writes host-specific raw output under benchmarks/artifacts/ (gitignored).
 bench-long:
-	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem  -count 10 > results.txt
+	mkdir -p benchmarks/artifacts
+	cd benchmarks && go test -bench=BenchmarkAllScenarios -benchmem -count=10 > artifacts/results.txt
 
 bench-comparative:
-	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
+	mkdir -p benchmarks/artifacts
+	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count=10 > artifacts/results_comparative.txt
 
 
 pre-commit:
