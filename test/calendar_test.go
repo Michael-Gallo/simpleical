@@ -227,13 +227,13 @@ func TestParseCalendarError(t *testing.T) {
 func TestReadPreservesInitialScanIOError(t *testing.T) {
 	calendar, err := ical.Read(errReader{err: errBoom})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errBoom)
-	assert.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	require.ErrorIs(t, err, errBoom)
+	require.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }
 
 func TestReadEmptyReaderReturnsNoCalendarFound(t *testing.T) {
 	calendar, err := ical.Read(io.MultiReader())
-	assert.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
+	require.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }

@@ -363,5 +363,3 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 	}
 	return nil
 }
-
-

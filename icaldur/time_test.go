@@ -115,7 +115,7 @@ func TestParseIcalLocalTime(t *testing.T) {
 				assert.ErrorIs(t, err, test.expectError)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, test.want, got)
 		})
 	}
