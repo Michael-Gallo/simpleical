@@ -1,4 +1,4 @@
-.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative pre-commit
+.PHONY: test-slow test lint fmt vet bench bench-profile bench-long bench-comparative pre-commit install-hooks
 
 test-slow:
 	go test ./... --race --count 1
@@ -30,6 +30,10 @@ bench-comparative:
 
 pre-commit:
 	PRE_COMMIT_HOME="$${PRE_COMMIT_HOME:-$(CURDIR)/.precommit-cache}" XDG_CACHE_HOME="$${XDG_CACHE_HOME:-$(CURDIR)/.cache}" pre-commit run --all-files
+
+install-hooks:
+	chmod +x .githooks/pre-commit
+	git config core.hooksPath .githooks
 
 cover:
 	go test -coverprofile=coverage.out ./...
