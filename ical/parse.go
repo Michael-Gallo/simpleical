@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -35,60 +34,6 @@ const (
 // beginVCalendarLine is the content line that opens a VCALENDAR object.
 const beginVCalendarLine = "BEGIN:VCALENDAR"
 
-// FromFileName parses an iCalendar file from the given file path into a Calendar.
-// It opens the file, parses its contents, and returns a Calendar.
-// This is a convenience function that wraps Read.
-// The file is automatically closed after parsing.
-func FromFileName(filename string) (*model.Calendar, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	return Read(file)
-}
-
-// FromString takes the string representation of an ICAL and parses it into a Calendar.
-// It returns an error if the input is not a valid ICAL string.
-// This is a convenience function that wraps Read.
-func FromString(input string) (*model.Calendar, error) {
-	// Handle empty input
-	if input == "" {
-		return nil, icalerr.ErrNoCalendarFound
-	}
-
-	// Use the reader-based parser for consistency
-	reader := strings.NewReader(input)
-	return Read(reader)
-}
-
-// FromFileNameAll parses an iCalendar file that may contain multiple
-// sequential VCALENDAR objects into a slice of Calendars.
-// This is a convenience function that wraps ReadAll.
-// The file is automatically closed after parsing.
-func FromFileNameAll(filename string) ([]*model.Calendar, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	return ReadAll(file)
-}
-
-// FromStringAll takes the string representation of an ICAL stream that may
-// contain multiple sequential VCALENDAR objects and parses it into a slice of Calendars.
-// This is a convenience function that wraps ReadAll.
-func FromStringAll(input string) ([]*model.Calendar, error) {
-	// Handle empty input
-	if input == "" {
-		return nil, icalerr.ErrNoCalendarFound
-	}
-
-	// Use the reader-based parser for consistency
-	reader := strings.NewReader(input)
-	return ReadAll(reader)
-}
-
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
 type componentCursor struct {
@@ -101,11 +46,11 @@ type componentCursor struct {
 	tzProp   *model.TimeZoneProperty
 }
 
-// Read takes an io.Reader containing iCalendar data and parses it into a Calendar.
-// The input must contain exactly one VCALENDAR object; any content after
+// ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
+// It asserts that the input contains exactly one VCALENDAR object; any content after
 // END:VCALENDAR (including another BEGIN:VCALENDAR) returns ErrContentAfterEndBlock.
-// Use ReadAll to parse a stream containing multiple VCALENDAR objects.
-func Read(reader io.Reader) (*model.Calendar, error) {
+// Use Read to parse a stream that may contain multiple VCALENDAR objects.
+func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
@@ -144,12 +89,13 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 	return calendar, nil
 }
 
-// ReadAll takes an io.Reader containing iCalendar data and parses it into a
+// Read takes an io.Reader containing iCalendar data and parses it into a
 // slice of Calendars. Per RFC 5545 section 3.4, a single iCalendar stream may
 // contain multiple sequential VCALENDAR objects. Scanner state and internal
 // buffers are shared across calendars, so parsing N calendars costs no more
 // than parsing each individually.
-func ReadAll(reader io.Reader) ([]*model.Calendar, error) {
+// Use ReadSingle to assert that the input contains exactly one VCALENDAR object.
+func Read(reader io.Reader) ([]*model.Calendar, error) {
 	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)

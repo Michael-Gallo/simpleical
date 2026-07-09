@@ -29,9 +29,23 @@ go get github.com/michael-gallo/simpleical
 
 ## Usage
 
-Use `ical.Read`, `ical.FromString`, or `ical.FromFileName` to parse input containing exactly one `VCALENDAR` object.
+`ical.Read` parses an iCalendar stream from any `io.Reader` into a `[]*model.Calendar`. Per [RFC 5545 section 3.4](https://datatracker.ietf.org/doc/html/rfc5545#section-3.4), a stream may contain multiple sequential `VCALENDAR` objects, and `Read` handles any number of them.
 
-Per [RFC 5545 section 3.4](https://datatracker.ietf.org/doc/html/rfc5545#section-3.4), a single iCalendar stream may contain multiple sequential `VCALENDAR` objects. Use `ical.ReadAll`, `ical.FromStringAll`, or `ical.FromFileNameAll` to parse such a stream into a `[]*model.Calendar`. The single-calendar functions return `ErrContentAfterEndBlock` if a second calendar follows the first.
+```go
+file, err := os.Open("calendars.ics")
+if err != nil {
+	return err
+}
+defer file.Close()
+
+calendars, err := ical.Read(file)
+```
+
+If you expect exactly one `VCALENDAR`, use `ical.ReadSingle`, which returns a single `*model.Calendar` and fails with `ErrContentAfterEndBlock` if anything (including a second calendar) follows `END:VCALENDAR`:
+
+```go
+calendar, err := ical.ReadSingle(strings.NewReader(icalData))
+```
 
 
 ## Performance

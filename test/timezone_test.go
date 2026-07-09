@@ -3,6 +3,7 @@ package test
 import (
 	_ "embed"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,7 +81,7 @@ func TestValidTimezone(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendar, err := ical.FromString(tc.input)
+			calendar, err := ical.ReadSingle(strings.NewReader(tc.input))
 			require.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
@@ -140,7 +141,7 @@ func TestInvalidTimezone(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendar, err := ical.FromString(tc.input)
+			calendar, err := ical.ReadSingle(strings.NewReader(tc.input))
 			require.ErrorIs(t, err, tc.expectedErr)
 			if tc.errContains != "" {
 				require.ErrorContains(t, err, tc.errContains)

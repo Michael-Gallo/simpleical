@@ -2,6 +2,7 @@ package ical_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/ical"
@@ -35,51 +36,7 @@ END:VEVENT
 END:VCALENDAR
 `
 
-func ExampleFromString() {
-	calendar, err := ical.FromString(testIcalString)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(calendar.ProdID)
-	fmt.Println(calendar.TimeZones[0].TimeZoneID)
-	fmt.Println(calendar.Events[0].Summary)
-	// Output:
-	// -//Event//Event Calendar//EN
-	// America/Detroit
-	// Event Summary
-}
-
-func ExampleFromFileName() {
-	calendar, err := ical.FromFileName("../test/test_data/calendar/valid_calendar.ical")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(calendar.ProdID)
-	fmt.Println(calendar.CalScale)
-	// Output:
-	// -//Event//Event Calendar//EN
-	// GREGORIAN
-}
-
 func ExampleRead() {
-	reader := strings.NewReader(testIcalString)
-	calendar, err := ical.Read(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(calendar.ProdID)
-	fmt.Println(calendar.TimeZones[0].TimeZoneID)
-	fmt.Println(calendar.Events[0].Summary)
-	// Output:
-	// -//Event//Event Calendar//EN
-	// America/Detroit
-	// Event Summary
-}
-
-func ExampleReadAll() {
 	// A single iCalendar stream may contain multiple sequential VCALENDAR objects
 	multiCalendarStream := `BEGIN:VCALENDAR
 VERSION:2.0
@@ -96,7 +53,7 @@ END:VEVENT
 END:VCALENDAR
 `
 	reader := strings.NewReader(multiCalendarStream)
-	calendars, err := ical.ReadAll(reader)
+	calendars, err := ical.Read(reader)
 	if err != nil {
 		panic(err)
 	}
@@ -108,4 +65,40 @@ END:VCALENDAR
 	// 2
 	// -//First//Calendar//EN
 	// Event Summary
+}
+
+func ExampleReadSingle() {
+	reader := strings.NewReader(testIcalString)
+	calendar, err := ical.ReadSingle(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(calendar.ProdID)
+	fmt.Println(calendar.TimeZones[0].TimeZoneID)
+	fmt.Println(calendar.Events[0].Summary)
+	// Output:
+	// -//Event//Event Calendar//EN
+	// America/Detroit
+	// Event Summary
+}
+
+// ExampleReadSingle_file demonstrates parsing a calendar from a file.
+func ExampleReadSingle_file() {
+	file, err := os.Open("../test/test_data/calendar/valid_calendar.ical")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	calendar, err := ical.ReadSingle(file)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(calendar.ProdID)
+	fmt.Println(calendar.CalScale)
+	// Output:
+	// -//Event//Event Calendar//EN
+	// GREGORIAN
 }

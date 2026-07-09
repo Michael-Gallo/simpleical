@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -174,7 +175,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 			if tc.name == "Calendar with carriage returns" {
 				assert.Contains(t, tc.input, "\r\n", "fixture must retain CRLF line endings")
 			}
-			calendar, err := ical.FromString(tc.input)
+			calendar, err := ical.ReadSingle(strings.NewReader(tc.input))
 			require.NoError(t, err)
 			assert.Equal(t, *tc.expectedCalendar, *calendar)
 		})
@@ -230,7 +231,7 @@ func TestParseCalendarError(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendar, err := ical.FromString(tc.input)
+			calendar, err := ical.ReadSingle(strings.NewReader(tc.input))
 			require.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendar)
 		})
@@ -283,7 +284,7 @@ func TestParseMultipleCalendarsSuccess(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendars, err := ical.FromStringAll(tc.input)
+			calendars, err := ical.Read(strings.NewReader(tc.input))
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedCalendars, calendars)
 		})
@@ -334,37 +335,37 @@ func TestParseMultipleCalendarsError(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			calendars, err := ical.FromStringAll(tc.input)
+			calendars, err := ical.Read(strings.NewReader(tc.input))
 			require.ErrorIs(t, err, tc.expectedErr)
 			assert.Nil(t, calendars)
 		})
 	}
 }
 
-func TestReadAllPreservesIOError(t *testing.T) {
-	calendars, err := ical.ReadAll(errReader{err: errBoom})
+func TestReadPreservesIOError(t *testing.T) {
+	calendars, err := ical.Read(errReader{err: errBoom})
 	require.Error(t, err)
 	require.ErrorIs(t, err, errBoom)
 	require.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendars)
 }
 
-func TestReadAllEmptyReaderReturnsNoCalendarFound(t *testing.T) {
-	calendars, err := ical.ReadAll(io.MultiReader())
+func TestReadEmptyReaderReturnsNoCalendarFound(t *testing.T) {
+	calendars, err := ical.Read(io.MultiReader())
 	require.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendars)
 }
 
-func TestReadPreservesInitialScanIOError(t *testing.T) {
-	calendar, err := ical.Read(errReader{err: errBoom})
+func TestReadSinglePreservesInitialScanIOError(t *testing.T) {
+	calendar, err := ical.ReadSingle(errReader{err: errBoom})
 	require.Error(t, err)
 	require.ErrorIs(t, err, errBoom)
 	require.NotErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }
 
-func TestReadEmptyReaderReturnsNoCalendarFound(t *testing.T) {
-	calendar, err := ical.Read(io.MultiReader())
+func TestReadSingleEmptyReaderReturnsNoCalendarFound(t *testing.T) {
+	calendar, err := ical.ReadSingle(io.MultiReader())
 	require.ErrorIs(t, err, icalerr.ErrNoCalendarFound)
 	assert.Nil(t, calendar)
 }
