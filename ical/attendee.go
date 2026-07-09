@@ -17,17 +17,17 @@ func parseAttendee(value string, params map[string]string) (*model.Attendee, err
 		case model.ParamCN:
 			attendee.CommonName = propValue
 		case model.ParamDir:
-			parsedURI, err := url.Parse(propValue)
+			parsedURI, err := parseCalAddress(propValue)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+				return nil, err
 			}
 			attendee.Directory = parsedURI
 		case model.ParamLanguage:
 			attendee.Language = propValue
 		case model.ParamSentBy:
-			parsedURI, err := url.Parse(propValue)
+			parsedURI, err := parseCalAddress(propValue)
 			if err != nil {
-				return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+				return nil, err
 			}
 			attendee.SentBy = parsedURI
 		case model.ParamCUType:
@@ -71,13 +71,21 @@ func parseAttendee(value string, params map[string]string) (*model.Attendee, err
 		}
 	}
 
-	parsedURI, err := url.Parse(value)
+	parsedURI, err := parseCalAddress(value)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+		return nil, err
 	}
 	attendee.CalAddress = parsedURI
 
 	return attendee, nil
+}
+
+func parseCalAddress(value string) (*url.URL, error) {
+	parsedURI, err := url.Parse(value)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", icalerr.ErrInvalidAttendee, err)
+	}
+	return parsedURI, nil
 }
 
 func parseCalAddressList(propValue string) ([]*url.URL, error) {
