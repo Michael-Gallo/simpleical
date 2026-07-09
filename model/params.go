@@ -9,11 +9,26 @@ package model
 // so these are untyped string constants rather than a closed enum.
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.2
 const (
-	ParamValue    = "VALUE"
-	ParamEncoding = "ENCODING"
-	ParamFmtType  = "FMTTYPE"
-	ParamCN       = "CN"
-	ParamDir      = "DIR"
+	ParamValue         = "VALUE"
+	ParamEncoding      = "ENCODING"
+	ParamFmtType       = "FMTTYPE"
+	ParamCN            = "CN"
+	ParamDir           = "DIR"
+	ParamLanguage      = "LANGUAGE"
+	ParamSentBy        = "SENT-BY"
+	ParamCUType        = "CUTYPE"
+	ParamRole          = "ROLE"
+	ParamPartStat      = "PARTSTAT"
+	ParamRSVP          = "RSVP"
+	ParamMember        = "MEMBER"
+	ParamDelegatedTo   = "DELEGATED-TO"
+	ParamDelegatedFrom = "DELEGATED-FROM"
+)
+
+// Boolean parameter values used by RSVP and similar parameters.
+const (
+	ParamTrue  = "TRUE"
+	ParamFalse = "FALSE"
 )
 
 // AttachValue represents the closed set of values the VALUE parameter can take

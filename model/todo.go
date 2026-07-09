@@ -5,7 +5,6 @@
 package model
 
 import (
-	"net/url"
 	"time"
 
 	"github.com/michael-gallo/simpleical/rrule"
@@ -165,7 +164,7 @@ type Todo struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies the participants that are invited to the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.1
-	Attendees []url.URL
+	Attendees []Attendee
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the categories that the calendar component belongs to.

@@ -5,7 +5,6 @@
 package model
 
 import (
-	"net/url"
 	"time"
 )
 
@@ -63,7 +62,7 @@ type Alarm struct {
 	// OPTIONAL, MAY occur more than once (for EMAIL action, at least one required)
 	// Specifies the participants that are invited to the alarm.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.1
-	Attendees []url.URL
+	Attendees []Attendee
 
 	// OPTIONAL, MAY occur more than once
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.

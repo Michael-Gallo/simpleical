@@ -36,6 +36,61 @@ type Organizer struct {
 	OtherParams map[string]string
 }
 
+// Attendee represents an ATTENDEE property in the iCalendar format.
+// Used in VEVENT, VTODO, VJOURNAL, VFREEBUSY, and VALARM.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.1
+type Attendee struct {
+	// CalAddress is the attendee's calendar address (property value).
+	CalAddress *url.URL
+
+	// CommonName is the CN parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.2
+	CommonName string
+
+	// Directory is the DIR parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.6
+	Directory *url.URL
+
+	// SentBy is the SENT-BY parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.18
+	SentBy *url.URL
+
+	// Language is the LANGUAGE parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.10
+	Language string
+
+	// CUType is the CUTYPE parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.3
+	CUType string
+
+	// Role is the ROLE parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.16
+	Role string
+
+	// PartStat is the PARTSTAT parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.12
+	PartStat string
+
+	// RSVP is the RSVP parameter.
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.17
+	RSVP bool
+
+	// Member is the MEMBER parameter (one or more calendar addresses).
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.11
+	Member []*url.URL
+
+	// DelegatedTo is the DELEGATED-TO parameter (one or more calendar addresses).
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.5
+	DelegatedTo []*url.URL
+
+	// DelegatedFrom is the DELEGATED-FROM parameter (one or more calendar addresses).
+	// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.4
+	DelegatedFrom []*url.URL
+
+	// OtherParams contains any other parameters on the ATTENDEE property.
+	OtherParams map[string]string
+}
+
 // Attachment represents an ATTACH property in the iCalendar format.
 // This property provides the capability to associate a document object with a calendar component.
 // It can be specified as a URI pointing to a resource or as inline binary encoded content.

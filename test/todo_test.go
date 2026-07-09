@@ -68,7 +68,10 @@ func TestValidTodo(t *testing.T) {
 							CommonName: "Project Manager",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "pm@example.com"},
 						},
-						Attendees:  []url.URL{{Scheme: "mailto", Opaque: "dev1@example.com"}, {Scheme: "mailto", Opaque: "dev2@example.com"}},
+						Attendees: []model.Attendee{
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "dev1@example.com"}},
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "dev2@example.com"}},
+						},
 						Contacts:   []string{"John Doe, Engineering Team, +1-555-0123"},
 						Categories: []string{"work", "urgent", "project"},
 						Comment:    []string{"This is a critical task for the Q1 release"},
@@ -104,7 +107,10 @@ func TestValidTodo(t *testing.T) {
 							CommonName: "Project Manager",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "pm@example.com"},
 						},
-						Attendees:  []url.URL{{Scheme: "mailto", Opaque: "dev1@example.com"}, {Scheme: "mailto", Opaque: "dev2@example.com"}},
+						Attendees: []model.Attendee{
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "dev1@example.com"}},
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "dev2@example.com"}},
+						},
 						Contacts:   []string{"John Doe, Engineering Team, +1-555-0123"},
 						Categories: []string{"work", "urgent", "project"},
 						Comment:    []string{"This is a critical task for the Q1 release"},

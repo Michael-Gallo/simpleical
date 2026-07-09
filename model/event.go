@@ -5,7 +5,6 @@
 package model
 
 import (
-	"net/url"
 	"time"
 
 	"github.com/michael-gallo/simpleical/rrule"
@@ -135,7 +134,7 @@ type Event struct {
 
 	// Attendee is used to represent an ATTENDEE component in the iCalendar format.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.1.
-	Attendees []url.URL
+	Attendees []Attendee
 
 	// Categories specifies the categories that the calendar component belongs to.
 	// Can be specified in Events, Todos, and Journals.
