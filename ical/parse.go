@@ -113,6 +113,9 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 		}
 		switch propertyName {
 		case "BEGIN":
+			if currentState == stateFinished {
+				return nil, icalerr.ErrContentAfterEndBlock
+			}
 			if err := handleBeginBlock(value, &currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}

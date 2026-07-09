@@ -30,6 +30,8 @@ var (
 	testIcalInvalidEndInput string
 	//go:embed test_data/events/test_event_content_after_end_block.ical
 	testIcalContentAfterEndBlockInput string
+	//go:embed test_data/events/test_event_begin_after_end_block.ical
+	testIcalBeginAfterEndBlockInput string
 	//go:embed test_data/events/test_event_duplicate_uid.ical
 	testIcalDuplicateUIDInput string
 	//go:embed test_data/events/test_event_duplicate_sequence.ical
@@ -330,6 +332,11 @@ func TestInvalidEvent(t *testing.T) {
 		{
 			name:        "Content after END:VCALENDAR",
 			input:       testIcalContentAfterEndBlockInput,
+			expectedErr: icalerr.ErrContentAfterEndBlock,
+		},
+		{
+			name:        "BEGIN after END:VCALENDAR",
+			input:       testIcalBeginAfterEndBlockInput,
 			expectedErr: icalerr.ErrContentAfterEndBlock,
 		},
 		{
