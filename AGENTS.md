@@ -18,3 +18,7 @@ This is an icalendar parser focused on performance and compliance with the RFC55
 # Tests
 
 - Please ensure that, when dealing with icalendar properties, we have integration test coverage in the `tests/` folder
+
+# Godoc Examples
+
+- Every exported function must have a corresponding `Example...` in an `_test.go` file so it appears in godoc
