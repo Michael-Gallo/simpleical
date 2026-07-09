@@ -24,7 +24,7 @@ DTEND:20231201T130000Z
 SUMMARY:Complex Event with Parameters
 DESCRIPTION:This event has many parameters and properties
 LOCATION:Conference Room A
-ORGANIZER;CN=John Doe;EMAIL=john@example.com:mailto:john@example.com
+ORGANIZER;CN=John Doe:mailto:john@example.com
 STATUS:CONFIRMED
 SEQUENCE:1
 TRANSP:OPAQUE
