@@ -84,6 +84,42 @@ func TestParseIcalTime(t *testing.T) {
 	}
 }
 
+func TestParseIcalLocalTime(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        time.Time
+		expectError error
+	}{
+		{
+			name:  "Valid local time",
+			input: "20240101T020000",
+			want:  time.Date(2024, 1, 1, 2, 0, 0, 0, time.UTC),
+		},
+		{
+			name:        "UTC designator rejected",
+			input:       "20240101T020000Z",
+			expectError: ErrLocalTimeRequired,
+		},
+		{
+			name:        "Invalid format",
+			input:       "invalid",
+			expectError: ErrInvalidTimeFormat,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := ParseIcalLocalTime(test.input)
+			if test.expectError != nil {
+				assert.ErrorIs(t, err, test.expectError)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
 func BenchmarkParseIcalTime(b *testing.B) {
 	times := []string{
 		"20250928T183000Z",

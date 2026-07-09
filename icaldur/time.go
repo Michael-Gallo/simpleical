@@ -9,6 +9,7 @@ import (
 var (
 	ErrInvalidTimeFormat = errors.New("invalid iCal time format")
 	ErrInvalidTimeValue  = errors.New("invalid time value")
+	ErrLocalTimeRequired = errors.New("local time required; UTC designator Z is not allowed")
 )
 
 // ParseIcalTime parses an iCal datetime string.
@@ -89,4 +90,13 @@ func ParseIcalTime(value string) (time.Time, error) {
 	}
 	// All times are returned in UTC (floating times are treated as UTC per iCal spec)
 	return t, nil
+}
+
+// ParseIcalLocalTime parses an iCal datetime string that must be local wall time
+// (FORM #1: DATE WITH LOCAL TIME). UTC values ending in "Z" are rejected.
+func ParseIcalLocalTime(value string) (time.Time, error) {
+	if len(value) > 0 && value[len(value)-1] == 'Z' {
+		return time.Time{}, ErrLocalTimeRequired
+	}
+	return ParseIcalTime(value)
 }

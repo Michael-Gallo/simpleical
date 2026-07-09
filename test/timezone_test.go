@@ -27,6 +27,10 @@ var (
 	testTimezoneDuplicateTZOffsetToInput string
 	//go:embed test_data/timezones/test_timezone_invalid_dtstart.ical
 	testTimezoneInvalidDTStartInput string
+	//go:embed test_data/timezones/test_timezone_utc_dtstart.ical
+	testTimezoneUTCDTStartInput string
+	//go:embed test_data/timezones/test_timezone_utc_rdate.ical
+	testTimezoneUTCRDateInput string
 	//go:embed test_data/timezones/test_timezone_duplicate_rrule.ical
 	testTimezoneDuplicateRRuleInput string
 )
@@ -98,6 +102,16 @@ func TestInvalidTimezone(t *testing.T) {
 			name:        "VTIMEZONE invalid DTSTART",
 			input:       testTimezoneInvalidDTStartInput,
 			expectedErr: icalerr.ErrParseErrorInComponent,
+		},
+		{
+			name:        "VTIMEZONE STANDARD DTSTART with UTC designator",
+			input:       testTimezoneUTCDTStartInput,
+			expectedErr: icalerr.ErrTimezoneLocalTimeRequired,
+		},
+		{
+			name:        "VTIMEZONE STANDARD RDATE with UTC designator",
+			input:       testTimezoneUTCRDateInput,
+			expectedErr: icalerr.ErrTimezoneLocalTimeRequired,
 		},
 		{
 			name:        "VTIMEZONE duplicate TZID",
