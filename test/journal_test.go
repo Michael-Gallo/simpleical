@@ -56,7 +56,10 @@ func TestValidJournal(t *testing.T) {
 							CommonName: "Project Lead",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "lead@example.com"},
 						},
-						Attendees:  []url.URL{{Scheme: "mailto", Opaque: "stakeholder1@example.com"}, {Scheme: "mailto", Opaque: "stakeholder2@example.com"}},
+						Attendees: []model.Attendee{
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "stakeholder1@example.com"}},
+							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "stakeholder2@example.com"}},
+						},
 						Contacts:   []string{"Jane Doe, Project Manager, +1-555-0456"},
 						Categories: []string{"work", "project", "status"},
 						Comment:    []string{"This journal entry documents the completion of Phase 1"},

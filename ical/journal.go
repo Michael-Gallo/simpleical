@@ -2,7 +2,6 @@ package ical
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -52,11 +51,11 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		journal.Attach = append(journal.Attach, *attachment)
 		return nil
 	case model.JournalTokenAttendee:
-		parsedURL, err := url.Parse(value)
+		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
-		journal.Attendees = append(journal.Attendees, *parsedURL)
+		journal.Attendees = append(journal.Attendees, *attendee)
 	case model.JournalTokenCategories:
 		journal.Categories = append(journal.Categories, strings.Split(value, ",")...)
 	case model.JournalTokenComment:
