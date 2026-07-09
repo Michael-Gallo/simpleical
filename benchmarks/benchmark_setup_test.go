@@ -20,6 +20,8 @@ const (
 	singleFileName   = "./test_event.ical"
 	multipleFileName = "./test_multiple_events.ical"
 	complexFileName  = "./test_complex.ical"
+	// A stream of three sequential VCALENDAR objects, parsed with ReadAll
+	multipleCalendarsFileName = "./test_multiple_calendars.ical"
 )
 
 func BenchmarkAllScenarios(b *testing.B) {
@@ -63,6 +65,30 @@ func benchmarkFile(b *testing.B, fileName string, description string) {
 
 		// Prevent optimization
 		_ = cal
+	}
+}
+
+// BenchmarkReadAll measures parsing a stream containing multiple sequential
+// VCALENDAR objects via ical.ReadAll.
+func BenchmarkReadAll(b *testing.B) {
+	fileContent, err := os.ReadFile(multipleCalendarsFileName)
+	if err != nil {
+		b.Fatalf("Failed to read file %s: %v", multipleCalendarsFileName, err)
+	}
+
+	var reader bytes.Reader
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		reader.Reset(fileContent)
+		cals, err := ical.ReadAll(&reader)
+		if err != nil {
+			b.Fatalf("Failed to parse multiple calendars: %v", err)
+		}
+		if len(cals) != 3 {
+			b.Fatalf("Expected 3 calendars, got %d", len(cals))
+		}
 	}
 }
 

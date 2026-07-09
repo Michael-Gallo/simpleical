@@ -78,3 +78,34 @@ func ExampleRead() {
 	// America/Detroit
 	// Event Summary
 }
+
+func ExampleReadAll() {
+	// A single iCalendar stream may contain multiple sequential VCALENDAR objects
+	multiCalendarStream := `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//First//Calendar//EN
+END:VCALENDAR
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Second//Calendar//EN
+BEGIN:VEVENT
+UID:13235@example.com
+DTSTART:20250928T183000Z
+SUMMARY:Event Summary
+END:VEVENT
+END:VCALENDAR
+`
+	reader := strings.NewReader(multiCalendarStream)
+	calendars, err := ical.ReadAll(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(len(calendars))
+	fmt.Println(calendars[0].ProdID)
+	fmt.Println(calendars[1].Events[0].Summary)
+	// Output:
+	// 2
+	// -//First//Calendar//EN
+	// Event Summary
+}

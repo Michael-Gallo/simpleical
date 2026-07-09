@@ -27,6 +27,12 @@ This project is licensed under the Mozilla Public License 2.0. See the [LICENSE]
 go get github.com/michael-gallo/simpleical
 ```
 
+## Usage
+
+Use `ical.Read`, `ical.FromString`, or `ical.FromFileName` to parse input containing exactly one `VCALENDAR` object.
+
+Per [RFC 5545 section 3.4](https://datatracker.ietf.org/doc/html/rfc5545#section-3.4), a single iCalendar stream may contain multiple sequential `VCALENDAR` objects. Use `ical.ReadAll`, `ical.FromStringAll`, or `ical.FromFileNameAll` to parse such a stream into a `[]*model.Calendar`. The single-calendar functions return `ErrContentAfterEndBlock` if a second calendar follows the first.
+
 
 ## Performance
 Performance tests are for simple-ical v5.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
