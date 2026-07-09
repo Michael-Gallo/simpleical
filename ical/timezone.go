@@ -89,7 +89,7 @@ func parseTimezoneLocalTime(value, propertyName string) (time.Time, error) {
 		if errors.Is(err, icaldur.ErrLocalTimeRequired) {
 			return time.Time{}, icalerr.ErrTimezoneLocalTimeRequired
 		}
-		return time.Time{}, fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName)
+		return time.Time{}, fmt.Errorf("%w: %s property %s in iCal: %s", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName, err)
 	}
 	return parsedTime, nil
 }
