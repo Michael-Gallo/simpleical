@@ -14,9 +14,9 @@ ARGS+=(--hook-dir "$HERE" -- "$@")
 
 if command -v pre-commit >/dev/null; then
 	exec pre-commit "${ARGS[@]}"
-elif command -v python3 >/dev/null; then
+elif command -v python3 >/dev/null && python3 -c "import pre_commit" 2>/dev/null; then
 	exec python3 -mpre_commit "${ARGS[@]}"
-elif command -v python >/dev/null; then
+elif command -v python >/dev/null && python -c "import pre_commit" 2>/dev/null; then
 	exec python -mpre_commit "${ARGS[@]}"
 else
 	echo '`pre-commit` not found. Did you forget to activate your virtualenv?' 1>&2
