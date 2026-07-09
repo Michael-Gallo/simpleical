@@ -35,6 +35,8 @@ var (
 	testCalendarMissingProdIDInput string
 	//go:embed test_data/calendar/valid_calendar_with_carriage_returns.ical
 	testValidCalendarWithCarriageReturnsInput string
+	//go:embed test_data/calendar/valid_calendar_folded_lines.ical
+	testValidCalendarFoldedLinesInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
@@ -122,6 +124,27 @@ func TestParseCalendarSuccess(t *testing.T) {
 			name:             "Calendar with carriage returns",
 			input:            testValidCalendarWithCarriageReturnsInput,
 			expectedCalendar: fullExpectedCalendar,
+		},
+		{
+			name:  "Calendar with folded content lines",
+			input: testValidCalendarFoldedLinesInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:   "-//Event//Event Calendar//EN",
+				Version:  "2.0",
+				Method:   "REQUEST",
+				CalScale: "GREGORIAN",
+				Events: []model.Event{
+					{
+						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						UID:         "13235@example.com",
+						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						Summary:     "Event Summary",
+						Description: "This is a long description that exists on a long line.",
+						Location:    "555 Fake Street",
+					},
+				},
+			},
 		},
 	}
 	for _, tc := range testCases {

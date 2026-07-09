@@ -66,18 +66,24 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
+	var pending string
+	var hasPending bool
 
-	if !scanner.Scan() {
+	line, ok := nextLogicalLine(scanner, &pending, &hasPending)
+	if !ok {
 		return nil, icalerr.ErrNoCalendarFound
 	}
-
-	line := strings.TrimRight(scanner.Text(), " ")
+	line = strings.TrimRight(line, " ")
 	if line != "BEGIN:VCALENDAR" {
 		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
 	}
 
-	for scanner.Scan() {
-		line := strings.TrimRight(scanner.Text(), " ")
+	for {
+		line, ok := nextLogicalLine(scanner, &pending, &hasPending)
+		if !ok {
+			break
+		}
+		line = strings.TrimRight(line, " ")
 
 		if line == "" {
 			return nil, icalerr.ErrInvalidCalendarEmptyLine
@@ -128,6 +134,33 @@ func Read(reader io.Reader) (*model.Calendar, error) {
 	}
 
 	return calendar, nil
+}
+
+// nextLogicalLine returns the next RFC 5545 content line after unfolding.
+// Folded physical lines (CRLF followed by a single SPACE or HTAB) are joined
+// by stripping that leading white-space and appending the remainder.
+func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) (string, bool) {
+	var line string
+	if *hasPending {
+		line = *pending
+		*hasPending = false
+	} else if scanner.Scan() {
+		line = scanner.Text()
+	} else {
+		return "", false
+	}
+
+	for scanner.Scan() {
+		next := scanner.Text()
+		if len(next) > 0 && (next[0] == ' ' || next[0] == '\t') {
+			line += next[1:]
+			continue
+		}
+		*pending = next
+		*hasPending = true
+		break
+	}
+	return line, true
 }
 
 // parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
