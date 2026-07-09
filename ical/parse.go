@@ -150,15 +150,25 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 		return "", false
 	}
 
+	var b strings.Builder
+	folded := false
 	for scanner.Scan() {
 		next := scanner.Text()
 		if len(next) > 0 && (next[0] == ' ' || next[0] == '\t') {
-			line += next[1:]
+			if !folded {
+				b.Grow(len(line) + len(next))
+				b.WriteString(line)
+				folded = true
+			}
+			b.WriteString(next[1:])
 			continue
 		}
 		*pending = next
 		*hasPending = true
 		break
+	}
+	if folded {
+		return b.String(), true
 	}
 	return line, true
 }
