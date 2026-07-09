@@ -159,49 +159,25 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYMONTH":
-			months := strings.Split(value, ",")
-			byMonth := make([]int, 0, len(months))
-			for _, month := range months {
-				monthInt, err := strconv.Atoi(month)
-				if err != nil {
-					return nil, err
-				}
-				if monthInt < 1 || monthInt > 12 {
-					return nil, errInvalidByMonth
-				}
-				byMonth = append(byMonth, monthInt)
+			byMonth, err := parseUnsignedIntList(value, 1, 12, errInvalidByMonth)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.ByMonth, byMonth, tag); err != nil {
 				return nil, err
 			}
 		case "BYMONTHDAY":
-			monthdays := strings.Split(value, ",")
-			byMonthDay := make([]int, 0, len(monthdays))
-			for _, monthday := range monthdays {
-				monthdayInt, err := strconv.Atoi(monthday)
-				if err != nil {
-					return nil, err
-				}
-				if !validByMonthDay(monthdayInt) {
-					return nil, errInvalidByMonthDay
-				}
-				byMonthDay = append(byMonthDay, monthdayInt)
+			byMonthDay, err := parseSignedIntListCustom(value, validByMonthDay, errInvalidByMonthDay)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.ByMonthDay, byMonthDay, tag); err != nil {
 				return nil, err
 			}
 		case "BYYEARDAY":
-			yeardays := strings.Split(value, ",")
-			byYearDay := make([]int, 0, len(yeardays))
-			for _, yearday := range yeardays {
-				yeardayInt, err := strconv.Atoi(yearday)
-				if err != nil {
-					return nil, err
-				}
-				if !validByYearDay(yeardayInt) {
-					return nil, errInvalidByYearDay
-				}
-				byYearDay = append(byYearDay, yeardayInt)
+			byYearDay, err := parseSignedIntListCustom(value, validByYearDay, errInvalidByYearDay)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.ByYearDay, byYearDay, tag); err != nil {
 				return nil, err
@@ -230,49 +206,25 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYMINUTE":
-			minutes := strings.Split(value, ",")
-			byMinute := make([]uint8, 0, len(minutes))
-			for _, minute := range minutes {
-				minuteInt, err := strconv.ParseUint(minute, 10, 8)
-				if err != nil {
-					return nil, err
-				}
-				if minuteInt > 59 {
-					return nil, errInvalidByMinute
-				}
-				byMinute = append(byMinute, uint8(minuteInt))
+			byMinute, err := parseUint8List(value, 59, errInvalidByMinute)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.ByMinute, byMinute, tag); err != nil {
 				return nil, err
 			}
 		case "BYHOUR":
-			hours := strings.Split(value, ",")
-			byHour := make([]uint8, 0, len(hours))
-			for _, hour := range hours {
-				hourInt, err := strconv.ParseUint(hour, 10, 8)
-				if err != nil {
-					return nil, err
-				}
-				if hourInt > 23 {
-					return nil, errInvalidByHour
-				}
-				byHour = append(byHour, uint8(hourInt))
+			byHour, err := parseUint8List(value, 23, errInvalidByHour)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.ByHour, byHour, tag); err != nil {
 				return nil, err
 			}
 		case "BYSECOND":
-			seconds := strings.Split(value, ",")
-			bySecond := make([]uint8, 0, len(seconds))
-			for _, second := range seconds {
-				secondInt, err := strconv.ParseUint(second, 10, 8)
-				if err != nil {
-					return nil, err
-				}
-				if secondInt > 59 {
-					return nil, errInvalidBySecond
-				}
-				bySecond = append(bySecond, uint8(secondInt))
+			bySecond, err := parseUint8List(value, 59, errInvalidBySecond)
+			if err != nil {
+				return nil, err
 			}
 			if err := setOnceSlice(&rrule.BySecond, bySecond, tag); err != nil {
 				return nil, err
@@ -395,6 +347,131 @@ func parseSignedIntListBounded[T ~int8 | ~int16](value string, maxVal T, outOfRa
 		}
 		parsed = append(parsed, T(n))
 
+		if i == len(value) {
+			break
+		}
+		if value[i] != ',' {
+			return nil, strconv.ErrSyntax
+		}
+		i++
+	}
+	if len(parsed) == 0 {
+		return nil, strconv.ErrSyntax
+	}
+	return parsed, nil
+}
+
+// parseUint8List parses a comma-separated list of unsigned integers into []uint8.
+// Values must be in [0, maxVal]. Used for BYMINUTE/BYHOUR/BYSECOND.
+func parseUint8List(value string, maxVal uint8, outOfRange error) ([]uint8, error) {
+	parsed := make([]uint8, 0, 4)
+	maxInt := int(maxVal)
+	i := 0
+	for i < len(value) {
+		start := i
+		n := 0
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			n = n*10 + int(value[i]-'0')
+			if n > maxInt {
+				return nil, outOfRange
+			}
+			i++
+		}
+		if i == start {
+			return nil, strconv.ErrSyntax
+		}
+		parsed = append(parsed, uint8(n))
+		if i == len(value) {
+			break
+		}
+		if value[i] != ',' {
+			return nil, strconv.ErrSyntax
+		}
+		i++
+	}
+	if len(parsed) == 0 {
+		return nil, strconv.ErrSyntax
+	}
+	return parsed, nil
+}
+
+// parseUnsignedIntList parses a comma-separated list of unsigned integers into []int.
+// Values must be in [minVal, maxVal]. Used for BYMONTH.
+func parseUnsignedIntList(value string, minVal, maxVal int, outOfRange error) ([]int, error) {
+	parsed := make([]int, 0, 4)
+	i := 0
+	for i < len(value) {
+		start := i
+		n := 0
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			n = n*10 + int(value[i]-'0')
+			if n > maxVal {
+				return nil, outOfRange
+			}
+			i++
+		}
+		if i == start {
+			return nil, strconv.ErrSyntax
+		}
+		if n < minVal {
+			return nil, outOfRange
+		}
+		parsed = append(parsed, n)
+		if i == len(value) {
+			break
+		}
+		if value[i] != ',' {
+			return nil, strconv.ErrSyntax
+		}
+		i++
+	}
+	if len(parsed) == 0 {
+		return nil, strconv.ErrSyntax
+	}
+	return parsed, nil
+}
+
+// parseSignedIntListCustom parses a comma-separated list of signed integers with a custom validator.
+// Used for BYMONTHDAY and BYYEARDAY (zero rejected by validator).
+func parseSignedIntListCustom(value string, valid func(int) bool, outOfRange error) ([]int, error) {
+	parsed := make([]int, 0, 4)
+	i := 0
+	for i < len(value) {
+		neg := false
+		switch value[i] {
+		case '-':
+			neg = true
+			i++
+			if i == len(value) {
+				return nil, strconv.ErrSyntax
+			}
+		case '+':
+			i++
+			if i == len(value) {
+				return nil, strconv.ErrSyntax
+			}
+		}
+
+		start := i
+		n := 0
+		for i < len(value) && value[i] >= '0' && value[i] <= '9' {
+			n = n*10 + int(value[i]-'0')
+			// Bound digit growth; validators cap at 366.
+			if n > 366 {
+				return nil, outOfRange
+			}
+			i++
+		}
+		if i == start {
+			return nil, strconv.ErrSyntax
+		}
+		if neg {
+			n = -n
+		}
+		if !valid(n) {
+			return nil, outOfRange
+		}
+		parsed = append(parsed, n)
 		if i == len(value) {
 			break
 		}
