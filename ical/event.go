@@ -43,6 +43,16 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		return setOnceProperty(&event.Location, value, propertyName, eventLocation)
 	case model.EventTokenUID:
 		return setOnceProperty(&event.UID, value, propertyName, eventLocation)
+	case model.EventTokenClass:
+		return setOnceProperty(&event.Class, model.EventClass(value), propertyName, eventLocation)
+	case model.EventTokenCreated:
+		return setOnceTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
+	case model.EventTokenPriority:
+		return setOnceIntProperty(&event.Priority, value, propertyName, eventLocation)
+	case model.EventTokenURL:
+		return setOnceProperty(&event.URL, value, propertyName, eventLocation)
+	case model.EventTokenRecurrenceID:
+		return setOnceTimePropertyWithParams(&event.RecurrenceID, value, params, propertyName, eventLocation)
 	case model.EventTokenContact:
 		event.Contacts = append(event.Contacts, value)
 		return nil
@@ -92,6 +102,16 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		}
 		event.Attendees = append(event.Attendees, *attendee)
 		return nil
+	case model.EventTokenExceptionDates:
+		return appendTimePropertyWithParams(&event.ExceptionDates, value, params, propertyName, eventLocation)
+	case model.EventTokenRequestStatus:
+		event.RequestStatus = append(event.RequestStatus, value)
+	case model.EventTokenRelated:
+		event.Related = append(event.Related, value)
+	case model.EventTokenResources:
+		event.Resources = append(event.Resources, strings.Split(value, ",")...)
+	case model.EventTokenRdate:
+		return appendTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidEventProperty, propertyName)
 	}
@@ -136,12 +156,13 @@ func parseOrganizer(value string, params map[string]string) (*model.Organizer, e
 	return organizer, nil
 }
 
-// validateEvent ensures that all required values are present for an event
-func validateEvent(event *model.Event) error {
+// validateEvent ensures that all required values are present for an event.
+// DTSTART is required only when the enclosing calendar has no METHOD property.
+func validateEvent(event *model.Event, method string) error {
 	if event.UID == "" {
 		return icalerr.ErrMissingEventUIDProperty
 	}
-	if event.Start.IsZero() {
+	if method == "" && event.Start.IsZero() {
 		return icalerr.ErrMissingEventDTStartProperty
 	}
 	return nil
