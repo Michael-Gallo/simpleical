@@ -20,15 +20,15 @@ const todoLocation = "Todo"
 func parseTodoProperty(propertyName string, value string, params map[string]string, todo *model.Todo) error {
 	switch model.TodoToken(propertyName) {
 	case model.TodoTokenDTStamp:
-		return setOnceTimeProperty(&todo.DTStamp, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.DTStamp, value, params, propertyName, todoLocation)
 	case model.TodoTokenUID:
 		return setOnceProperty(&todo.UID, value, propertyName, todoLocation)
 	case model.TodoTokenClass:
 		return setOnceProperty(&todo.Class, model.TodoClass(value), propertyName, todoLocation)
 	case model.TodoTokenCompleted:
-		return setOnceTimeProperty(&todo.Completed, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.Completed, value, params, propertyName, todoLocation)
 	case model.TodoTokenCreated:
-		return setOnceTimeProperty(&todo.Created, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.Created, value, params, propertyName, todoLocation)
 	case model.TodoTokenDescription:
 		return setOnceProperty(&todo.Description, value, propertyName, todoLocation)
 	case model.TodoTokenDTStart:
@@ -51,7 +51,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		todo.Geo = &geo
 	case model.TodoTokenLastModified:
-		return setOnceTimeProperty(&todo.LastModified, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.LastModified, value, params, propertyName, todoLocation)
 	case model.TodoTokenLocation:
 		return setOnceProperty(&todo.Location, value, propertyName, todoLocation)
 	case model.TodoTokenOrganizer:

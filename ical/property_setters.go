@@ -30,13 +30,8 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
-// setOnceTimeProperty sets a time.Time field only if it hasn't been set before.
-// this is intended for properties that according to the spec must only be set once
-func setOnceTimeProperty(field *time.Time, value, propertyName string, componentType string) error {
-	return setOnceTimePropertyWithParams(field, value, nil, propertyName, componentType)
-}
-
-// setOnceTimePropertyWithParams is like setOnceTimeProperty but honors VALUE=DATE.
+// setOnceTimePropertyWithParams sets a time.Time field only if it hasn't been set before,
+// honoring VALUE=DATE when present.
 func setOnceTimePropertyWithParams(field *time.Time, value string, params map[string]string, propertyName string, componentType string) error {
 	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
 	if err != nil {

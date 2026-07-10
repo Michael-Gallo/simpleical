@@ -14,17 +14,17 @@ const journalLocation = "Journal"
 func parseJournalProperty(propertyName string, value string, params map[string]string, journal *model.Journal) error {
 	switch model.JournalToken(propertyName) {
 	case model.JournalTokenDTStamp:
-		return setOnceTimeProperty(&journal.DTStamp, value, propertyName, journalLocation)
+		return setOnceTimePropertyWithParams(&journal.DTStamp, value, params, propertyName, journalLocation)
 	case model.JournalTokenUID:
 		return setOnceProperty(&journal.UID, value, propertyName, journalLocation)
 	case model.JournalTokenClass:
 		return setOnceProperty(&journal.Class, model.JournalClass(value), propertyName, journalLocation)
 	case model.JournalTokenCreated:
-		return setOnceTimeProperty(&journal.Created, value, propertyName, journalLocation)
+		return setOnceTimePropertyWithParams(&journal.Created, value, params, propertyName, journalLocation)
 	case model.JournalTokenDTStart:
 		return setOnceTimePropertyWithParams(&journal.DTStart, value, params, propertyName, journalLocation)
 	case model.JournalTokenLastModified:
-		return setOnceTimeProperty(&journal.LastModified, value, propertyName, journalLocation)
+		return setOnceTimePropertyWithParams(&journal.LastModified, value, params, propertyName, journalLocation)
 	case model.JournalTokenOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
