@@ -12,6 +12,41 @@ var (
 	ErrLocalTimeRequired = errors.New("local time required; UTC designator Z is not allowed")
 )
 
+// parseIcalDate parses an iCal DATE value (YYYYMMDD) as midnight UTC.
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
+func parseIcalDate(value string) (time.Time, error) {
+	if len(value) != 8 {
+		return time.Time{}, ErrInvalidTimeFormat
+	}
+
+	year, err := strconv.Atoi(value[0:4])
+	if err != nil {
+		return time.Time{}, ErrInvalidTimeFormat
+	}
+
+	month, err := strconv.Atoi(value[4:6])
+	if err != nil {
+		return time.Time{}, ErrInvalidTimeFormat
+	}
+	if month < 1 || month > 12 {
+		return time.Time{}, ErrInvalidTimeValue
+	}
+
+	day, err := strconv.Atoi(value[6:8])
+	if err != nil {
+		return time.Time{}, ErrInvalidTimeFormat
+	}
+	if day < 1 || day > 31 {
+		return time.Time{}, ErrInvalidTimeValue
+	}
+
+	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	if t.Day() != day {
+		return time.Time{}, ErrInvalidTimeValue
+	}
+	return t, nil
+}
+
 // ParseIcalTime parses an iCal datetime string.
 // Supports both UTC format (YYYYMMDDTHHMMSSZ) and floating time format (YYYYMMDDTHHMMSS).
 // This manual implementation is faster than time.Parse for the fixed iCal format.
@@ -90,6 +125,17 @@ func ParseIcalTime(value string) (time.Time, error) {
 	}
 	// All times are returned in UTC (floating times are treated as UTC per iCal spec)
 	return t, nil
+}
+
+const valueTypeDate = "DATE"
+
+// ParseIcalTimeOrDate parses a DATE-TIME value, or a DATE value when valueType is "DATE".
+// When valueType is empty or "DATE-TIME", DATE-TIME parsing is used.
+func ParseIcalTimeOrDate(value, valueType string) (time.Time, error) {
+	if valueType == valueTypeDate {
+		return parseIcalDate(value)
+	}
+	return ParseIcalTime(value)
 }
 
 // ParseIcalLocalTime parses an iCal datetime string that must be local wall time

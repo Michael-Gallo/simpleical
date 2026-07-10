@@ -33,3 +33,12 @@ func ExampleParseIcalTime() {
 	// 30
 	// 0
 }
+
+func ExampleParseIcalTimeOrDate() {
+	date, err := icaldur.ParseIcalTimeOrDate("20070628", "DATE")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(date.Format("2006-01-02"))
+	// Output: 2007-06-28
+}

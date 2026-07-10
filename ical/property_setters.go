@@ -7,6 +7,7 @@ import (
 
 	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
+	"github.com/michael-gallo/simpleical/model"
 )
 
 // setOnceProperty ensures that set-once properties have consistent error handling
@@ -32,7 +33,12 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 // setOnceTimeProperty sets a time.Time field only if it hasn't been set before.
 // this is intended for properties that according to the spec must only be set once
 func setOnceTimeProperty(field *time.Time, value, propertyName string, componentType string) error {
-	parsedTime, err := icaldur.ParseIcalTime(value)
+	return setOnceTimePropertyWithParams(field, value, nil, propertyName, componentType)
+}
+
+// setOnceTimePropertyWithParams is like setOnceTimeProperty but honors VALUE=DATE.
+func setOnceTimePropertyWithParams(field *time.Time, value string, params map[string]string, propertyName string, componentType string) error {
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
@@ -50,10 +56,15 @@ func setOnceDurationProperty(field *time.Duration, value, propertyName string, c
 }
 
 func appendTimeProperty(field *[]time.Time, value, propertyName string, componentType string) error {
-	time, err := icaldur.ParseIcalTime(value)
+	return appendTimePropertyWithParams(field, value, nil, propertyName, componentType)
+}
+
+// appendTimePropertyWithParams is like appendTimeProperty but honors VALUE=DATE.
+func appendTimePropertyWithParams(field *[]time.Time, value string, params map[string]string, propertyName string, componentType string) error {
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
-	*field = append(*field, time)
+	*field = append(*field, parsedTime)
 	return nil
 }
