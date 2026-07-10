@@ -19,6 +19,10 @@ This is an icalendar parser focused on performance and compliance with the RFC55
 
 - Please ensure that, when dealing with icalendar properties, we have integration test coverage in the `tests/` folder
 
+# Public API
+
+- Be conservative about expanding the public API. Prefer unexported helpers unless a symbol is needed by other packages or is intentionally part of the documented surface. Do not export low-level helpers just for symmetry with related exported functions.
+
 # Godoc Examples
 
 - Every exported function must have a corresponding `Example...` in an `_test.go` file so it appears in godoc
