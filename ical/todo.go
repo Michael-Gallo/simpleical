@@ -32,9 +32,9 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenDescription:
 		return setOnceProperty(&todo.Description, value, propertyName, todoLocation)
 	case model.TodoTokenDTStart:
-		return setOnceTimeProperty(&todo.DTStart, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.DTStart, value, params, propertyName, todoLocation)
 	case model.TodoTokenDue:
-		return setOnceTimeProperty(&todo.Due, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.Due, value, params, propertyName, todoLocation)
 	case model.TodoTokenDuration:
 		if todo.Due != (time.Time{}) {
 			return icalerr.ErrInvalidDurationPropertyDue
@@ -65,7 +65,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenPriority:
 		return setOnceIntProperty(&todo.Priority, value, propertyName, todoLocation)
 	case model.TodoTokenRecurrenceID:
-		return setOnceTimeProperty(&todo.RecurrenceID, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation)
 	case model.TodoTokenSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)
 	case model.TodoTokenStatus:
@@ -104,7 +104,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenContact:
 		todo.Contacts = append(todo.Contacts, value)
 	case model.TodoTokenExceptionDates:
-		return appendTimeProperty(&todo.ExceptionDates, value, propertyName, todoLocation)
+		return appendTimePropertyWithParams(&todo.ExceptionDates, value, params, propertyName, todoLocation)
 	case model.TodoTokenRequestStatus:
 		todo.RequestStatus = append(todo.RequestStatus, value)
 	case model.TodoTokenRelated:
@@ -112,7 +112,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.TodoTokenResources:
 		todo.Resources = append(todo.Resources, strings.Split(value, ",")...)
 	case model.TodoTokenRdate:
-		return appendTimeProperty(&todo.Rdate, value, propertyName, todoLocation)
+		return appendTimePropertyWithParams(&todo.Rdate, value, params, propertyName, todoLocation)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTodoProperty, propertyName)
 	}

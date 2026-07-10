@@ -55,11 +55,7 @@ func setOnceDurationProperty(field *time.Duration, value, propertyName string, c
 	return setOnceProperty(field, duration, propertyName, componentType)
 }
 
-func appendTimeProperty(field *[]time.Time, value, propertyName string, componentType string) error {
-	return appendTimePropertyWithParams(field, value, nil, propertyName, componentType)
-}
-
-// appendTimePropertyWithParams is like appendTimeProperty but honors VALUE=DATE.
+// appendTimePropertyWithParams appends a parsed time, honoring VALUE=DATE when present.
 func appendTimePropertyWithParams(field *[]time.Time, value string, params map[string]string, propertyName string, componentType string) error {
 	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
 	if err != nil {

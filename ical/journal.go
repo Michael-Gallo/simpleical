@@ -22,7 +22,7 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.JournalTokenCreated:
 		return setOnceTimeProperty(&journal.Created, value, propertyName, journalLocation)
 	case model.JournalTokenDTStart:
-		return setOnceTimeProperty(&journal.DTStart, value, propertyName, journalLocation)
+		return setOnceTimePropertyWithParams(&journal.DTStart, value, params, propertyName, journalLocation)
 	case model.JournalTokenLastModified:
 		return setOnceTimeProperty(&journal.LastModified, value, propertyName, journalLocation)
 	case model.JournalTokenOrganizer:
@@ -32,7 +32,7 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		}
 		return setOnceProperty(&journal.Organizer, organizer, propertyName, journalLocation)
 	case model.JournalTokenRecurrenceID:
-		return setOnceTimeProperty(&journal.RecurrenceID, value, propertyName, journalLocation)
+		return setOnceTimePropertyWithParams(&journal.RecurrenceID, value, params, propertyName, journalLocation)
 	case model.JournalTokenSequence:
 		return setOnceIntProperty(&journal.Sequence, value, propertyName, journalLocation)
 	case model.JournalTokenStatus:
@@ -65,11 +65,11 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.JournalTokenDescription:
 		journal.Description = append(journal.Description, value)
 	case model.JournalTokenExceptionDates:
-		return appendTimeProperty(&journal.ExceptionDates, value, propertyName, journalLocation)
+		return appendTimePropertyWithParams(&journal.ExceptionDates, value, params, propertyName, journalLocation)
 	case model.JournalTokenRelated:
 		journal.Related = append(journal.Related, value)
 	case model.JournalTokenRdate:
-		return appendTimeProperty(&journal.Rdate, value, propertyName, journalLocation)
+		return appendTimePropertyWithParams(&journal.Rdate, value, params, propertyName, journalLocation)
 	case model.JournalTokenRequestStatus:
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:

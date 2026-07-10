@@ -3,6 +3,7 @@ package icaldur
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -12,6 +13,32 @@ var (
 	ErrLocalTimeRequired = errors.New("local time required; UTC designator Z is not allowed")
 )
 
+// parseDateParts parses YYYYMMDD from the first 8 characters of value.
+// Callers must ensure value is long enough.
+func parseDateParts(value string) (year, month, day int, err error) {
+	year, err = strconv.Atoi(value[0:4])
+	if err != nil {
+		return 0, 0, 0, ErrInvalidTimeFormat
+	}
+
+	month, err = strconv.Atoi(value[4:6])
+	if err != nil {
+		return 0, 0, 0, ErrInvalidTimeFormat
+	}
+	if month < 1 || month > 12 {
+		return 0, 0, 0, ErrInvalidTimeValue
+	}
+
+	day, err = strconv.Atoi(value[6:8])
+	if err != nil {
+		return 0, 0, 0, ErrInvalidTimeFormat
+	}
+	if day < 1 || day > 31 {
+		return 0, 0, 0, ErrInvalidTimeValue
+	}
+	return year, month, day, nil
+}
+
 // parseIcalDate parses an iCal DATE value (YYYYMMDD) as midnight UTC.
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4
 func parseIcalDate(value string) (time.Time, error) {
@@ -19,25 +46,9 @@ func parseIcalDate(value string) (time.Time, error) {
 		return time.Time{}, ErrInvalidTimeFormat
 	}
 
-	year, err := strconv.Atoi(value[0:4])
+	year, month, day, err := parseDateParts(value)
 	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-
-	month, err := strconv.Atoi(value[4:6])
-	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-	if month < 1 || month > 12 {
-		return time.Time{}, ErrInvalidTimeValue
-	}
-
-	day, err := strconv.Atoi(value[6:8])
-	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-	if day < 1 || day > 31 {
-		return time.Time{}, ErrInvalidTimeValue
+		return time.Time{}, err
 	}
 
 	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
@@ -62,28 +73,9 @@ func ParseIcalTime(value string) (time.Time, error) {
 		}
 	}
 
-	// Parse year (positions 0-3)
-	year, err := strconv.Atoi(value[0:4])
+	year, month, day, err := parseDateParts(value)
 	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-
-	// Parse month (positions 4-5)
-	month, err := strconv.Atoi(value[4:6])
-	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-	if month < 1 || month > 12 {
-		return time.Time{}, ErrInvalidTimeValue
-	}
-
-	// Parse day (positions 6-7)
-	day, err := strconv.Atoi(value[6:8])
-	if err != nil {
-		return time.Time{}, ErrInvalidTimeFormat
-	}
-	if day < 1 || day > 31 {
-		return time.Time{}, ErrInvalidTimeValue
+		return time.Time{}, err
 	}
 
 	// Check for 'T' separator (position 8)
@@ -130,9 +122,10 @@ func ParseIcalTime(value string) (time.Time, error) {
 const valueTypeDate = "DATE"
 
 // ParseIcalTimeOrDate parses a DATE-TIME value, or a DATE value when valueType is "DATE".
+// valueType comparison is case-insensitive (RFC 5545 parameter values).
 // When valueType is empty or "DATE-TIME", DATE-TIME parsing is used.
 func ParseIcalTimeOrDate(value, valueType string) (time.Time, error) {
-	if valueType == valueTypeDate {
+	if strings.EqualFold(valueType, valueTypeDate) {
 		return parseIcalDate(value)
 	}
 	return ParseIcalTime(value)

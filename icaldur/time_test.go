@@ -151,6 +151,18 @@ func TestParseIcalTimeOrDate(t *testing.T) {
 			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
 		},
 		{
+			name:      "DATE value type lowercase",
+			input:     "20070628",
+			valueType: "date",
+			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:      "DATE value type mixed case",
+			input:     "20070628",
+			valueType: "Date",
+			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
+		},
+		{
 			name:      "DATE-TIME when value type empty",
 			input:     "20250928T183000Z",
 			valueType: "",
