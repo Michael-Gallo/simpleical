@@ -30,10 +30,32 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
-// setOnceTimePropertyWithParams sets a time.Time field only if it hasn't been set before,
-// honoring VALUE=DATE when present.
+// dateValueAllowed reports whether propertyName may use VALUE=DATE per RFC 5545.
+func dateValueAllowed(propertyName string) bool {
+	switch propertyName {
+	case string(model.EventTokenDtstart),
+		string(model.EventTokenDtend),
+		string(model.TodoTokenDue),
+		string(model.TodoTokenRecurrenceID),
+		string(model.TodoTokenExceptionDates),
+		string(model.TodoTokenRdate):
+		return true
+	default:
+		return false
+	}
+}
+
+func timeValueType(propertyName string, params map[string]string) string {
+	if !dateValueAllowed(propertyName) {
+		return ""
+	}
+	return params[model.ParamValue]
+}
+
+// setOnceTimePropertyWithParams sets a time.Time field only if it hasn't been set before.
+// VALUE=DATE is honored only for properties that permit DATE values.
 func setOnceTimePropertyWithParams(field *time.Time, value string, params map[string]string, propertyName string, componentType string) error {
-	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, timeValueType(propertyName, params))
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
@@ -50,9 +72,10 @@ func setOnceDurationProperty(field *time.Duration, value, propertyName string, c
 	return setOnceProperty(field, duration, propertyName, componentType)
 }
 
-// appendTimePropertyWithParams appends a parsed time, honoring VALUE=DATE when present.
+// appendTimePropertyWithParams appends a parsed time.
+// VALUE=DATE is honored only for properties that permit DATE values.
 func appendTimePropertyWithParams(field *[]time.Time, value string, params map[string]string, propertyName string, componentType string) error {
-	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, params[model.ParamValue])
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, timeValueType(propertyName, params))
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
