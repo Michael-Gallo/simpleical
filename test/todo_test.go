@@ -43,6 +43,8 @@ var (
 	testTodoMissingDTStampInput string
 	//go:embed test_data/todos/valid_test_todo_all_day_date.ical
 	testTodoAllDayDateInput string
+	//go:embed test_data/todos/valid_test_todo_attach_exdate_rdate_alarm.ical
+	testTodoAttachExdateRdateAlarmInput string
 )
 
 func TestValidTodo(t *testing.T) {
@@ -147,6 +149,53 @@ func TestValidTodo(t *testing.T) {
 						Summary: "All-day todo",
 						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
 						Due:     time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VTODO with ATTACH, COMPLETED, TRANSP, SEQUENCE, RECURRENCE-ID, EXDATE, RDATE, RELATED-TO, REQUEST-STATUS, VALARM",
+			input: testTodoAttachExdateRdateAlarmInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Todo Calendar//EN",
+				Version: "2.0",
+				Todos: []model.Todo{
+					{
+						UID:          "todo-attach-exdate-rdate-alarm@example.com",
+						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						DTStart:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						Due:          time.Date(2024, time.January, 30, 17, 0, 0, 0, time.UTC),
+						Summary:      "Todo with ATTACH EXDATE RDATE VALARM",
+						Completed:    time.Date(2024, time.January, 20, 15, 0, 0, 0, time.UTC),
+						Transp:       model.TodoTranspOpaque,
+						Sequence:     3,
+						RecurrenceID: time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						Attach: []model.Attachment{
+							{
+								FormatType: "application/pdf",
+								Value:      model.AttachValueURI,
+								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/todo.pdf"},
+							},
+						},
+						ExceptionDates: []time.Time{
+							time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC),
+							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),
+						},
+						Rdate: []time.Time{
+							time.Date(2024, time.January, 22, 9, 0, 0, 0, time.UTC),
+							time.Date(2024, time.January, 29, 9, 0, 0, 0, time.UTC),
+						},
+						RequestStatus: []string{"2.0;Success"},
+						Related:       []string{"parent-todo@example.com"},
+						Alarms: []model.Alarm{
+							{
+								Action:      model.AlarmActionDisplay,
+								Trigger:     "-PT15M",
+								Description: "Reminder: todo due soon",
+								Repeat:      2,
+								Duration:    5 * time.Minute,
+							},
+						},
 					},
 				},
 			},
