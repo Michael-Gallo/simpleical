@@ -24,8 +24,7 @@ const (
 	stateTodo
 	stateJournal
 	stateFreebusy
-	stateEventAlarm
-	stateTodoAlarm
+	stateAlarm
 	stateStandard
 	stateDaylight
 	stateFinished
@@ -37,13 +36,14 @@ const beginVCalendarLine = "BEGIN:VCALENDAR"
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
 type componentCursor struct {
-	event    *model.Event
-	todo     *model.Todo
-	journal  *model.Journal
-	freeBusy *model.FreeBusy
-	timeZone *model.TimeZone
-	alarm    *model.Alarm
-	tzProp   *model.TimeZoneProperty
+	event       *model.Event
+	todo        *model.Todo
+	journal     *model.Journal
+	freeBusy    *model.FreeBusy
+	timeZone    *model.TimeZone
+	alarm       *model.Alarm
+	alarmParent parserState // stateEvent or stateTodo; valid while in stateAlarm
+	tzProp      *model.TimeZoneProperty
 }
 
 // ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
@@ -202,9 +202,7 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 // parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
 func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch currentState {
-	case stateEventAlarm:
-		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
-	case stateTodoAlarm:
+	case stateAlarm:
 		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
 	case stateEvent:
 		return parseEventProperty(propertyName, value, params, cursor.event)
@@ -251,14 +249,12 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 			if cursor.event == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
-			*currentState = stateEventAlarm
 			cursor.event.Alarms = append(cursor.event.Alarms, model.Alarm{})
 			cursor.alarm = &cursor.event.Alarms[len(cursor.event.Alarms)-1]
 		case stateTodo:
 			if cursor.todo == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
-			*currentState = stateTodoAlarm
 			cursor.todo.Alarms = append(cursor.todo.Alarms, model.Alarm{})
 			cursor.alarm = &cursor.todo.Alarms[len(cursor.todo.Alarms)-1]
 		case stateJournal:
@@ -266,6 +262,8 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		default:
 			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", icalerr.ErrUnexpectedBeginBlock)
 		}
+		cursor.alarmParent = *currentState
+		*currentState = stateAlarm
 	case model.SectionTokenVJournal:
 		*currentState = stateJournal
 		calendar.Journals = append(calendar.Journals, model.Journal{})
@@ -333,28 +331,15 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		cursor.freeBusy = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVAlarm):
-		switch *currentState { //nolint:exhaustive // it is an error condition to end a VALARM block if the state isn't an alarm state
-		case stateEventAlarm:
-			if cursor.alarm == nil {
-				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
-			}
-			if err := validateAlarm(cursor.alarm); err != nil {
-				return err
-			}
-			cursor.alarm = nil
-			*currentState = stateEvent
-		case stateTodoAlarm:
-			if cursor.alarm == nil {
-				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
-			}
-			if err := validateAlarm(cursor.alarm); err != nil {
-				return err
-			}
-			cursor.alarm = nil
-			*currentState = stateTodo
-		default:
+		if *currentState != stateAlarm || cursor.alarm == nil {
 			return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 		}
+		if err := validateAlarm(cursor.alarm); err != nil {
+			return err
+		}
+		cursor.alarm = nil
+		*currentState = cursor.alarmParent
+		cursor.alarmParent = 0
 	case string(model.SectionTokenVJournal):
 		if *currentState != stateJournal || cursor.journal == nil {
 			return fmt.Errorf("%w: END:VJOURNAL", icalerr.ErrUnexpectedEndBlock)
