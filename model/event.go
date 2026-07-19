@@ -29,6 +29,16 @@ const (
 	EventTranspOpaque      EventTransp = "OPAQUE"
 )
 
+// EventClass represents the possible values for a VEVENT's CLASS field.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
+type EventClass string
+
+const (
+	EventClassPublic       EventClass = "PUBLIC"
+	EventClassPrivate      EventClass = "PRIVATE"
+	EventClassConfidential EventClass = "CONFIDENTIAL"
+)
+
 // Event represents a VEVENT component in the iCalendar format.
 // For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1.
 type Event struct {
@@ -46,6 +56,17 @@ type Event struct {
 	// REQUIRED if no METHOD property. MUST NOT occur more than once
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
 	Start time.Time
+
+	// Class is the access classification for the event. Refers to the CLASS property.
+	// OPTIONAL, MUST NOT occur more than once.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
+	Class EventClass
+
+	// Created specifies the date and time that the calendar information was created.
+	// Refers to the CREATED property.
+	// OPTIONAL, MUST NOT occur more than once.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.1
+	Created time.Time
 
 	// Summary is a short, one-line summary about the event. Refers to the SUMMARY property.
 	// OPTIONAL, MUST NOT occur more than once.

@@ -73,6 +73,16 @@ var (
 	testEventWithRRuleByWeekNoBySetPosInput string
 	//go:embed test_data/events/test_event_attendee_params.ical
 	testEventAttendeeParamsInput string
+	//go:embed test_data/events/valid_test_event_with_new_props.ical
+	testEventWithNewPropsInput string
+	//go:embed test_data/events/valid_test_event_method_no_dtstart.ical
+	testEventMethodNoDTStartInput string
+	//go:embed test_data/events/valid_test_event_all_day_date.ical
+	testEventAllDayDateInput string
+	//go:embed test_data/events/test_event_duplicate_class.ical
+	testEventDuplicateClassInput string
+	//go:embed test_data/events/test_event_duplicate_created.ical
+	testEventDuplicateCreatedInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -287,6 +297,74 @@ func TestValidEvent(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "Valid VEVENT with previously missing properties",
+			input: testEventWithNewPropsInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:          "13235@example.com",
+						DTStamp:      time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Start:        time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						End:          time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						Summary:      "Event with new properties",
+						Class:        model.EventClassPrivate,
+						Created:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Priority:     5,
+						URL:          "https://example.com/event/13235",
+						RecurrenceID: time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
+						ExceptionDates: []time.Time{
+							time.Date(2025, time.October, 5, 18, 30, 0, 0, time.UTC),
+							time.Date(2025, time.October, 6, 18, 30, 0, 0, time.UTC),
+						},
+						Rdate: []time.Time{
+							time.Date(2025, time.October, 12, 18, 30, 0, 0, time.UTC),
+							time.Date(2025, time.October, 19, 18, 30, 0, 0, time.UTC),
+						},
+						RequestStatus: []string{"2.0;Success"},
+						Related:       []string{"parent-event@example.com"},
+						Resources:     []string{"projector", "whiteboard"},
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VEVENT without DTSTART when METHOD is present",
+			input: testEventMethodNoDTStartInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Method:  "REQUEST",
+				Events: []model.Event{
+					{
+						UID:         "13235@example.com",
+						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Summary:     "Event without DTSTART",
+						Description: "METHOD is present so DTSTART is optional",
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid all-day VEVENT with VALUE=DATE",
+			input: testEventAllDayDateInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "19970901T130000Z-123403@example.com",
+						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
+						Start:   time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
+						End:     time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
+						Summary: "Festival International de Jazz de Montreal",
+						Transp:  model.EventTranspTransparent,
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -412,6 +490,16 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "VEVENT with invalid ATTACH VALUE parameter",
 			input:       testEventInvalidAttachValueInput,
 			expectedErr: icalerr.ErrParseErrorInComponent,
+		},
+		{
+			name:        "Duplicate CLASS",
+			input:       testEventDuplicateClassInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "Duplicate CREATED",
+			input:       testEventDuplicateCreatedInput,
+			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
 		},
 	}
 	for _, tc := range testCases {

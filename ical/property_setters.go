@@ -3,6 +3,7 @@ package ical
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/michael-gallo/simpleical/icaldur"
@@ -80,5 +81,16 @@ func appendTimePropertyWithParams(field *[]time.Time, value string, params map[s
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
 	*field = append(*field, parsedTime)
+	return nil
+}
+
+// appendCommaSeparatedTimePropertyWithParams appends each comma-separated DATE/DATE-TIME
+// from value (as used by EXDATE and RDATE).
+func appendCommaSeparatedTimePropertyWithParams(field *[]time.Time, value string, params map[string]string, propertyName string, componentType string) error {
+	for part := range strings.SplitSeq(value, ",") {
+		if err := appendTimePropertyWithParams(field, part, params, propertyName, componentType); err != nil {
+			return err
+		}
+	}
 	return nil
 }
