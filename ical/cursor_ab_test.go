@@ -89,7 +89,7 @@ func resolveByIndex(calendar *model.Calendar, currentState parserState) uintptr 
 	case stateDaylight:
 		tz := &calendar.TimeZones[len(calendar.TimeZones)-1]
 		return uintptr(len(tz.Daylight[len(tz.Daylight)-1].TimeZoneOffsetTo))
-	case stateCalendar, stateFinished:
+	case stateCalendar, stateFinished, stateSkipComponent:
 		return 0
 	default:
 		return 0
@@ -113,7 +113,7 @@ func resolveByCursor(cursor *componentCursor, currentState parserState) uintptr 
 		return uintptr(len(cursor.freeBusy.UID))
 	case stateStandard, stateDaylight:
 		return uintptr(len(cursor.tzProp.TimeZoneOffsetFrom))
-	case stateCalendar, stateFinished:
+	case stateCalendar, stateFinished, stateSkipComponent:
 		return 0
 	default:
 		return 0
