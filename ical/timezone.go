@@ -29,12 +29,12 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 	}
 
 	// Handle timezone-level properties
-	switch model.TimezoneToken(propertyName) {
-	case model.TimezoneTokenTimeZoneID:
+	switch propertyName {
+	case model.PropTZID:
 		return setOnceProperty(&timezone.TimeZoneID, value, propertyName, timezoneLocation)
-	case model.TimezoneTokenLastMod:
+	case model.PropLastModified:
 		return setOnceTimePropertyWithParams(&timezone.LastMod, value, params, propertyName, timezoneLocation)
-	case model.TimezoneTokenTimeZoneURL:
+	case model.PropTZURL:
 		parsedURL, err := url.Parse(value)
 		if err != nil {
 			return err
@@ -48,28 +48,28 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 // parseTimeZonePropertySubComponent parses a single property line for STANDARD or DAYLIGHT sub-components.
 // TODO: support X-PROP and IANA-PROP
 func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[string]string, tzProp *model.TimeZoneProperty) error {
-	switch model.TimezonePropertyToken(propertyName) {
-	case model.TimezonePropertyTokenTimeZoneOffsetFrom:
+	switch propertyName {
+	case model.PropTZOffsetFrom:
 		return setOnceProperty(&tzProp.TimeZoneOffsetFrom, value, propertyName, timezoneLocation)
-	case model.TimezonePropertyTokenTimeZoneOffsetTo:
+	case model.PropTZOffsetTo:
 		return setOnceProperty(&tzProp.TimeZoneOffsetTo, value, propertyName, timezoneLocation)
-	case model.TimezonePropertyTokenDTStart:
+	case model.PropDTStart:
 		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
 		if err != nil {
 			return err
 		}
 		return setOnceProperty(&tzProp.DTStart, parsedTime, propertyName, timezoneLocation)
-	case model.TimezonePropertyComment:
+	case model.PropComment:
 		tzProp.Comment = append(tzProp.Comment, value)
-	case model.TimezonePropertyRdate:
+	case model.PropRDate:
 		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
 		if err != nil {
 			return err
 		}
 		tzProp.Rdate = append(tzProp.Rdate, parsedTime)
-	case model.TimezonePropertyTimeZoneName:
+	case model.PropTZName:
 		tzProp.TimeZoneName = append(tzProp.TimeZoneName, value)
-	case model.TimezonePropertyRRule:
+	case model.PropRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
 			return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, err.Error())

@@ -18,30 +18,30 @@ const todoLocation = "Todo"
 // An error is returned for invalid property names, duplicate
 // assignments, or any parse failures.
 func parseTodoProperty(propertyName string, value string, params map[string]string, todo *model.Todo) error {
-	switch model.TodoToken(propertyName) {
-	case model.TodoTokenDTStamp:
+	switch propertyName {
+	case model.PropDTStamp:
 		return setOnceTimePropertyWithParams(&todo.DTStamp, value, params, propertyName, todoLocation)
-	case model.TodoTokenUID:
+	case model.PropUID:
 		return setOnceProperty(&todo.UID, value, propertyName, todoLocation)
-	case model.TodoTokenClass:
+	case model.PropClass:
 		return setOnceProperty(&todo.Class, model.TodoClass(value), propertyName, todoLocation)
-	case model.TodoTokenCompleted:
+	case model.PropCompleted:
 		return setOnceTimePropertyWithParams(&todo.Completed, value, params, propertyName, todoLocation)
-	case model.TodoTokenCreated:
+	case model.PropCreated:
 		return setOnceTimePropertyWithParams(&todo.Created, value, params, propertyName, todoLocation)
-	case model.TodoTokenDescription:
+	case model.PropDescription:
 		return setOnceProperty(&todo.Description, value, propertyName, todoLocation)
-	case model.TodoTokenDTStart:
+	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&todo.DTStart, value, params, propertyName, todoLocation)
-	case model.TodoTokenDue:
+	case model.PropDue:
 		return setOnceTimePropertyWithParams(&todo.Due, value, params, propertyName, todoLocation)
-	case model.TodoTokenDuration:
+	case model.PropDuration:
 		if todo.Due != (time.Time{}) {
 			return icalerr.ErrInvalidDurationPropertyDue
 		}
 		return setOnceDurationProperty(&todo.Duration, value, propertyName, todoLocation)
 
-	case model.TodoTokenGeo:
+	case model.PropGeo:
 		if todo.Geo != nil {
 			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, todoLocation)
 		}
@@ -50,68 +50,68 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 			return err
 		}
 		todo.Geo = &geo
-	case model.TodoTokenLastModified:
+	case model.PropLastModified:
 		return setOnceTimePropertyWithParams(&todo.LastModified, value, params, propertyName, todoLocation)
-	case model.TodoTokenLocation:
+	case model.PropLocation:
 		return setOnceProperty(&todo.Location, value, propertyName, todoLocation)
-	case model.TodoTokenOrganizer:
+	case model.PropOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
 			return err
 		}
 		return setOnceProperty(&todo.Organizer, organizer, propertyName, todoLocation)
-	case model.TodoTokenPercentComplete:
+	case model.PropPercentComplete:
 		return setOnceIntProperty(&todo.PercentComplete, value, propertyName, todoLocation)
-	case model.TodoTokenPriority:
+	case model.PropPriority:
 		return setOnceIntProperty(&todo.Priority, value, propertyName, todoLocation)
-	case model.TodoTokenRecurrenceID:
+	case model.PropRecurrenceID:
 		return setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation)
-	case model.TodoTokenSequence:
+	case model.PropSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)
-	case model.TodoTokenStatus:
+	case model.PropStatus:
 		return setOnceProperty(&todo.Status, model.TodoStatus(value), propertyName, todoLocation)
-	case model.TodoTokenSummary:
+	case model.PropSummary:
 		return setOnceProperty(&todo.Summary, value, propertyName, todoLocation)
-	case model.TodoTokenRRule:
+	case model.PropRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
 			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
-	case model.TodoTokenTransp:
+	case model.PropTransp:
 		return setOnceProperty(&todo.Transp, model.TodoTransp(value), propertyName, todoLocation)
-	case model.TodoTokenURL:
+	case model.PropURL:
 		return setOnceProperty(&todo.URL, value, propertyName, todoLocation)
 
 	// Repeatable properties
-	case model.TodoTokenAttach:
+	case model.PropAttach:
 		attachment, err := parseAttachment(value, params)
 		if err != nil {
 			return err
 		}
 		todo.Attach = append(todo.Attach, *attachment)
 		return nil
-	case model.TodoTokenAttendee:
+	case model.PropAttendee:
 		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
 		todo.Attendees = append(todo.Attendees, *attendee)
-	case model.TodoTokenCategories:
+	case model.PropCategories:
 		todo.Categories = append(todo.Categories, strings.Split(value, ",")...)
-	case model.TodoTokenComment:
+	case model.PropComment:
 		todo.Comment = append(todo.Comment, value)
-	case model.TodoTokenContact:
+	case model.PropContact:
 		todo.Contacts = append(todo.Contacts, value)
-	case model.TodoTokenExceptionDates:
+	case model.PropExDate:
 		return appendCommaSeparatedTimePropertyWithParams(&todo.ExceptionDates, value, params, propertyName, todoLocation)
-	case model.TodoTokenRequestStatus:
+	case model.PropRequestStatus:
 		todo.RequestStatus = append(todo.RequestStatus, value)
-	case model.TodoTokenRelated:
+	case model.PropRelatedTo:
 		todo.Related = append(todo.Related, value)
-	case model.TodoTokenResources:
+	case model.PropResources:
 		todo.Resources = append(todo.Resources, strings.Split(value, ",")...)
-	case model.TodoTokenRdate:
+	case model.PropRDate:
 		return appendCommaSeparatedTimePropertyWithParams(&todo.Rdate, value, params, propertyName, todoLocation)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTodoProperty, propertyName)
