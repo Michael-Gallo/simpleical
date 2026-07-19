@@ -31,6 +31,8 @@ var (
 	testJournalDuplicateOrganizerInput string
 	//go:embed test_data/journals/valid_test_journal_all_day_date.ical
 	testJournalAllDayDateInput string
+	//go:embed test_data/journals/valid_test_journal_attach_rdate_related.ical
+	testJournalAttachRdateRelatedInput string
 )
 
 func TestValidJournal(t *testing.T) {
@@ -108,6 +110,37 @@ func TestValidJournal(t *testing.T) {
 						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
 						Summary: "All-day journal",
 						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VJOURNAL with ATTACH, SEQUENCE, RECURRENCE-ID, RDATE, RELATED-TO, REQUEST-STATUS",
+			input: testJournalAttachRdateRelatedInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Journal Calendar//EN",
+				Version: "2.0",
+				Journals: []model.Journal{
+					{
+						UID:          "journal-attach-rdate-related@example.com",
+						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						DTStart:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						Summary:      "Journal with ATTACH RDATE RELATED-TO",
+						Sequence:     2,
+						RecurrenceID: time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						Attach: []model.Attachment{
+							{
+								FormatType: "application/pdf",
+								Value:      model.AttachValueURI,
+								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/journal.pdf"},
+							},
+						},
+						Rdate: []time.Time{
+							time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC),
+							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),
+						},
+						RequestStatus: []string{"2.0;Success"},
+						Related:       []string{"parent-journal@example.com"},
 					},
 				},
 			},
