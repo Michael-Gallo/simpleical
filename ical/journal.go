@@ -73,7 +73,6 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:
 		appendExtensionProperty(&journal.XProp, &journal.IANAProp, propertyName, value, params)
-		return nil
 	}
 	return nil
 }

@@ -76,7 +76,6 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, params
 		return setOnceProperty(&tzProp.RRule, rule, propertyName, timezoneLocation)
 	default:
 		appendExtensionProperty(&tzProp.XProp, &tzProp.IANAProp, propertyName, value, params)
-		return nil
 	}
 	return nil
 }

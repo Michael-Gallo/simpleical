@@ -114,7 +114,6 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		return appendCommaSeparatedTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
 		appendExtensionProperty(&event.XProp, &event.IANAProp, propertyName, value, params)
-		return nil
 	}
 	return nil
 }

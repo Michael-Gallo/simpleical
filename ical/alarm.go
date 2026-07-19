@@ -38,7 +38,6 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		alarm.Attendees = append(alarm.Attendees, *attendee)
 	default:
 		appendExtensionProperty(&alarm.XProp, &alarm.IANAProp, propertyName, value, params)
-		return nil
 	}
 	return nil
 }

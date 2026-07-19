@@ -52,7 +52,6 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 		freeBusy.RequestStatus = append(freeBusy.RequestStatus, value)
 	default:
 		appendExtensionProperty(&freeBusy.XProp, &freeBusy.IANAProp, propertyName, value, params)
-		return nil
 	}
 	return nil
 }
