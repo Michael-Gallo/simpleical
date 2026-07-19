@@ -65,11 +65,11 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.JournalTokenDescription:
 		journal.Description = append(journal.Description, value)
 	case model.JournalTokenExceptionDates:
-		return appendTimePropertyWithParams(&journal.ExceptionDates, value, params, propertyName, journalLocation)
+		return appendCommaSeparatedTimePropertyWithParams(&journal.ExceptionDates, value, params, propertyName, journalLocation)
 	case model.JournalTokenRelated:
 		journal.Related = append(journal.Related, value)
 	case model.JournalTokenRdate:
-		return appendTimePropertyWithParams(&journal.Rdate, value, params, propertyName, journalLocation)
+		return appendCommaSeparatedTimePropertyWithParams(&journal.Rdate, value, params, propertyName, journalLocation)
 	case model.JournalTokenRequestStatus:
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:

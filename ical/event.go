@@ -103,7 +103,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		event.Attendees = append(event.Attendees, *attendee)
 		return nil
 	case model.EventTokenExceptionDates:
-		return appendTimePropertyWithParams(&event.ExceptionDates, value, params, propertyName, eventLocation)
+		return appendCommaSeparatedTimePropertyWithParams(&event.ExceptionDates, value, params, propertyName, eventLocation)
 	case model.EventTokenRequestStatus:
 		event.RequestStatus = append(event.RequestStatus, value)
 	case model.EventTokenRelated:
@@ -111,7 +111,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.EventTokenResources:
 		event.Resources = append(event.Resources, strings.Split(value, ",")...)
 	case model.EventTokenRdate:
-		return appendTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
+		return appendCommaSeparatedTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrInvalidEventProperty, propertyName)
 	}

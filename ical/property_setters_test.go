@@ -31,3 +31,20 @@ func TestSetOnceTimePropertyWithParamsDateGating(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, stamp.IsZero())
 }
+
+func TestAppendCommaSeparatedTimePropertyWithParams(t *testing.T) {
+	t.Parallel()
+	var dates []time.Time
+	require.NoError(t, appendCommaSeparatedTimePropertyWithParams(
+		&dates,
+		"19960402T010000Z,19960403T010000Z,19960404T010000Z",
+		nil,
+		"EXDATE",
+		"Event",
+	))
+	assert.Equal(t, []time.Time{
+		time.Date(1996, 4, 2, 1, 0, 0, 0, time.UTC),
+		time.Date(1996, 4, 3, 1, 0, 0, 0, time.UTC),
+		time.Date(1996, 4, 4, 1, 0, 0, 0, time.UTC),
+	}, dates)
+}
