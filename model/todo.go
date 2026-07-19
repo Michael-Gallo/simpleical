@@ -21,25 +21,6 @@ const (
 	TodoStatusCancelled   TodoStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
-// TodoClass represents the possible values for a VTODO's CLASS field.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-type TodoClass string
-
-const (
-	TodoClassPublic       TodoClass = "PUBLIC"
-	TodoClassPrivate      TodoClass = "PRIVATE"
-	TodoClassConfidential TodoClass = "CONFIDENTIAL"
-)
-
-// TodoTransp represents the possible values for a VTODO's TRANSP field.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
-type TodoTransp string
-
-const (
-	TodoTranspTransparent TodoTransp = "TRANSPARENT"
-	TodoTranspOpaque      TodoTransp = "OPAQUE"
-)
-
 // Todo represents a VTODO component in the iCalendar format.
 // A VTODO is a grouping of component properties that describe a to-do.
 // https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.2
@@ -57,7 +38,7 @@ type Todo struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Access Classification for the calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-	Class TodoClass
+	Class Class
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that a to-do was actually completed.
@@ -145,7 +126,7 @@ type Todo struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// The time transparency for the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
-	Transp TodoTransp
+	Transp Transp
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies a URL associated with the activity.

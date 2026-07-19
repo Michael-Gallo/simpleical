@@ -44,7 +44,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropUID:
 		return setOnceProperty(&event.UID, value, propertyName, eventLocation)
 	case model.PropClass:
-		return setOnceProperty(&event.Class, model.EventClass(value), propertyName, eventLocation)
+		return setOnceProperty(&event.Class, model.Class(value), propertyName, eventLocation)
 	case model.PropCreated:
 		return setOnceTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
 	case model.PropPriority:
@@ -60,7 +60,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropStatus:
 		return setOnceProperty(&event.Status, model.EventStatus(value), propertyName, eventLocation)
 	case model.PropTransp:
-		return setOnceProperty(&event.Transp, model.EventTransp(value), propertyName, eventLocation)
+		return setOnceProperty(&event.Transp, model.Transp(value), propertyName, eventLocation)
 	case model.PropSequence:
 		return setOnceIntProperty(&event.Sequence, value, propertyName, eventLocation)
 	case model.PropOrganizer:

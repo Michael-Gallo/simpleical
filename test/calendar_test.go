@@ -84,7 +84,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				},
 				Status:       model.EventStatusConfirmed,
 				Sequence:     1,
-				Transp:       model.EventTranspOpaque,
+				Transp:       model.TranspOpaque,
 				Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
 				LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
 				Categories:   []string{"first", "second", "third"},

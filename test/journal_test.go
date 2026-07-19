@@ -53,7 +53,7 @@ func TestValidJournal(t *testing.T) {
 						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
 						Summary:      "Project status update",
 						Description:  []string{"Completed the initial research phase", "Identified key stakeholders and requirements"},
-						Class:        model.JournalClassConfidential,
+						Class:        model.ClassConfidential,
 						Status:       model.JournalStatusFinal,
 						Created:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
 						LastModified: time.Date(2024, time.January, 15, 12, 0, 0, 0, time.UTC),
@@ -87,7 +87,7 @@ func TestValidJournal(t *testing.T) {
 						DTStart:     time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
 						Summary:     "Journal with Multiple Exception Dates",
 						Description: []string{"This journal has multiple exception dates to test the append functionality"},
-						Class:       model.JournalClassConfidential,
+						Class:       model.ClassConfidential,
 						Status:      model.JournalStatusFinal,
 						ExceptionDates: []time.Time{
 							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),

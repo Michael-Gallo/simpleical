@@ -24,7 +24,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.PropUID:
 		return setOnceProperty(&todo.UID, value, propertyName, todoLocation)
 	case model.PropClass:
-		return setOnceProperty(&todo.Class, model.TodoClass(value), propertyName, todoLocation)
+		return setOnceProperty(&todo.Class, model.Class(value), propertyName, todoLocation)
 	case model.PropCompleted:
 		return setOnceTimePropertyWithParams(&todo.Completed, value, params, propertyName, todoLocation)
 	case model.PropCreated:
@@ -79,7 +79,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
 	case model.PropTransp:
-		return setOnceProperty(&todo.Transp, model.TodoTransp(value), propertyName, todoLocation)
+		return setOnceProperty(&todo.Transp, model.Transp(value), propertyName, todoLocation)
 	case model.PropURL:
 		return setOnceProperty(&todo.URL, value, propertyName, todoLocation)
 

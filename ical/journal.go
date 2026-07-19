@@ -18,7 +18,7 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.PropUID:
 		return setOnceProperty(&journal.UID, value, propertyName, journalLocation)
 	case model.PropClass:
-		return setOnceProperty(&journal.Class, model.JournalClass(value), propertyName, journalLocation)
+		return setOnceProperty(&journal.Class, model.Class(value), propertyName, journalLocation)
 	case model.PropCreated:
 		return setOnceTimePropertyWithParams(&journal.Created, value, params, propertyName, journalLocation)
 	case model.PropDTStart:
