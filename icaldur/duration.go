@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 )
 
 var (
@@ -32,22 +31,10 @@ var (
 // Invalid inputs are rejected, including mixed weeks with other components, duplicate units,
 // multiple `T` markers, and time components without a preceding `T`.
 func ParseICalDuration(s string) (time.Duration, error) {
-	if len(s) == 0 {
+	s = strings.TrimSpace(s)
+	if s == "" {
 		return 0, errEmpty
 	}
-
-	// Trim spaces (optional)
-	start, end := 0, len(s)
-	for start < end && unicode.IsSpace(rune(s[start])) {
-		start++
-	}
-	for end > start && unicode.IsSpace(rune(s[end-1])) {
-		end--
-	}
-	if start == end {
-		return 0, errEmpty
-	}
-	s = s[start:end]
 
 	sign := int64(1)
 	i := 0
