@@ -1,3 +1,4 @@
 .cursorrules
 .vscode
 coverage.out
+.golangci-cache/
