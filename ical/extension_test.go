@@ -35,13 +35,3 @@ func TestAppendExtensionProperty(t *testing.T) {
 	assert.Equal(t, "one", xProp[1].Value)
 	assert.Equal(t, "two", xProp[2].Value)
 }
-
-func TestIsXName(t *testing.T) {
-	assert.True(t, isXName("X-FOO"))
-	assert.True(t, isXName("x-foo"))
-	assert.True(t, isXName("X-"))
-	assert.False(t, isXName("DRESSCODE"))
-	assert.False(t, isXName("XFOO"))
-	assert.False(t, isXName("X"))
-	assert.False(t, isXName(""))
-}

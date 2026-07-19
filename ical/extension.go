@@ -1,13 +1,15 @@
 package ical
 
 import (
+	"maps"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/model"
 )
 
 // appendExtensionProperty appends an unrecognized property to XProp or IANAProp.
-// Names starting with "X-" (case-insensitive) go to XProp; all others go to IANAProp.
+// Names starting with "X-" go to XProp; all others go to IANAProp.
+// Property names are uppercased before this is called.
 // Params are cloned because the caller reuses the parameter map across lines.
 func appendExtensionProperty(xProp, ianaProp *[]model.ExtensionProperty, name, value string, params map[string]string) {
 	prop := model.ExtensionProperty{
@@ -15,19 +17,11 @@ func appendExtensionProperty(xProp, ianaProp *[]model.ExtensionProperty, name, v
 		Value: value,
 	}
 	if len(params) > 0 {
-		prop.Params = make(map[string]string, len(params))
-		for k, v := range params {
-			prop.Params[k] = v
-		}
+		prop.Params = maps.Clone(params)
 	}
-	if isXName(name) {
+	if strings.HasPrefix(name, "X-") {
 		*xProp = append(*xProp, prop)
 		return
 	}
 	*ianaProp = append(*ianaProp, prop)
-}
-
-// isXName reports whether name is an RFC 5545 x-name (prefix "X-").
-func isXName(name string) bool {
-	return len(name) >= 2 && strings.EqualFold(name[:2], "X-")
 }
