@@ -15,7 +15,6 @@ import (
 const timezoneLocation = "TimeZone"
 
 // parseTimezoneProperty parses a single property line and adds it to the provided timezone.
-// TODO: support X-PROP and IANA-PROP
 func parseTimezoneProperty(propertyName string, value string, params map[string]string, currentState parserState, timezone *model.TimeZone) error {
 	// Handle sub-components (STANDARD and DAYLIGHT)
 	if currentState == stateStandard || currentState == stateDaylight {
@@ -41,13 +40,13 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 		}
 		return setOnceProperty(&timezone.TimeZoneURL, parsedURL, propertyName, timezoneLocation)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
+		appendExtensionProperty(&timezone.XProp, &timezone.IANAProp, propertyName, value, params)
+		return nil
 	}
 }
 
 // parseTimeZonePropertySubComponent parses a single property line for STANDARD or DAYLIGHT sub-components.
-// TODO: support X-PROP and IANA-PROP
-func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[string]string, tzProp *model.TimeZoneProperty) error {
+func parseTimeZonePropertySubComponent(propertyName string, value string, params map[string]string, tzProp *model.TimeZoneProperty) error {
 	switch model.TimezonePropertyToken(propertyName) {
 	case model.TimezonePropertyTokenTimeZoneOffsetFrom:
 		return setOnceProperty(&tzProp.TimeZoneOffsetFrom, value, propertyName, timezoneLocation)
@@ -76,7 +75,8 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, _ map[
 		}
 		return setOnceProperty(&tzProp.RRule, rule, propertyName, timezoneLocation)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTimezoneProperty, propertyName)
+		appendExtensionProperty(&tzProp.XProp, &tzProp.IANAProp, propertyName, value, params)
+		return nil
 	}
 	return nil
 }
