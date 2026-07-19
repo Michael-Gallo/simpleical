@@ -15,15 +15,15 @@ const freeBusyLocation = "FreeBusy"
 func parseFreeBusyProperty(propertyName string, value string, params map[string]string, freeBusy *model.FreeBusy) error {
 	switch model.FreeBusyToken(propertyName) {
 	case model.FreeBusyTokenDTStamp:
-		return setOnceTimeProperty(&freeBusy.DTStamp, value, propertyName, freeBusyLocation)
+		return setOnceTimePropertyWithParams(&freeBusy.DTStamp, value, params, propertyName, freeBusyLocation)
 	case model.FreeBusyTokenUID:
 		return setOnceProperty(&freeBusy.UID, value, propertyName, freeBusyLocation)
 	case model.FreeBusyTokenContact:
 		return setOnceProperty(&freeBusy.Contact, value, propertyName, freeBusyLocation)
 	case model.FreeBusyTokenDTStart:
-		return setOnceTimeProperty(&freeBusy.DTStart, value, propertyName, freeBusyLocation)
+		return setOnceTimePropertyWithParams(&freeBusy.DTStart, value, params, propertyName, freeBusyLocation)
 	case model.FreeBusyTokenDTEnd:
-		return setOnceTimeProperty(&freeBusy.DTEnd, value, propertyName, freeBusyLocation)
+		return setOnceTimePropertyWithParams(&freeBusy.DTEnd, value, params, propertyName, freeBusyLocation)
 	case model.FreeBusyTokenOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {

@@ -33,7 +33,7 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 	case model.TimezoneTokenTimeZoneID:
 		return setOnceProperty(&timezone.TimeZoneID, value, propertyName, timezoneLocation)
 	case model.TimezoneTokenLastMod:
-		return setOnceTimeProperty(&timezone.LastMod, value, propertyName, timezoneLocation)
+		return setOnceTimePropertyWithParams(&timezone.LastMod, value, params, propertyName, timezoneLocation)
 	case model.TimezoneTokenTimeZoneURL:
 		parsedURL, err := url.Parse(value)
 		if err != nil {

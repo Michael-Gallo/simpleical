@@ -17,23 +17,23 @@ const eventLocation = "Event"
 func parseEventProperty(propertyName string, value string, params map[string]string, event *model.Event) error {
 	switch model.EventToken(propertyName) {
 	case model.EventTokenDtstart:
-		return setOnceTimeProperty(&event.Start, value, propertyName, eventLocation)
+		return setOnceTimePropertyWithParams(&event.Start, value, params, propertyName, eventLocation)
 	case model.EventTokenDTStamp:
-		return setOnceTimeProperty(&event.DTStamp, value, propertyName, eventLocation)
+		return setOnceTimePropertyWithParams(&event.DTStamp, value, params, propertyName, eventLocation)
 
 	// End and Duration are mutually exclusive
 	case model.EventTokenDtend:
 		if event.Duration != 0 {
 			return icalerr.ErrInvalidDurationPropertyDtend
 		}
-		return setOnceTimeProperty(&event.End, value, propertyName, eventLocation)
+		return setOnceTimePropertyWithParams(&event.End, value, params, propertyName, eventLocation)
 	case model.EventTokenDuration:
 		if event.End != (time.Time{}) {
 			return icalerr.ErrInvalidDurationPropertyDtend
 		}
 		return setOnceDurationProperty(&event.Duration, value, propertyName, eventLocation)
 	case model.EventTokenLastModified:
-		return setOnceTimeProperty(&event.LastModified, value, propertyName, eventLocation)
+		return setOnceTimePropertyWithParams(&event.LastModified, value, params, propertyName, eventLocation)
 
 	case model.EventTokenSummary:
 		return setOnceProperty(&event.Summary, value, propertyName, eventLocation)

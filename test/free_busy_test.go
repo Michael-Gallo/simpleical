@@ -25,6 +25,8 @@ var (
 	testFreeBusyDuplicateUIDInput string
 	//go:embed test_data/freebusy/test_freebusy_invalid_freebusy.ical
 	testFreeBusyInvalidFreeBusyInput string
+	//go:embed test_data/freebusy/valid_test_freebusy_all_day_date.ical
+	testFreeBusyAllDayDateInput string
 )
 
 func TestValidFreeBusy(t *testing.T) {
@@ -73,6 +75,22 @@ func TestValidFreeBusy(t *testing.T) {
 							},
 						},
 						URL: "https://calendar.example.com/freebusy/123",
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid all-day VFREEBUSY with VALUE=DATE",
+			input: testFreeBusyAllDayDateInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//FreeBusy Calendar//EN",
+				Version: "2.0",
+				FreeBusys: []model.FreeBusy{
+					{
+						UID:     "freebusy-date@example.com",
+						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
+						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
+						DTEnd:   time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
 					},
 				},
 			},

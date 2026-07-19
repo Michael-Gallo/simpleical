@@ -7,6 +7,7 @@ import (
 
 	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
+	"github.com/michael-gallo/simpleical/model"
 )
 
 // setOnceProperty ensures that set-once properties have consistent error handling
@@ -29,10 +30,32 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
-// setOnceTimeProperty sets a time.Time field only if it hasn't been set before.
-// this is intended for properties that according to the spec must only be set once
-func setOnceTimeProperty(field *time.Time, value, propertyName string, componentType string) error {
-	parsedTime, err := icaldur.ParseIcalTime(value)
+// dateValueAllowed reports whether propertyName may use VALUE=DATE per RFC 5545.
+func dateValueAllowed(propertyName string) bool {
+	switch propertyName {
+	case string(model.EventTokenDtstart),
+		string(model.EventTokenDtend),
+		string(model.TodoTokenDue),
+		string(model.TodoTokenRecurrenceID),
+		string(model.TodoTokenExceptionDates),
+		string(model.TodoTokenRdate):
+		return true
+	default:
+		return false
+	}
+}
+
+func timeValueType(propertyName string, params map[string]string) string {
+	if !dateValueAllowed(propertyName) {
+		return ""
+	}
+	return params[model.ParamValue]
+}
+
+// setOnceTimePropertyWithParams sets a time.Time field only if it hasn't been set before.
+// VALUE=DATE is honored only for properties that permit DATE values.
+func setOnceTimePropertyWithParams(field *time.Time, value string, params map[string]string, propertyName string, componentType string) error {
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, timeValueType(propertyName, params))
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
@@ -49,11 +72,13 @@ func setOnceDurationProperty(field *time.Duration, value, propertyName string, c
 	return setOnceProperty(field, duration, propertyName, componentType)
 }
 
-func appendTimeProperty(field *[]time.Time, value, propertyName string, componentType string) error {
-	time, err := icaldur.ParseIcalTime(value)
+// appendTimePropertyWithParams appends a parsed time.
+// VALUE=DATE is honored only for properties that permit DATE values.
+func appendTimePropertyWithParams(field *[]time.Time, value string, params map[string]string, propertyName string, componentType string) error {
+	parsedTime, err := icaldur.ParseIcalTimeOrDate(value, timeValueType(propertyName, params))
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
-	*field = append(*field, time)
+	*field = append(*field, parsedTime)
 	return nil
 }

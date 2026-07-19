@@ -85,6 +85,121 @@ func TestParseIcalTime(t *testing.T) {
 	}
 }
 
+func TestParseIcalDate(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        time.Time
+		expectError bool
+	}{
+		{
+			name:  "Valid date",
+			input: "19971102",
+			want:  time.Date(1997, 11, 2, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:  "Leap day",
+			input: "20240229",
+			want:  time.Date(2024, 2, 29, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:        "Invalid February 31st",
+			input:       "20250231",
+			expectError: true,
+		},
+		{
+			name:        "Too short",
+			input:       "1997110",
+			expectError: true,
+		},
+		{
+			name:        "DATE-TIME rejected",
+			input:       "19971102T000000Z",
+			expectError: true,
+		},
+		{
+			name:        "Empty input",
+			input:       "",
+			expectError: true,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := parseIcalDate(test.input)
+			if test.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
+func TestParseIcalTimeOrDate(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		valueType   string
+		want        time.Time
+		expectError bool
+	}{
+		{
+			name:      "DATE value type",
+			input:     "20070628",
+			valueType: valueTypeDate,
+			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:      "DATE value type lowercase",
+			input:     "20070628",
+			valueType: "date",
+			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:      "DATE value type mixed case",
+			input:     "20070628",
+			valueType: "Date",
+			want:      time.Date(2007, 6, 28, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:      "DATE-TIME when value type empty",
+			input:     "20250928T183000Z",
+			valueType: "",
+			want:      time.Date(2025, 9, 28, 18, 30, 0, 0, time.UTC),
+		},
+		{
+			name:      "DATE-TIME when value type DATE-TIME",
+			input:     "20250928T183000Z",
+			valueType: "DATE-TIME",
+			want:      time.Date(2025, 9, 28, 18, 30, 0, 0, time.UTC),
+		},
+		{
+			name:        "DATE-TIME rejected as DATE",
+			input:       "20250928T183000Z",
+			valueType:   valueTypeDate,
+			expectError: true,
+		},
+		{
+			name:        "DATE rejected as DATE-TIME",
+			input:       "20070628",
+			valueType:   "",
+			expectError: true,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := ParseIcalTimeOrDate(test.input, test.valueType)
+			if test.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
 func TestParseIcalLocalTime(t *testing.T) {
 	tests := []struct {
 		name        string

@@ -41,6 +41,8 @@ var (
 	testTodoDurationWithoutDTStartInput string
 	//go:embed test_data/todos/test_todo_missing_dtstamp.ical
 	testTodoMissingDTStampInput string
+	//go:embed test_data/todos/valid_test_todo_all_day_date.ical
+	testTodoAllDayDateInput string
 )
 
 func TestValidTodo(t *testing.T) {
@@ -128,6 +130,23 @@ func TestValidTodo(t *testing.T) {
 							Interval:  1,
 							Count:     new(10),
 						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid all-day VTODO with VALUE=DATE",
+			input: testTodoAllDayDateInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Todo Calendar//EN",
+				Version: "2.0",
+				Todos: []model.Todo{
+					{
+						UID:     "todo-date@example.com",
+						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
+						Summary: "All-day todo",
+						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
+						Due:     time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
 					},
 				},
 			},

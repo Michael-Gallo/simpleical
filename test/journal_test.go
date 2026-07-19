@@ -29,6 +29,8 @@ var (
 	testJournalDuplicateStatusInput string
 	//go:embed test_data/journals/test_journal_duplicate_organizer.ical
 	testJournalDuplicateOrganizerInput string
+	//go:embed test_data/journals/valid_test_journal_all_day_date.ical
+	testJournalAllDayDateInput string
 )
 
 func TestValidJournal(t *testing.T) {
@@ -90,6 +92,22 @@ func TestValidJournal(t *testing.T) {
 							time.Date(2024, time.January, 22, 9, 0, 0, 0, time.UTC),
 							time.Date(2024, time.January, 29, 9, 0, 0, 0, time.UTC),
 						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid all-day VJOURNAL with VALUE=DATE",
+			input: testJournalAllDayDateInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Journal Calendar//EN",
+				Version: "2.0",
+				Journals: []model.Journal{
+					{
+						UID:     "journal-date@example.com",
+						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
+						Summary: "All-day journal",
+						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
 					},
 				},
 			},
