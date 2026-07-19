@@ -51,44 +51,14 @@ type componentCursor struct {
 // END:VCALENDAR (including another BEGIN:VCALENDAR) returns ErrContentAfterEndBlock.
 // Use Read to parse a stream that may contain multiple VCALENDAR objects.
 func ReadSingle(reader io.Reader) (*model.Calendar, error) {
-	// Reusable parameter map to avoid allocations on every property
-	reusableParams := make(map[string]string, 2)
-	scanner := bufio.NewScanner(reader)
-	var pending string
-	var hasPending bool
-
-	line, ok := nextLogicalLine(scanner, &pending, &hasPending)
-	if !ok {
-		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("error reading iCalendar data: %w", err)
-		}
-		return nil, icalerr.ErrNoCalendarFound
-	}
-	if line != beginVCalendarLine {
-		if line == "" {
-			return nil, icalerr.ErrInvalidCalendarEmptyLine
-		}
-		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
-	}
-
-	calendar, err := parseOneCalendar(scanner, &pending, &hasPending, reusableParams)
+	calendars, err := Read(reader)
 	if err != nil {
 		return nil, err
 	}
-
-	// Exactly one calendar is allowed: any remaining content (including a
-	// second BEGIN:VCALENDAR) is an error.
-	if line, ok = nextLogicalLine(scanner, &pending, &hasPending); ok {
-		if line == "" {
-			return nil, icalerr.ErrInvalidCalendarEmptyLine
-		}
+	if len(calendars) != 1 {
 		return nil, icalerr.ErrContentAfterEndBlock
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
-	}
-
-	return calendar, nil
+	return calendars[0], nil
 }
 
 // Read takes an io.Reader containing iCalendar data and parses it into a
