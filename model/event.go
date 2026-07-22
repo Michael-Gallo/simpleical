@@ -112,6 +112,10 @@ type Event struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.4.
 	RecurrenceID DateTime
 
+	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.13
+	RecurrenceIDRange string
+
 	// RRule is the recurrence rule for the event. Refers to the RRULE property.
 	// OPTIONAL, SHOULD NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.3

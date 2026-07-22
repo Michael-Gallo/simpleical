@@ -65,7 +65,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.PropPercentComplete:
 		return setOncePercentCompleteProperty(&todo.PercentComplete, value, propertyName, todoLocation)
 	case model.PropRecurrenceID:
-		return setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation)
+		if err := setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation); err != nil {
+			return err
+		}
+		todo.RecurrenceIDRange = params[model.ParamRange]
+		return nil
 	case model.PropSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)
 	case model.PropStatus:

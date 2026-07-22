@@ -63,6 +63,9 @@ type Journal struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.4
 	RecurrenceID DateTime
 
+	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
+	RecurrenceIDRange string
+
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.4
