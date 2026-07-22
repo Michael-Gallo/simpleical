@@ -51,7 +51,7 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 	case model.PropRequestStatus:
 		freeBusy.RequestStatus = append(freeBusy.RequestStatus, value)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidFreeBusyProperty, propertyName)
+		appendExtensionProperty(&freeBusy.XProp, &freeBusy.IANAProp, propertyName, value, params)
 	}
 	return nil
 }

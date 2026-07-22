@@ -113,7 +113,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropRDate:
 		return appendCommaSeparatedTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidEventProperty, propertyName)
+		appendExtensionProperty(&event.XProp, &event.IANAProp, propertyName, value, params)
 	}
 	return nil
 }

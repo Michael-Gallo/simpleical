@@ -114,7 +114,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.PropRDate:
 		return appendCommaSeparatedTimePropertyWithParams(&todo.Rdate, value, params, propertyName, todoLocation)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidTodoProperty, propertyName)
+		appendExtensionProperty(&todo.XProp, &todo.IANAProp, propertyName, value, params)
 	}
 	return nil
 }

@@ -27,6 +27,7 @@ const (
 	stateAlarm
 	stateStandard
 	stateDaylight
+	stateSkipComponent
 	stateFinished
 )
 
@@ -44,6 +45,12 @@ type componentCursor struct {
 	alarm       *model.Alarm
 	alarmParent parserState // stateEvent or stateTodo; valid while in stateAlarm
 	tzProp      *model.TimeZoneProperty
+}
+
+// skipTracker tracks nested unknown x-comp / iana-comp blocks so they can be ignored.
+type skipTracker struct {
+	depth       int
+	returnState parserState
 }
 
 // ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
@@ -80,7 +87,7 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 		if !ok {
 			break
 		}
-		if line != beginVCalendarLine {
+		if !strings.EqualFold(line, beginVCalendarLine) {
 			if line == "" {
 				return nil, icalerr.ErrInvalidCalendarEmptyLine
 			}
@@ -116,6 +123,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 	calendar := &model.Calendar{}
 	currentState := stateCalendar
 	var cursor componentCursor
+	var skip skipTracker
 
 	for {
 		line, ok := nextLogicalLine(scanner, pending, hasPending)
@@ -133,12 +141,26 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		if err != nil {
 			return nil, err
 		}
+		propertyName = strings.ToUpper(propertyName)
 		switch propertyName {
 		case "BEGIN":
-			if err := handleBeginBlock(value, &currentState, calendar, &cursor); err != nil {
+			value = strings.ToUpper(value)
+			if currentState == stateSkipComponent {
+				skip.depth++
+				continue
+			}
+			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip); err != nil {
 				return nil, err
 			}
 		case "END":
+			value = strings.ToUpper(value)
+			if currentState == stateSkipComponent {
+				skip.depth--
+				if skip.depth == 0 {
+					currentState = skip.returnState
+				}
+				continue
+			}
 			if err := handleEndBlock(value, &currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
@@ -146,6 +168,9 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				return calendar, nil
 			}
 		default:
+			if currentState == stateSkipComponent {
+				continue
+			}
 			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
@@ -216,6 +241,9 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 		return parseFreeBusyProperty(propertyName, value, params, cursor.freeBusy)
 	case stateStandard, stateDaylight:
 		return parseTimeZonePropertySubComponent(propertyName, value, params, cursor.tzProp)
+	case stateSkipComponent:
+		// Unreachable: parseOneCalendar skips property lines while ignoring unknown components.
+		return nil
 	case stateFinished:
 		// Unreachable: parseOneCalendar returns as soon as stateFinished is reached; kept as a defensive default.
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
@@ -226,7 +254,8 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 }
 
 // handleBeginBlock processes BEGIN blocks and updates the parser state.
-func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor) error {
+// Unrecognized component names enter skip mode so x-comp / iana-comp are ignored.
+func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker) error {
 	switch model.SectionToken(beginValue) {
 	case model.SectionTokenVEvent:
 		*currentState = stateEvent
@@ -287,7 +316,10 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		cursor.timeZone.Daylight = append(cursor.timeZone.Daylight, model.TimeZoneProperty{})
 		cursor.tzProp = &cursor.timeZone.Daylight[len(cursor.timeZone.Daylight)-1]
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrTemplateInvalidStartBlock, beginValue)
+		// RFC 5545: applications MUST ignore unrecognized x-comp / iana-comp.
+		skip.returnState = *currentState
+		skip.depth = 1
+		*currentState = stateSkipComponent
 	}
 	return nil
 }
