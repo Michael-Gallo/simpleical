@@ -2,7 +2,9 @@ package ical
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
@@ -13,23 +15,44 @@ const alarmLocation = "Alarm"
 func parseAlarmProperty(propertyName string, value string, params map[string]string, alarm *model.Alarm) error {
 	switch propertyName {
 	case model.PropAction:
-		return setOnceProperty(&alarm.Action, model.AlarmAction(value), propertyName, alarmLocation)
+		action, err := parseAlarmAction(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&alarm.Action, action, propertyName, alarmLocation)
 	case model.PropTrigger:
-		return setOnceProperty(&alarm.Trigger, value, propertyName, alarmLocation)
+		if alarm.Trigger.Duration != nil || alarm.Trigger.Absolute != nil {
+			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, alarmLocation)
+		}
+		trigger, err := parseTrigger(value, params)
+		if err != nil {
+			return err
+		}
+		alarm.Trigger = trigger
+		return nil
 	case model.PropAttach:
 		attachment, err := parseAttachment(value, params)
 		if err != nil {
 			return err
 		}
-		return setOnceProperty(&alarm.Attach, attachment, propertyName, alarmLocation)
+		alarm.Attach = append(alarm.Attach, *attachment)
+		return nil
 	case model.PropDuration:
 		return setOnceDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)
 	case model.PropDescription:
-		return setOnceProperty(&alarm.Description, value, propertyName, alarmLocation)
+		unescaped, err := unescapeText(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&alarm.Description, unescaped, propertyName, alarmLocation)
 	case model.PropRepeat:
 		return setOnceIntProperty(&alarm.Repeat, value, propertyName, alarmLocation)
 	case model.PropSummary:
-		return setOnceProperty(&alarm.Summary, value, propertyName, alarmLocation)
+		unescaped, err := unescapeText(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&alarm.Summary, unescaped, propertyName, alarmLocation)
 	case model.PropAttendee:
 		attendee, err := parseAttendee(value, params)
 		if err != nil {
@@ -42,33 +65,80 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 	return nil
 }
 
+func parseTrigger(value string, params map[string]string) (model.Trigger, error) {
+	related := model.TriggerRelatedStart
+	if raw := params[model.ParamRelated]; raw != "" {
+		switch model.TriggerRelated(strings.ToUpper(raw)) {
+		case model.TriggerRelatedStart:
+			related = model.TriggerRelatedStart
+		case model.TriggerRelatedEnd:
+			related = model.TriggerRelatedEnd
+		default:
+			return model.Trigger{}, icalerr.ErrInvalidAlarmTrigger
+		}
+	}
+
+	valueType := strings.ToUpper(params[model.ParamValue])
+	asDateTime := valueType == "DATE-TIME" || (valueType != "DURATION" && triggerLooksLikeDateTime(value))
+	if asDateTime {
+		dt, err := parseUTCDateTimeValue(value, params, model.PropTrigger)
+		if err != nil {
+			return model.Trigger{}, fmt.Errorf("%w: %w", icalerr.ErrInvalidAlarmTrigger, err)
+		}
+		return model.Trigger{Absolute: &dt, Related: related}, nil
+	}
+
+	dur, err := icaldur.ParseICalDuration(value)
+	if err != nil {
+		return model.Trigger{}, fmt.Errorf("%w: %w", icalerr.ErrInvalidAlarmTrigger, err)
+	}
+	return model.Trigger{Duration: &dur, Related: related}, nil
+}
+
+func triggerLooksLikeDateTime(value string) bool {
+	if value == "" {
+		return false
+	}
+	s := value
+	if s[0] == '+' || s[0] == '-' {
+		if len(s) > 1 && (s[1] == 'P' || s[1] == 'p') {
+			return false
+		}
+	}
+	if s[0] == 'P' || s[0] == 'p' {
+		return false
+	}
+	return true
+}
+
 // validateAlarm ensures that all required values are present for an alarm.
-// An alarm has the following requirements:
 //
-//   - The "VALARM" calendar component MUST include the "ACTION" and "TRIGGER" properties
-//
-// This requirement is modified based on the action in the following way.
-//   - The "DISPLAY" action MUST include the "DESCRIPTION" property
-//   - The "EMAIL" action MUST include the "DESCRIPTION" and "SUMMARY" properties
-//   - The "EMAIL" action MUST include at least one "ATTENDEE" property
-//   - The "AUDIO" action MUST include a single "ATTACH" property
-//   - The "PROCEDURE" action does not have any additional requirements
+//   - ACTION and TRIGGER are always required
+//   - DISPLAY requires DESCRIPTION
+//   - EMAIL requires DESCRIPTION, SUMMARY, and at least one ATTENDEE
+//   - AUDIO may include at most one ATTACH
+//   - DURATION and REPEAT must both be present or both absent
 func validateAlarm(alarm *model.Alarm) error {
 	if alarm.Action == "" {
 		return icalerr.ErrMissingAlarmActionProperty
 	}
-	if alarm.Trigger == "" {
+	if alarm.Trigger.Duration == nil && alarm.Trigger.Absolute == nil {
 		return icalerr.ErrMissingAlarmTriggerProperty
 	}
 
-	// Validate action-specific requirements
+	hasDuration := alarm.Duration != 0
+	hasRepeat := alarm.Repeat != 0
+	if hasDuration != hasRepeat {
+		return icalerr.ErrAlarmDurationRepeatCoupling
+	}
+
 	switch alarm.Action {
 	case model.AlarmActionDisplay:
-		if len(alarm.Description) == 0 {
+		if alarm.Description == "" {
 			return icalerr.ErrMissingAlarmDescriptionForDisplay
 		}
 	case model.AlarmActionEmail:
-		if len(alarm.Description) == 0 {
+		if alarm.Description == "" {
 			return icalerr.ErrMissingAlarmDescriptionForEmail
 		}
 		if alarm.Summary == "" {
@@ -77,10 +147,9 @@ func validateAlarm(alarm *model.Alarm) error {
 		if len(alarm.Attendees) == 0 {
 			return icalerr.ErrMissingAlarmAttendeesForEmail
 		}
-	case model.AlarmActionProcedure:
 	case model.AlarmActionAudio:
-		if alarm.Attach == nil {
-			return icalerr.ErrMissingAlarmAttachForAudio
+		if len(alarm.Attach) > 1 {
+			return icalerr.ErrAlarmAttachTooManyForAudio
 		}
 	default:
 		return fmt.Errorf("%w: %s", icalerr.ErrUnknownAlarmAction, alarm.Action)

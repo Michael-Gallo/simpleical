@@ -1,10 +1,11 @@
 package ical
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
+	"github.com/michael-gallo/simpleical/rrule"
 )
 
 const journalLocation = "Journal"
@@ -13,17 +14,21 @@ const journalLocation = "Journal"
 func parseJournalProperty(propertyName string, value string, params map[string]string, journal *model.Journal) error {
 	switch propertyName {
 	case model.PropDTStamp:
-		return setOnceTimePropertyWithParams(&journal.DTStamp, value, params, propertyName, journalLocation)
+		return setOnceUTCTimePropertyWithParams(&journal.DTStamp, value, params, propertyName, journalLocation)
 	case model.PropUID:
 		return setOnceProperty(&journal.UID, value, propertyName, journalLocation)
 	case model.PropClass:
-		return setOnceProperty(&journal.Class, model.Class(value), propertyName, journalLocation)
+		class, err := parseClass(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&journal.Class, class, propertyName, journalLocation)
 	case model.PropCreated:
-		return setOnceTimePropertyWithParams(&journal.Created, value, params, propertyName, journalLocation)
+		return setOnceUTCTimePropertyWithParams(&journal.Created, value, params, propertyName, journalLocation)
 	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&journal.DTStart, value, params, propertyName, journalLocation)
 	case model.PropLastModified:
-		return setOnceTimePropertyWithParams(&journal.LastModified, value, params, propertyName, journalLocation)
+		return setOnceUTCTimePropertyWithParams(&journal.LastModified, value, params, propertyName, journalLocation)
 	case model.PropOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
@@ -35,11 +40,21 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.PropSequence:
 		return setOnceIntProperty(&journal.Sequence, value, propertyName, journalLocation)
 	case model.PropStatus:
-		return setOnceProperty(&journal.Status, model.JournalStatus(value), propertyName, journalLocation)
+		status, err := parseJournalStatus(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&journal.Status, status, propertyName, journalLocation)
 	case model.PropSummary:
-		return setOnceProperty(&journal.Summary, value, propertyName, journalLocation)
+		return setOnceTextProperty(&journal.Summary, value, params, propertyName, journalLocation)
 	case model.PropURL:
 		return setOnceProperty(&journal.URL, value, propertyName, journalLocation)
+	case model.PropRRule:
+		rule, err := rrule.ParseRRule(value)
+		if err != nil {
+			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
+		}
+		return setOnceProperty(&journal.RRule, rule, propertyName, journalLocation)
 
 	// Repeatable properties
 	case model.PropAttach:
@@ -56,19 +71,19 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		}
 		journal.Attendees = append(journal.Attendees, *attendee)
 	case model.PropCategories:
-		journal.Categories = append(journal.Categories, strings.Split(value, ",")...)
+		return appendTextListProperty(&journal.Categories, value)
 	case model.PropComment:
-		journal.Comment = append(journal.Comment, value)
+		return appendTextProperty(&journal.Comment, value, params)
 	case model.PropContact:
 		journal.Contacts = append(journal.Contacts, value)
 	case model.PropDescription:
-		journal.Description = append(journal.Description, value)
+		return appendTextProperty(&journal.Description, value, params)
 	case model.PropExDate:
 		return appendCommaSeparatedTimePropertyWithParams(&journal.ExceptionDates, value, params, propertyName, journalLocation)
 	case model.PropRelatedTo:
-		journal.Related = append(journal.Related, value)
+		return appendRelatedToProperty(&journal.Related, value, params)
 	case model.PropRDate:
-		return appendCommaSeparatedTimePropertyWithParams(&journal.Rdate, value, params, propertyName, journalLocation)
+		return appendRDateProperty(&journal.Rdate, value, params, propertyName, journalLocation)
 	case model.PropRequestStatus:
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:

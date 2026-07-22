@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 )
@@ -15,7 +14,7 @@ const freeBusyLocation = "FreeBusy"
 func parseFreeBusyProperty(propertyName string, value string, params map[string]string, freeBusy *model.FreeBusy) error {
 	switch propertyName {
 	case model.PropDTStamp:
-		return setOnceTimePropertyWithParams(&freeBusy.DTStamp, value, params, propertyName, freeBusyLocation)
+		return setOnceUTCTimePropertyWithParams(&freeBusy.DTStamp, value, params, propertyName, freeBusyLocation)
 	case model.PropUID:
 		return setOnceProperty(&freeBusy.UID, value, propertyName, freeBusyLocation)
 	case model.PropContact:
@@ -29,7 +28,7 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 		if err != nil {
 			return err
 		}
-		freeBusy.Organizer = organizer
+		return setOnceProperty(&freeBusy.Organizer, organizer, propertyName, freeBusyLocation)
 	case model.PropURL:
 		return setOnceProperty(&freeBusy.URL, value, propertyName, freeBusyLocation)
 
@@ -41,13 +40,28 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 		}
 		freeBusy.Attendees = append(freeBusy.Attendees, *attendee)
 	case model.PropComment:
-		freeBusy.Comment = append(freeBusy.Comment, value)
+		return appendTextProperty(&freeBusy.Comment, value, params)
 	case model.PropFreeBusy:
-		fbTime, err := parseFreeBusyTime(value)
-		if err != nil {
-			return err
+		fbType := model.FreeBusyStatusBusy
+		if raw := params[model.ParamFBType]; raw != "" {
+			parsed, err := parseFreeBusyStatus(raw)
+			if err != nil {
+				return err
+			}
+			fbType = parsed
 		}
-		freeBusy.FreeBusy = append(freeBusy.FreeBusy, fbTime)
+		for part := range strings.SplitSeq(value, ",") {
+			period, err := parsePeriod(part, true)
+			if err != nil {
+				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, freeBusyLocation, propertyName, err)
+			}
+			freeBusy.FreeBusy = append(freeBusy.FreeBusy, model.FreeBusyTime{
+				Start:    period.Start,
+				End:      period.End,
+				Duration: period.Duration,
+				FBType:   fbType,
+			})
+		}
 	case model.PropRequestStatus:
 		freeBusy.RequestStatus = append(freeBusy.RequestStatus, value)
 	default:
@@ -56,51 +70,13 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 	return nil
 }
 
-// parseFreeBusyTime parses a FREEBUSY property value into a FreeBusyTime struct.
-// Format: "/" separated start/end datetime pair, optionally followed by "/" and status.
-// Example: "19970101T180000Z/19970102T070000Z" or "19970101T180000Z/19970102T070000Z/BUSY"
-func parseFreeBusyTime(value string) (model.FreeBusyTime, error) {
-	// Extract start time (everything before first '/')
-	startStr, remaining, found := strings.Cut(value, "/")
-	if !found {
-		return model.FreeBusyTime{}, fmt.Errorf("%w: %s", icalerr.ErrInvalidFreeBusyFormat, value)
-	}
-
-	startTime, err := icaldur.ParseIcalTime(startStr)
-	if err != nil {
-		return model.FreeBusyTime{}, fmt.Errorf("invalid start time in FREEBUSY property: %w", err)
-	}
-
-	// Extract end time and optional status (everything after first '/')
-	endStr, statusStr, hasStatus := strings.Cut(remaining, "/")
-	endTime, err := icaldur.ParseIcalTime(endStr)
-	if err != nil {
-		return model.FreeBusyTime{}, fmt.Errorf("invalid end time in FREEBUSY property: %w", err)
-	}
-
-	fbTime := model.FreeBusyTime{
-		Start: startTime,
-		End:   endTime,
-	}
-
-	// Optional status parameter
-	if hasStatus {
-		fbTime.Status = model.FreeBusyStatus(statusStr)
-	} else {
-		// Default to BUSY if no status specified
-		fbTime.Status = model.FreeBusyStatusBusy
-	}
-
-	return fbTime, nil
-}
-
 // validateFreeBusy ensures that all required values are present for a freebusy.
 func validateFreeBusy(freeBusy *model.FreeBusy) error {
 	if freeBusy.UID == "" {
 		return icalerr.ErrMissingFreeBusyUIDProperty
 	}
-	if freeBusy.DTStart.IsZero() {
-		return icalerr.ErrMissingFreeBusyDTStartProperty
+	if freeBusy.DTStamp.IsZero() {
+		return icalerr.ErrMissingFreeBusyDTStampProperty
 	}
 	return nil
 }
