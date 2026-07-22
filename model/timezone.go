@@ -6,7 +6,6 @@ package model
 
 import (
 	"net/url"
-	"time"
 
 	"github.com/michael-gallo/simpleical/rrule"
 )
@@ -24,7 +23,7 @@ type TimeZone struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// The last modification time of the time zone.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.3
-	LastMod time.Time
+	LastMod DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Time Zone URL, represented as tzurl in the spec, can be any valid URI
@@ -59,27 +58,27 @@ type TimeZoneProperty struct {
 	// REQUIRED, MUST NOT occur more than once
 	// The time zone offset from UTC when daylight saving time is in effect.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.3.3
-	TimeZoneOffsetFrom string
+	TimeZoneOffsetFrom UTCOffset
 
 	// REQUIRED, MUST NOT occur more than once
 	// The time zone offset from UTC when standard time is in effect.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.3.4
-	TimeZoneOffsetTo string
+	TimeZoneOffsetTo UTCOffset
 
 	// REQUIRED, MUST NOT occur more than once
 	// Date-Time Start, used to specify when the calendar event starts
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	DTStart time.Time
+	DTStart DateTime
 
 	// OPTIONAL, MAY occur more than once
 	// A comment to describe the Time Zone Property
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4
-	Comment []string
+	Comment []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Recurrence Date-Times
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.2
-	Rdate []time.Time
+	Rdate []DateTime
 
 	// OPTIONAL, MAY occur more than once
 	// Represented by tzname

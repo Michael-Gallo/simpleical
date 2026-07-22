@@ -4,11 +4,7 @@
 
 package model
 
-import (
-	"time"
-)
-
-// FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property.
+// FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property FBTYPE parameter.
 // See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.6
 type FreeBusyStatus string
 
@@ -27,7 +23,7 @@ type FreeBusy struct {
 	// REQUIRED, MUST NOT occur more than once
 	// a DTSTAMP property defines the date and time that the instance of the calendar component was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
-	DTStamp time.Time
+	DTStamp DateTime
 
 	// REQUIRED, MUST NOT occur more than once
 	// The unique identifier for the free/busy component.
@@ -42,12 +38,12 @@ type FreeBusy struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component begins.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	DTStart time.Time
+	DTStart DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component ends.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.2
-	DTEnd time.Time
+	DTEnd DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// The organizer of the activity.
@@ -67,7 +63,7 @@ type FreeBusy struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies non-processing information intended to provide a comment to the calendar user.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4
-	Comment []string
+	Comment []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies one or more free or busy time intervals.
@@ -92,12 +88,12 @@ type FreeBusy struct {
 	IANAProp []ExtensionProperty
 }
 
-// FreeBusyTime represents a single free/busy time interval with its status.
+// FreeBusyTime represents a single free/busy time interval with its FBTYPE.
 type FreeBusyTime struct {
 	// The start time of the free/busy interval.
-	Start time.Time
+	Start DateTime
 	// The end time of the free/busy interval.
-	End time.Time
-	// The status of the time interval (FREE, BUSY, BUSY-TENTATIVE, BUSY-UNAVAILABLE).
-	Status FreeBusyStatus
+	End DateTime
+	// FBType is the FBTYPE parameter (FREE, BUSY, BUSY-TENTATIVE, BUSY-UNAVAILABLE).
+	FBType FreeBusyStatus
 }
