@@ -18,10 +18,12 @@ This is an icalendar parser focused on performance and compliance with the RFC55
 # Tests
 
 - Please ensure that, when dealing with icalendar properties, we have integration test coverage in the `tests/` folder
+- `testify` is an intentional test dependency: `assert.Equal` on large parsed calendars/components gives readable diffs. Do not rip it out just to eliminate a test-only dep.
 
 # Public API
 
 - Be conservative about expanding the public API. Prefer unexported helpers unless a symbol is needed by other packages or is intentionally part of the documented surface. Do not export low-level helpers just for symmetry with related exported functions.
+- Parser sentinel errors live in `internal/icalerr` on purpose: they stay off the public API while integration tests in `test/` can still `errors.Is` against them. Do not fold that package into `ical` (or export the sentinels) just to remove an internal package.
 
 # Godoc Examples
 

@@ -8,6 +8,25 @@ import (
 	"net/url"
 )
 
+// Class is the CLASS property value shared by VEVENT, VTODO, and VJOURNAL.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
+type Class string
+
+const (
+	ClassPublic       Class = "PUBLIC"
+	ClassPrivate      Class = "PRIVATE"
+	ClassConfidential Class = "CONFIDENTIAL"
+)
+
+// Transp is the TRANSP property value shared by VEVENT and VTODO.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
+type Transp string
+
+const (
+	TranspTransparent Transp = "TRANSPARENT"
+	TranspOpaque      Transp = "OPAQUE"
+)
+
 // Organizer represents an ORGANIZER component in the iCalendar format, used in VEVENT, VTODO, and VJOURNAL
 // for more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.3
 type Organizer struct {

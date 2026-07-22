@@ -20,16 +20,6 @@ const (
 	JournalStatusCancelled JournalStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
-// JournalClass represents the possible values for a VJOURNAL's CLASS field.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-type JournalClass string
-
-const (
-	JournalClassPublic       JournalClass = "PUBLIC"
-	JournalClassPrivate      JournalClass = "PRIVATE"
-	JournalClassConfidential JournalClass = "CONFIDENTIAL"
-)
-
 // Journal represents a VJOURNAL component in the iCalendar format.
 // A VJOURNAL is a grouping of component properties that describe a journal entry.
 // Does not take up time on a calendar.
@@ -48,7 +38,7 @@ type Journal struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Access Classification for the calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-	Class JournalClass
+	Class Class
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the calendar information was created.

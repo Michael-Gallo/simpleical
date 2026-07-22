@@ -15,65 +15,65 @@ const eventLocation = "Event"
 
 // parseEventProperty parses a single property line and adds it to the provided vevent.
 func parseEventProperty(propertyName string, value string, params map[string]string, event *model.Event) error {
-	switch model.EventToken(propertyName) {
-	case model.EventTokenDtstart:
+	switch propertyName {
+	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&event.Start, value, params, propertyName, eventLocation)
-	case model.EventTokenDTStamp:
+	case model.PropDTStamp:
 		return setOnceTimePropertyWithParams(&event.DTStamp, value, params, propertyName, eventLocation)
 
 	// End and Duration are mutually exclusive
-	case model.EventTokenDtend:
+	case model.PropDTEnd:
 		if event.Duration != 0 {
 			return icalerr.ErrInvalidDurationPropertyDtend
 		}
 		return setOnceTimePropertyWithParams(&event.End, value, params, propertyName, eventLocation)
-	case model.EventTokenDuration:
+	case model.PropDuration:
 		if event.End != (time.Time{}) {
 			return icalerr.ErrInvalidDurationPropertyDtend
 		}
 		return setOnceDurationProperty(&event.Duration, value, propertyName, eventLocation)
-	case model.EventTokenLastModified:
+	case model.PropLastModified:
 		return setOnceTimePropertyWithParams(&event.LastModified, value, params, propertyName, eventLocation)
 
-	case model.EventTokenSummary:
+	case model.PropSummary:
 		return setOnceProperty(&event.Summary, value, propertyName, eventLocation)
-	case model.EventTokenDescription:
+	case model.PropDescription:
 		return setOnceProperty(&event.Description, value, propertyName, eventLocation)
-	case model.EventTokenLocation:
+	case model.PropLocation:
 		return setOnceProperty(&event.Location, value, propertyName, eventLocation)
-	case model.EventTokenUID:
+	case model.PropUID:
 		return setOnceProperty(&event.UID, value, propertyName, eventLocation)
-	case model.EventTokenClass:
-		return setOnceProperty(&event.Class, model.EventClass(value), propertyName, eventLocation)
-	case model.EventTokenCreated:
+	case model.PropClass:
+		return setOnceProperty(&event.Class, model.Class(value), propertyName, eventLocation)
+	case model.PropCreated:
 		return setOnceTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
-	case model.EventTokenPriority:
+	case model.PropPriority:
 		return setOnceIntProperty(&event.Priority, value, propertyName, eventLocation)
-	case model.EventTokenURL:
+	case model.PropURL:
 		return setOnceProperty(&event.URL, value, propertyName, eventLocation)
-	case model.EventTokenRecurrenceID:
+	case model.PropRecurrenceID:
 		return setOnceTimePropertyWithParams(&event.RecurrenceID, value, params, propertyName, eventLocation)
-	case model.EventTokenContact:
+	case model.PropContact:
 		event.Contacts = append(event.Contacts, value)
 		return nil
 
-	case model.EventTokenStatus:
+	case model.PropStatus:
 		return setOnceProperty(&event.Status, model.EventStatus(value), propertyName, eventLocation)
-	case model.EventTokenTransp:
-		return setOnceProperty(&event.Transp, model.EventTransp(value), propertyName, eventLocation)
-	case model.EventTokenSequence:
+	case model.PropTransp:
+		return setOnceProperty(&event.Transp, model.Transp(value), propertyName, eventLocation)
+	case model.PropSequence:
 		return setOnceIntProperty(&event.Sequence, value, propertyName, eventLocation)
-	case model.EventTokenOrganizer:
+	case model.PropOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
 			return err
 		}
 		return setOnceProperty(&event.Organizer, organizer, propertyName, eventLocation)
-	case model.EventTokenComment:
+	case model.PropComment:
 		event.Comment = append(event.Comment, value)
-	case model.EventTokenCategories:
+	case model.PropCategories:
 		event.Categories = append(event.Categories, strings.Split(value, ",")...)
-	case model.EventTokenGeo:
+	case model.PropGeo:
 		if event.Geo != nil {
 			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, eventLocation)
 		}
@@ -82,35 +82,35 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 			return err
 		}
 		event.Geo = &geo
-	case model.EventTokenRRule:
+	case model.PropRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
 			return fmt.Errorf("%w: %w", icalerr.ErrInvalidRRule, err)
 		}
 		return setOnceProperty(&event.RRule, rule, propertyName, eventLocation)
-	case model.EventTokenAttach:
+	case model.PropAttach:
 		attachment, err := parseAttachment(value, params)
 		if err != nil {
 			return err
 		}
 		event.Attach = append(event.Attach, *attachment)
 		return nil
-	case model.EventTokenAttendee:
+	case model.PropAttendee:
 		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
 		event.Attendees = append(event.Attendees, *attendee)
 		return nil
-	case model.EventTokenExceptionDates:
+	case model.PropExDate:
 		return appendCommaSeparatedTimePropertyWithParams(&event.ExceptionDates, value, params, propertyName, eventLocation)
-	case model.EventTokenRequestStatus:
+	case model.PropRequestStatus:
 		event.RequestStatus = append(event.RequestStatus, value)
-	case model.EventTokenRelated:
+	case model.PropRelatedTo:
 		event.Related = append(event.Related, value)
-	case model.EventTokenResources:
+	case model.PropResources:
 		event.Resources = append(event.Resources, strings.Split(value, ",")...)
-	case model.EventTokenRdate:
+	case model.PropRDate:
 		return appendCommaSeparatedTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
 		appendExtensionProperty(&event.XProp, &event.IANAProp, propertyName, value, params)

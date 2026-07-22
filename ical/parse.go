@@ -24,8 +24,7 @@ const (
 	stateTodo
 	stateJournal
 	stateFreebusy
-	stateEventAlarm
-	stateTodoAlarm
+	stateAlarm
 	stateStandard
 	stateDaylight
 	stateSkipComponent
@@ -38,13 +37,14 @@ const beginVCalendarLine = "BEGIN:VCALENDAR"
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
 type componentCursor struct {
-	event    *model.Event
-	todo     *model.Todo
-	journal  *model.Journal
-	freeBusy *model.FreeBusy
-	timeZone *model.TimeZone
-	alarm    *model.Alarm
-	tzProp   *model.TimeZoneProperty
+	event       *model.Event
+	todo        *model.Todo
+	journal     *model.Journal
+	freeBusy    *model.FreeBusy
+	timeZone    *model.TimeZone
+	alarm       *model.Alarm
+	alarmParent parserState // stateEvent or stateTodo; valid while in stateAlarm
+	tzProp      *model.TimeZoneProperty
 }
 
 // skipTracker tracks nested unknown x-comp / iana-comp blocks so they can be ignored.
@@ -58,44 +58,14 @@ type skipTracker struct {
 // END:VCALENDAR (including another BEGIN:VCALENDAR) returns ErrContentAfterEndBlock.
 // Use Read to parse a stream that may contain multiple VCALENDAR objects.
 func ReadSingle(reader io.Reader) (*model.Calendar, error) {
-	// Reusable parameter map to avoid allocations on every property
-	reusableParams := make(map[string]string, 2)
-	scanner := bufio.NewScanner(reader)
-	var pending string
-	var hasPending bool
-
-	line, ok := nextLogicalLine(scanner, &pending, &hasPending)
-	if !ok {
-		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("error reading iCalendar data: %w", err)
-		}
-		return nil, icalerr.ErrNoCalendarFound
-	}
-	if !strings.EqualFold(line, beginVCalendarLine) {
-		if line == "" {
-			return nil, icalerr.ErrInvalidCalendarEmptyLine
-		}
-		return nil, icalerr.ErrInvalidCalendarFormatMissingBegin
-	}
-
-	calendar, err := parseOneCalendar(scanner, &pending, &hasPending, reusableParams)
+	calendars, err := Read(reader)
 	if err != nil {
 		return nil, err
 	}
-
-	// Exactly one calendar is allowed: any remaining content (including a
-	// second BEGIN:VCALENDAR) is an error.
-	if line, ok = nextLogicalLine(scanner, &pending, &hasPending); ok {
-		if line == "" {
-			return nil, icalerr.ErrInvalidCalendarEmptyLine
-		}
+	if len(calendars) != 1 {
 		return nil, icalerr.ErrContentAfterEndBlock
 	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
-	}
-
-	return calendar, nil
+	return calendars[0], nil
 }
 
 // Read takes an io.Reader containing iCalendar data and parses it into a
@@ -257,9 +227,7 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 // parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
 func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch currentState {
-	case stateEventAlarm:
-		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
-	case stateTodoAlarm:
+	case stateAlarm:
 		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
 	case stateEvent:
 		return parseEventProperty(propertyName, value, params, cursor.event)
@@ -310,14 +278,12 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 			if cursor.event == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
-			*currentState = stateEventAlarm
 			cursor.event.Alarms = append(cursor.event.Alarms, model.Alarm{})
 			cursor.alarm = &cursor.event.Alarms[len(cursor.event.Alarms)-1]
 		case stateTodo:
 			if cursor.todo == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
 			}
-			*currentState = stateTodoAlarm
 			cursor.todo.Alarms = append(cursor.todo.Alarms, model.Alarm{})
 			cursor.alarm = &cursor.todo.Alarms[len(cursor.todo.Alarms)-1]
 		case stateJournal:
@@ -325,6 +291,8 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		default:
 			return fmt.Errorf("%w: VALARM must be inside VEVENT or VTODO", icalerr.ErrUnexpectedBeginBlock)
 		}
+		cursor.alarmParent = *currentState
+		*currentState = stateAlarm
 	case model.SectionTokenVJournal:
 		*currentState = stateJournal
 		calendar.Journals = append(calendar.Journals, model.Journal{})
@@ -395,28 +363,15 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		cursor.freeBusy = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVAlarm):
-		switch *currentState { //nolint:exhaustive // it is an error condition to end a VALARM block if the state isn't an alarm state
-		case stateEventAlarm:
-			if cursor.alarm == nil {
-				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
-			}
-			if err := validateAlarm(cursor.alarm); err != nil {
-				return err
-			}
-			cursor.alarm = nil
-			*currentState = stateEvent
-		case stateTodoAlarm:
-			if cursor.alarm == nil {
-				return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
-			}
-			if err := validateAlarm(cursor.alarm); err != nil {
-				return err
-			}
-			cursor.alarm = nil
-			*currentState = stateTodo
-		default:
+		if *currentState != stateAlarm || cursor.alarm == nil {
 			return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 		}
+		if err := validateAlarm(cursor.alarm); err != nil {
+			return err
+		}
+		cursor.alarm = nil
+		*currentState = cursor.alarmParent
+		cursor.alarmParent = 0
 	case string(model.SectionTokenVJournal):
 		if *currentState != stateJournal || cursor.journal == nil {
 			return fmt.Errorf("%w: END:VJOURNAL", icalerr.ErrUnexpectedEndBlock)

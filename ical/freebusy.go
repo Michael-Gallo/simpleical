@@ -13,42 +13,42 @@ const freeBusyLocation = "FreeBusy"
 
 // parseFreeBusyProperty parses a single property line and adds it to the provided freebusy.
 func parseFreeBusyProperty(propertyName string, value string, params map[string]string, freeBusy *model.FreeBusy) error {
-	switch model.FreeBusyToken(propertyName) {
-	case model.FreeBusyTokenDTStamp:
+	switch propertyName {
+	case model.PropDTStamp:
 		return setOnceTimePropertyWithParams(&freeBusy.DTStamp, value, params, propertyName, freeBusyLocation)
-	case model.FreeBusyTokenUID:
+	case model.PropUID:
 		return setOnceProperty(&freeBusy.UID, value, propertyName, freeBusyLocation)
-	case model.FreeBusyTokenContact:
+	case model.PropContact:
 		return setOnceProperty(&freeBusy.Contact, value, propertyName, freeBusyLocation)
-	case model.FreeBusyTokenDTStart:
+	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&freeBusy.DTStart, value, params, propertyName, freeBusyLocation)
-	case model.FreeBusyTokenDTEnd:
+	case model.PropDTEnd:
 		return setOnceTimePropertyWithParams(&freeBusy.DTEnd, value, params, propertyName, freeBusyLocation)
-	case model.FreeBusyTokenOrganizer:
+	case model.PropOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
 			return err
 		}
 		freeBusy.Organizer = organizer
-	case model.FreeBusyTokenURL:
+	case model.PropURL:
 		return setOnceProperty(&freeBusy.URL, value, propertyName, freeBusyLocation)
 
 	// Repeatable properties
-	case model.FreeBusyTokenAttendee:
+	case model.PropAttendee:
 		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err
 		}
 		freeBusy.Attendees = append(freeBusy.Attendees, *attendee)
-	case model.FreeBusyTokenComment:
+	case model.PropComment:
 		freeBusy.Comment = append(freeBusy.Comment, value)
-	case model.FreeBusyTokenFreeBusy:
+	case model.PropFreeBusy:
 		fbTime, err := parseFreeBusyTime(value)
 		if err != nil {
 			return err
 		}
 		freeBusy.FreeBusy = append(freeBusy.FreeBusy, fbTime)
-	case model.FreeBusyTokenRequestStatus:
+	case model.PropRequestStatus:
 		freeBusy.RequestStatus = append(freeBusy.RequestStatus, value)
 	default:
 		appendExtensionProperty(&freeBusy.XProp, &freeBusy.IANAProp, propertyName, value, params)

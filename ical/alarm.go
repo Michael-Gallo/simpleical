@@ -11,26 +11,26 @@ const alarmLocation = "Alarm"
 
 // parseAlarmProperty parses a single property line and adds it to the provided alarm.
 func parseAlarmProperty(propertyName string, value string, params map[string]string, alarm *model.Alarm) error {
-	switch model.AlarmToken(propertyName) {
-	case model.AlarmTokenAction:
+	switch propertyName {
+	case model.PropAction:
 		return setOnceProperty(&alarm.Action, model.AlarmAction(value), propertyName, alarmLocation)
-	case model.AlarmTokenTrigger:
+	case model.PropTrigger:
 		return setOnceProperty(&alarm.Trigger, value, propertyName, alarmLocation)
-	case model.AlarmTokenAttach:
+	case model.PropAttach:
 		attachment, err := parseAttachment(value, params)
 		if err != nil {
 			return err
 		}
 		return setOnceProperty(&alarm.Attach, attachment, propertyName, alarmLocation)
-	case model.AlarmTokenDuration:
+	case model.PropDuration:
 		return setOnceDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)
-	case model.AlarmTokenDescription:
+	case model.PropDescription:
 		return setOnceProperty(&alarm.Description, value, propertyName, alarmLocation)
-	case model.AlarmTokenRepeat:
+	case model.PropRepeat:
 		return setOnceIntProperty(&alarm.Repeat, value, propertyName, alarmLocation)
-	case model.AlarmTokenSummary:
+	case model.PropSummary:
 		return setOnceProperty(&alarm.Summary, value, propertyName, alarmLocation)
-	case model.AlarmTokenAttendee:
+	case model.PropAttendee:
 		attendee, err := parseAttendee(value, params)
 		if err != nil {
 			return err

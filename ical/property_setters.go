@@ -34,12 +34,12 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 // dateValueAllowed reports whether propertyName may use VALUE=DATE per RFC 5545.
 func dateValueAllowed(propertyName string) bool {
 	switch propertyName {
-	case string(model.EventTokenDtstart),
-		string(model.EventTokenDtend),
-		string(model.TodoTokenDue),
-		string(model.TodoTokenRecurrenceID),
-		string(model.TodoTokenExceptionDates),
-		string(model.TodoTokenRdate):
+	case model.PropDTStart,
+		model.PropDTEnd,
+		model.PropDue,
+		model.PropRecurrenceID,
+		model.PropExDate,
+		model.PropRDate:
 		return true
 	default:
 		return false

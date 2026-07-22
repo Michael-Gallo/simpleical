@@ -20,25 +20,6 @@ const (
 	EventStatusCancelled EventStatus = "CANCELLED" //nolint:misspell // iCalendar property name, not a typo
 )
 
-// EventTransp represents VEVENT TRANSP values. Note VTODO TRANSP values are different.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7.
-type EventTransp string
-
-const (
-	EventTranspTransparent EventTransp = "TRANSPARENT"
-	EventTranspOpaque      EventTransp = "OPAQUE"
-)
-
-// EventClass represents the possible values for a VEVENT's CLASS field.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-type EventClass string
-
-const (
-	EventClassPublic       EventClass = "PUBLIC"
-	EventClassPrivate      EventClass = "PRIVATE"
-	EventClassConfidential EventClass = "CONFIDENTIAL"
-)
-
 // Event represents a VEVENT component in the iCalendar format.
 // For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1.
 type Event struct {
@@ -60,7 +41,7 @@ type Event struct {
 	// Class is the access classification for the event. Refers to the CLASS property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
-	Class EventClass
+	Class Class
 
 	// Created specifies the date and time that the calendar information was created.
 	// Refers to the CREATED property.
@@ -120,7 +101,7 @@ type Event struct {
 	// Time transparency refers to whether the event is considered to consume time on the calendar.
 	// ie: If an event is TRANSPARENT, participants are not to be considered busy during the event.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7.
-	Transp EventTransp
+	Transp Transp
 
 	// URL specifies a URL associated with the event. Refers to the URL property.
 	// OPTIONAL, MUST NOT occur more than once.
