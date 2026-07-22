@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -52,26 +51,26 @@ func TestValidTimezone(t *testing.T) {
 				TimeZones: []model.TimeZone{
 					{
 						TimeZoneID:  "America/New_York",
-						LastMod:     time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						LastMod:     utcDT(2024, 1, 1, 0, 0, 0),
 						TimeZoneURL: &url.URL{Scheme: "http", Host: "tzurl.org", Path: "/zoneinfo-outlook/America/New_York"},
 						Standard: []model.TimeZoneProperty{
 							{
-								TimeZoneOffsetFrom: "-0400",
-								TimeZoneOffsetTo:   "-0500",
-								DTStart:            time.Date(2024, time.January, 1, 2, 0, 0, 0, time.UTC),
+								TimeZoneOffsetFrom: model.UTCOffset("-0400"),
+								TimeZoneOffsetTo:   model.UTCOffset("-0500"),
+								DTStart:            floatDT(2024, 1, 1, 2, 0, 0),
 								TimeZoneName:       []string{"EST"},
-								Comment:            []string{"Eastern Standard Time"},
-								Rdate:              []time.Time{time.Date(2024, time.January, 1, 2, 0, 0, 0, time.UTC)},
+								Comment:            texts("Eastern Standard Time"),
+								Rdate:              []model.DateTime{floatDT(2024, 1, 1, 2, 0, 0)},
 							},
 						},
 						Daylight: []model.TimeZoneProperty{
 							{
-								TimeZoneOffsetFrom: "-0500",
-								TimeZoneOffsetTo:   "-0400",
-								DTStart:            time.Date(2024, time.March, 1, 2, 0, 0, 0, time.UTC),
+								TimeZoneOffsetFrom: model.UTCOffset("-0500"),
+								TimeZoneOffsetTo:   model.UTCOffset("-0400"),
+								DTStart:            floatDT(2024, 3, 1, 2, 0, 0),
 								TimeZoneName:       []string{"EDT"},
-								Comment:            []string{"Eastern Daylight Time"},
-								Rdate:              []time.Time{time.Date(2024, time.March, 1, 2, 0, 0, 0, time.UTC)},
+								Comment:            texts("Eastern Daylight Time"),
+								Rdate:              []model.DateTime{floatDT(2024, 3, 1, 2, 0, 0)},
 							},
 						},
 					},

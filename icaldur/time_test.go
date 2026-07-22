@@ -131,7 +131,7 @@ func TestParseIcalDate(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, test.want, got)
+			assert.Equal(t, Temporal{Form: FormDate, Time: test.want}, got)
 		})
 	}
 }

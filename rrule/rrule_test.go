@@ -144,7 +144,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 20}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 20, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -299,8 +299,17 @@ func TestParseRRule(t *testing.T) {
 			expectError: errInvalidByMinute,
 		},
 		{
-			name:        "Error: BySecond set to number greater than 59",
-			input:       "FREQ=DAILY;BYSECOND=60",
+			name:  "BYSECOND leap second 60 accepted",
+			input: "FREQ=DAILY;BYSECOND=60",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				BySecond:  []uint8{60},
+			},
+		},
+		{
+			name:        "Error: BySecond set to number greater than 60",
+			input:       "FREQ=DAILY;BYSECOND=61",
 			want:        nil,
 			expectError: errInvalidBySecond,
 		},
@@ -309,6 +318,25 @@ func TestParseRRule(t *testing.T) {
 			input:       "FREQ=DAILY;BYSECOND=-1",
 			want:        nil,
 			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:  "DATE form UNTIL",
+			input: "FREQ=DAILY;UNTIL=19971224",
+			want: &RRule{
+				Frequency:   FrequencyDaily,
+				Interval:    1,
+				Until:       new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				UntilIsDate: true,
+			},
+		},
+		{
+			name:  "BYDAY with explicit +1 ordinal",
+			input: "FREQ=MONTHLY;BYDAY=+1MO",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1, Ordinal: true}},
+			},
 		},
 		{
 			name:        "Error: BYMONTH out of range (0)",
@@ -449,7 +477,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     new(10),
-				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -460,7 +488,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -472,8 +500,8 @@ func TestParseRRule(t *testing.T) {
 				Interval:  2,
 				Count:     new(10),
 				ByDay: []ByDay{
-					{Weekday: WeekdaySunday, Interval: 1},
-					{Weekday: WeekdaySunday, Interval: -1},
+					{Weekday: WeekdaySunday, Interval: 1, Ordinal: true},
+					{Weekday: WeekdaySunday, Interval: -1, Ordinal: true},
 				},
 			},
 			expectError: nil,
@@ -485,7 +513,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     new(6),
-				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -972,7 +1000,7 @@ func TestParseByDay(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			interval, weekday, err := parseByDay(test.input)
+			interval, weekday, _, err := parseByDay(test.input)
 			if test.expectError != nil {
 				require.ErrorIs(t, err, test.expectError)
 				return

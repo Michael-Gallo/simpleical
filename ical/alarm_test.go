@@ -2,6 +2,7 @@ package ical
 
 import (
 	"testing"
+	"time"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
@@ -9,9 +10,10 @@ import (
 )
 
 func TestValidateAlarmRejectsUnknownAction(t *testing.T) {
+	dur := -15 * time.Minute
 	alarm := &model.Alarm{
 		Action:  model.AlarmAction("BOGUS"),
-		Trigger: "-PT15M",
+		Trigger: model.Trigger{Duration: &dur, Related: model.TriggerRelatedStart},
 	}
 
 	err := validateAlarm(alarm)

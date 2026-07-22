@@ -1,19 +1,19 @@
 # Simple-ical
 
-A very much not ready ICAL parser for Golang intended to follow the official [ICAL 2.0 spec](https://datatracker.ietf.org/doc/html/rfc5545) as closely as is reasonable.
-
-Focused on ease of use and good documentation, with frequent links to the spec.
+An RFC 5545 iCalendar parser for Go, focused on correctness, performance, and clear documentation with frequent links to the spec.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/michael-gallo/simpleical.svg)](https://pkg.go.dev/github.com/michael-gallo/simpleical)
+
+## Scope
+
+This library is a **parser only**:
+
+- Supported: reading iCalendar streams into typed Go values (`ical.Read` / `ical.ReadSingle`)
+- Explicit non-goals: serialization/writing and recurrence expansion
 
 ## Documentation
 
 Full API documentation is available on [pkg.go.dev](https://pkg.go.dev/github.com/michael-gallo/simpleical).
-
-## Deviations from spec
-
-1. The VCALENDAR spec does not address whitespace at the end of lines. We assume in this parser it is to be ignored and right-trim all whitespace.
-2. The `DTSTAMP` property is [mandatory](https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1), however, I have seen real-life examples where it is not filled out. Ergo I will not be enforcing it here. If I do enforce it in the future, it will be in an opt-in strict mode.
 
 ## License
 
