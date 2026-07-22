@@ -4,6 +4,8 @@
 
 package model
 
+import "time"
+
 // FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property FBTYPE parameter.
 // See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.6
 type FreeBusyStatus string
@@ -89,11 +91,14 @@ type FreeBusy struct {
 }
 
 // FreeBusyTime represents a single free/busy time interval with its FBTYPE.
+// Either End is set (start/end form) or Duration is non-zero (start/duration form).
 type FreeBusyTime struct {
-	// The start time of the free/busy interval.
+	// The start time of the free/busy interval (UTC).
 	Start DateTime
-	// The end time of the free/busy interval.
+	// The end time of the free/busy interval (UTC); zero when Duration form is used.
 	End DateTime
+	// Duration is set for the start/duration PERIOD form.
+	Duration time.Duration
 	// FBType is the FBTYPE parameter (FREE, BUSY, BUSY-TENTATIVE, BUSY-UNAVAILABLE).
 	FBType FreeBusyStatus
 }

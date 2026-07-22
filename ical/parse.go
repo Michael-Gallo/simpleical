@@ -34,6 +34,10 @@ const (
 // beginVCalendarLine is the content line that opens a VCALENDAR object.
 const beginVCalendarLine = "BEGIN:VCALENDAR"
 
+// maxPhysicalLineBytes is the maximum size of a single physical line token.
+// RFC 5545 folds at 75 octets, but unfolded logical lines may be longer.
+const maxPhysicalLineBytes = 4 * 1024 * 1024
+
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
 type componentCursor struct {
@@ -51,6 +55,11 @@ type componentCursor struct {
 type skipTracker struct {
 	depth       int
 	returnState parserState
+}
+
+// calendarParseState holds per-calendar parse bookkeeping.
+type calendarParseState struct {
+	sawComponent bool
 }
 
 // ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
@@ -75,9 +84,9 @@ func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 // than parsing each individually.
 // Use ReadSingle to assert that the input contains exactly one VCALENDAR object.
 func Read(reader io.Reader) ([]*model.Calendar, error) {
-	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
+	scanner.Buffer(make([]byte, 64*1024), maxPhysicalLineBytes)
 	var pending string
 	var hasPending bool
 	var calendars []*model.Calendar
@@ -116,14 +125,12 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 
 // parseOneCalendar parses a single VCALENDAR body, starting just after its
 // BEGIN:VCALENDAR line, and returns as soon as END:VCALENDAR is validated.
-// The scanner, line-unfolding state, and parameter map are owned by the caller
-// so multiple calendars can be parsed from the same stream without
-// reallocating them.
 func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool, reusableParams map[string]string) (*model.Calendar, error) {
 	calendar := &model.Calendar{}
 	currentState := stateCalendar
 	var cursor componentCursor
 	var skip skipTracker
+	var cps calendarParseState
 
 	for {
 		line, ok := nextLogicalLine(scanner, pending, hasPending)
@@ -149,7 +156,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				skip.depth++
 				continue
 			}
-			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip); err != nil {
+			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip, &cps); err != nil {
 				return nil, err
 			}
 		case "END":
@@ -165,6 +172,12 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				return nil, err
 			}
 			if currentState == stateFinished {
+				if err := validateCalendar(calendar, &cps); err != nil {
+					return nil, err
+				}
+				if err := validateCalendarTZIDs(calendar); err != nil {
+					return nil, err
+				}
 				return calendar, nil
 			}
 		default:
@@ -177,19 +190,15 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		}
 	}
 
-	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
 	}
 
-	// Input ended before END:VCALENDAR was seen
 	return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
 }
 
-// nextLogicalLine returns the next RFC 5545 content line after unfolding,
-// with trailing spaces trimmed.
-// Folded physical lines (CRLF followed by a single SPACE or HTAB) are joined
-// by stripping that leading white-space and appending the remainder.
+// nextLogicalLine returns the next RFC 5545 content line after unfolding.
+// Trailing value whitespace is preserved.
 func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) (string, bool) {
 	var line string
 	if *hasPending {
@@ -219,12 +228,11 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 		break
 	}
 	if folded {
-		return strings.TrimRight(b.String(), " "), true
+		return b.String(), true
 	}
-	return strings.TrimRight(line, " "), true
+	return line, true
 }
 
-// parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
 func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch currentState {
 	case stateAlarm:
@@ -242,10 +250,8 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateStandard, stateDaylight:
 		return parseTimeZonePropertySubComponent(propertyName, value, params, cursor.tzProp)
 	case stateSkipComponent:
-		// Unreachable: parseOneCalendar skips property lines while ignoring unknown components.
 		return nil
 	case stateFinished:
-		// Unreachable: parseOneCalendar returns as soon as stateFinished is reached; kept as a defensive default.
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
@@ -253,17 +259,26 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	return nil
 }
 
-// handleBeginBlock processes BEGIN blocks and updates the parser state.
-// Unrecognized component names enter skip mode so x-comp / iana-comp are ignored.
-func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker) error {
-	switch model.SectionToken(beginValue) {
+func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, cps *calendarParseState) error {
+	token := model.SectionToken(beginValue)
+
+	// Top-level calendar components may only begin from calendar state.
+	switch token {
+	case model.SectionTokenVEvent, model.SectionTokenVTodo, model.SectionTokenVJournal,
+		model.SectionTokenVFreebusy, model.SectionTokenVTimezone:
+		if *currentState != stateCalendar {
+			return fmt.Errorf("%w: %s", icalerr.ErrComponentNotAllowedHere, beginValue)
+		}
+		cps.sawComponent = true
+	case model.SectionTokenVCalendar:
+		return icalerr.ErrNestedBeginVCalendar
+	}
+
+	switch token {
 	case model.SectionTokenVEvent:
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
 		cursor.event = &calendar.Events[len(calendar.Events)-1]
-	// We have already verified that the first line is a BEGIN:VCALENDAR, so this is an error case
-	case model.SectionTokenVCalendar:
-		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVTimezone:
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
@@ -273,7 +288,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 		cursor.freeBusy = &calendar.FreeBusys[len(calendar.FreeBusys)-1]
 	case model.SectionTokenVAlarm:
-		switch *currentState { //nolint:exhaustive // it is an error condition to begin a VALARM block if we are not in an event or todo
+		switch *currentState {
 		case stateEvent:
 			if cursor.event == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
@@ -317,6 +332,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		cursor.tzProp = &cursor.timeZone.Daylight[len(cursor.timeZone.Daylight)-1]
 	default:
 		// RFC 5545: applications MUST ignore unrecognized x-comp / iana-comp.
+		cps.sawComponent = true
 		skip.returnState = *currentState
 		skip.depth = 1
 		*currentState = stateSkipComponent
@@ -324,7 +340,6 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 	return nil
 }
 
-// handleEndBlock processes END blocks and updates the parser state.
 func handleEndBlock(endLineValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):
@@ -339,9 +354,6 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 	case string(model.SectionTokenVCalendar):
 		if *currentState != stateCalendar {
 			return fmt.Errorf("%w: END:VCALENDAR", icalerr.ErrUnexpectedEndBlock)
-		}
-		if err := validateCalendar(calendar); err != nil {
-			return err
 		}
 		*currentState = stateFinished
 	case string(model.SectionTokenVTimezone):
@@ -391,14 +403,20 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		cursor.todo = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVStandard):
-		if *currentState != stateStandard || cursor.timeZone == nil {
+		if *currentState != stateStandard || cursor.timeZone == nil || cursor.tzProp == nil {
 			return fmt.Errorf("%w: END:STANDARD", icalerr.ErrUnexpectedEndBlock)
+		}
+		if err := validateObservance(cursor.tzProp); err != nil {
+			return err
 		}
 		cursor.tzProp = nil
 		*currentState = stateTimezone
 	case string(model.SectionTokenVDaylight):
-		if *currentState != stateDaylight || cursor.timeZone == nil {
+		if *currentState != stateDaylight || cursor.timeZone == nil || cursor.tzProp == nil {
 			return fmt.Errorf("%w: END:DAYLIGHT", icalerr.ErrUnexpectedEndBlock)
+		}
+		if err := validateObservance(cursor.tzProp); err != nil {
+			return err
 		}
 		cursor.tzProp = nil
 		*currentState = stateTimezone

@@ -19,6 +19,10 @@ var (
 	ErrUnexpectedBeginBlock              = errors.New("unexpected begin block: not inside expected parent")
 	ErrMissingCalendarVersionProperty    = errors.New("calendar must have a VERSION property")
 	ErrMissingCalendarProdIDProperty     = errors.New("calendar must have a PRODID property")
+	ErrMissingCalendarComponent          = errors.New("calendar must contain at least one component")
+	ErrDuplicateParameter                = errors.New("duplicate property parameter")
+	ErrInvalidTextEscape                 = errors.New("invalid TEXT escape sequence")
+	ErrComponentNotAllowedHere           = errors.New("component begin not allowed in current state")
 )
 
 // General parsing errors.
@@ -33,13 +37,25 @@ var (
 // Event-specific errors.
 var (
 	ErrMissingEventUIDProperty     = errors.New("event must have a UID property")
+	ErrMissingEventDTStampProperty = errors.New("event must have a DTSTAMP property")
 	ErrMissingEventDTStartProperty = errors.New("event must have a DTSTART property if no METHOD property is present for the top level calendar")
 
 	ErrInvalidDurationPropertyDtend = errors.New("invalid duration property in iCal Event: DTEND and DURATION are mutually exclusive")
+	ErrDateDurationMustBeDayOrWeek  = errors.New("DURATION with DATE DTSTART must be day or week granularity")
+	ErrMismatchedDateValueTypes     = errors.New("DTSTART and DTEND/DUE must use matching DATE or DATE-TIME value types")
+	ErrPositiveDurationRequired     = errors.New("duration must be positive")
+	ErrInvalidPriority              = errors.New("PRIORITY must be an integer from 0 to 9")
+	ErrInvalidPercentComplete       = errors.New("PERCENT-COMPLETE must be an integer from 0 to 100")
+	ErrInvalidEnumValue             = errors.New("invalid enumerated property value")
+	ErrUTCValueRequired             = errors.New("property value must be in UTC form")
+	ErrUnknownTZID                  = errors.New("TZID parameter does not reference a VTIMEZONE in this calendar")
+	ErrDuplicateTimezoneTZID        = errors.New("duplicate VTIMEZONE TZID in calendar")
 
 	ErrInvalidGeoProperty          = errors.New("invalid event property in iCal Event: GEO must be two floats separated by a semicolon")
 	ErrInvalidGeoPropertyLatitude  = errors.New("invalid latitude in iCal Event: GEO must be a float")
 	ErrInvalidGeoPropertyLongitude = errors.New("invalid longitude in iCal Event: GEO must be a float")
+	ErrGeoLatitudeOutOfRange       = errors.New("GEO latitude must be between -90 and 90")
+	ErrGeoLongitudeOutOfRange      = errors.New("GEO longitude must be between -180 and 180")
 )
 
 // Todo-specific errors.
@@ -65,13 +81,17 @@ var (
 
 	ErrInvalidFreeBusyFormat = errors.New("invalid FREEBUSY property format")
 
-	ErrMissingFreeBusyDTStartProperty = errors.New("freebusy must have a DTSTART property")
+	ErrMissingFreeBusyDTStampProperty = errors.New("freebusy must have a DTSTAMP property")
 )
 
 // Timezone-specific errors.
 var (
 	ErrInvalidTimezoneProperty     = errors.New("invalid timezone property")
 	ErrMissingTimezoneTZIDProperty = errors.New("timezone must have a TZID property")
+	ErrMissingTimezoneObservance   = errors.New("timezone must have at least one STANDARD or DAYLIGHT sub-component")
+	ErrMissingObservanceDTStart    = errors.New("STANDARD/DAYLIGHT must have a DTSTART property")
+	ErrMissingObservanceOffsetFrom = errors.New("STANDARD/DAYLIGHT must have a TZOFFSETFROM property")
+	ErrMissingObservanceOffsetTo   = errors.New("STANDARD/DAYLIGHT must have a TZOFFSETTO property")
 	// ErrTimezoneLocalTimeRequired is returned when DTSTART or RDATE in a
 	// STANDARD/DAYLIGHT sub-component uses a UTC timestamp (trailing "Z").
 	// RFC 5545 requires these values to be local wall time.
@@ -94,7 +114,10 @@ var (
 
 	ErrMissingAlarmAttendeesForEmail = errors.New("EMAIL alarm must have at least one ATTENDEE property")
 
-	ErrMissingAlarmAttachForAudio = errors.New("AUDIO alarm must have at least one ATTACH property")
+	ErrAlarmAttachTooManyForAudio = errors.New("AUDIO alarm must not have more than one ATTACH property")
+	ErrAlarmDurationRepeatCoupling = errors.New("DURATION and REPEAT must both be present or both absent")
+	ErrInvalidAlarmTrigger         = errors.New("invalid TRIGGER property")
+	ErrTodoTranspNotAllowed        = errors.New("TRANSP is not allowed on VTODO")
 )
 
 // Property Setter errors.

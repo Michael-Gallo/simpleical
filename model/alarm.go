@@ -13,10 +13,9 @@ import (
 type AlarmAction string
 
 const (
-	AlarmActionAudio     AlarmAction = "AUDIO"
-	AlarmActionDisplay   AlarmAction = "DISPLAY"
-	AlarmActionEmail     AlarmAction = "EMAIL"
-	AlarmActionProcedure AlarmAction = "PROCEDURE"
+	AlarmActionAudio   AlarmAction = "AUDIO"
+	AlarmActionDisplay AlarmAction = "DISPLAY"
+	AlarmActionEmail   AlarmAction = "EMAIL"
 )
 
 // TriggerRelated is the RELATED parameter on TRIGGER (START or END).
