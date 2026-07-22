@@ -15,7 +15,6 @@ var (
 	ErrNestedBeginVCalendar              = errors.New("invalid calendar format: BEGIN:VCALENDAR cannot appear inside a calendar")
 	ErrContentAfterEndBlock              = errors.New("content after END:VCALENDAR")
 	ErrTemplateInvalidEndBlock           = errors.New("invalid end block")
-	ErrTemplateInvalidStartBlock         = errors.New("invalid start block")
 	ErrUnexpectedEndBlock                = errors.New("unexpected end block: no matching begin or wrong nesting")
 	ErrUnexpectedBeginBlock              = errors.New("unexpected begin block: not inside expected parent")
 	ErrMissingCalendarVersionProperty    = errors.New("calendar must have a VERSION property")
@@ -33,8 +32,6 @@ var (
 
 // Event-specific errors.
 var (
-	ErrInvalidEventProperty = errors.New("invalid event property")
-
 	ErrMissingEventUIDProperty     = errors.New("event must have a UID property")
 	ErrMissingEventDTStartProperty = errors.New("event must have a DTSTART property if no METHOD property is present for the top level calendar")
 
@@ -47,8 +44,6 @@ var (
 
 // Todo-specific errors.
 var (
-	ErrInvalidTodoProperty = errors.New("invalid todo property")
-
 	ErrMissingTodoUIDProperty = errors.New("todo must have a UID property")
 
 	ErrMissingTodoDTStampProperty = errors.New("todo must have a DTSTAMP property")
@@ -59,8 +54,6 @@ var (
 
 // Journal-specific errors.
 var (
-	ErrInvalidJournalProperty = errors.New("invalid journal property")
-
 	ErrMissingJournalUIDProperty = errors.New("journal must have a UID property")
 
 	ErrMissingJournalDTStampProperty = errors.New("journal must have a DTSTAMP property")
@@ -68,8 +61,6 @@ var (
 
 // FreeBusy-specific errors.
 var (
-	ErrInvalidFreeBusyProperty = errors.New("invalid freebusy property")
-
 	ErrMissingFreeBusyUIDProperty = errors.New("freebusy must have a UID property")
 
 	ErrInvalidFreeBusyFormat = errors.New("invalid FREEBUSY property format")
@@ -89,8 +80,6 @@ var (
 
 // Alarm-specific errors.
 var (
-	ErrInvalidAlarmProperty = errors.New("invalid alarm property")
-
 	ErrUnknownAlarmAction = errors.New("unknown alarm action")
 
 	ErrMissingAlarmActionProperty = errors.New("alarm must have an ACTION property")

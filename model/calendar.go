@@ -30,6 +30,18 @@ type Calendar struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.2
 	Method string
 
+	// OPTIONAL, MAY occur more than once
+	// A Non-Standard Property. Can be represented by any name with a X-prefix.
+	// Parameters and repeats are preserved.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.2
+	XProp []ExtensionProperty
+
+	// OPTIONAL, MAY occur more than once
+	// An unrecognized IANA-style property name (non X- prefix).
+	// Parameters and repeats are preserved. No IANA-registration validation.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.1
+	IANAProp []ExtensionProperty
+
 	// TimeZones contains all VTIMEZONE components in the calendar.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.5
 	TimeZones []TimeZone

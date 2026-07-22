@@ -1,7 +1,6 @@
 package ical
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -73,7 +72,7 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 	case model.JournalTokenRequestStatus:
 		journal.RequestStatus = append(journal.RequestStatus, value)
 	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrInvalidJournalProperty, propertyName)
+		appendExtensionProperty(&journal.XProp, &journal.IANAProp, propertyName, value, params)
 	}
 	return nil
 }

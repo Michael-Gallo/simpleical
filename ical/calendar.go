@@ -6,7 +6,7 @@ import (
 )
 
 // parseCalendarProperty parses a single property line and sets its value in the provided vcalendar.
-func parseCalendarProperty(propertyName string, value string, _ map[string]string, calendar *model.Calendar) error {
+func parseCalendarProperty(propertyName string, value string, params map[string]string, calendar *model.Calendar) error {
 	switch propertyName {
 	case "VERSION":
 		return setOnceProperty(&calendar.Version, value, propertyName, "VCALENDAR")
@@ -16,8 +16,10 @@ func parseCalendarProperty(propertyName string, value string, _ map[string]strin
 		return setOnceProperty(&calendar.CalScale, value, propertyName, "VCALENDAR")
 	case "METHOD":
 		return setOnceProperty(&calendar.Method, value, propertyName, "VCALENDAR")
+	default:
+		appendExtensionProperty(&calendar.XProp, &calendar.IANAProp, propertyName, value, params)
+		return nil
 	}
-	return nil
 }
 
 func validateCalendar(calendar *model.Calendar) error {

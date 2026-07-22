@@ -197,16 +197,15 @@ type Event struct {
 	Rdate []time.Time
 
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.
-	// This is optional and repeatable.
-	// The keys of the map are expected to include the X-prefix.
+	// OPTIONAL, MAY occur more than once. Parameters and repeats are preserved.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.2.
-	XProp map[string]string
+	XProp []ExtensionProperty
 
-	// An IANA registered property name.
-	// This is optional and repeatable.
-	// As of right now this is implemented as a map of string to string with no validation of whether the property is a real IANA registered property.
+	// An unrecognized IANA-style property name (non X- prefix).
+	// OPTIONAL, MAY occur more than once. Parameters and repeats are preserved.
+	// There is no validation that the name is IANA-registered.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.1.
-	IANAProp map[string]string
+	IANAProp []ExtensionProperty
 
 	// OPTIONAL, MAY occur more than once.
 	// Sub-components: VALARM.

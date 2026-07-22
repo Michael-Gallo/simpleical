@@ -43,13 +43,15 @@ type TimeZone struct {
 
 	// OPTIONAL, MAY occur more than once
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.
+	// Parameters and repeats are preserved.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.2
-	XProp map[string]string
+	XProp []ExtensionProperty
 
 	// OPTIONAL, MAY occur more than once
-	// An IANA registered property name.
+	// An unrecognized IANA-style property name (non X- prefix).
+	// Parameters and repeats are preserved. No IANA-registration validation.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.1
-	IANAProp map[string]string
+	IANAProp []ExtensionProperty
 }
 
 // TimeZoneProperty is defined in the spec as tzprop and describes the fields that are used to represent either a standard or daylight sub-component in a timezone.
@@ -89,11 +91,13 @@ type TimeZoneProperty struct {
 
 	// OPTIONAL, MAY occur more than once
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.
+	// Parameters and repeats are preserved.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.2
-	XProp map[string]string
+	XProp []ExtensionProperty
 
 	// OPTIONAL, MAY occur more than once
-	// An IANA registered property name.
+	// An unrecognized IANA-style property name (non X- prefix).
+	// Parameters and repeats are preserved. No IANA-registration validation.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.8.1
-	IANAProp map[string]string
+	IANAProp []ExtensionProperty
 }
