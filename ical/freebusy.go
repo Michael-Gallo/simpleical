@@ -51,7 +51,7 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 			fbType = parsed
 		}
 		for part := range strings.SplitSeq(value, ",") {
-			period, err := parsePeriod(part, true)
+			period, err := parsePeriod(part)
 			if err != nil {
 				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, freeBusyLocation, propertyName, err)
 			}

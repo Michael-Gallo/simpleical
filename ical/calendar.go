@@ -22,14 +22,14 @@ func parseCalendarProperty(propertyName string, value string, params map[string]
 	}
 }
 
-func validateCalendar(calendar *model.Calendar, cps *calendarParseState) error {
+func validateCalendar(calendar *model.Calendar, sawComponent bool) error {
 	if calendar.Version == "" {
 		return icalerr.ErrMissingCalendarVersionProperty
 	}
 	if calendar.ProdID == "" {
 		return icalerr.ErrMissingCalendarProdIDProperty
 	}
-	if !cps.sawComponent {
+	if !sawComponent {
 		return icalerr.ErrMissingCalendarComponent
 	}
 	return nil
@@ -133,6 +133,5 @@ func validateCalendarTZIDs(calendar *model.Calendar) error {
 			}
 		}
 	}
-	_ = check
 	return nil
 }

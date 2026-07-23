@@ -225,7 +225,7 @@ func appendRelatedToProperty(field *[]model.RelatedToValue, value string, params
 func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map[string]string, propertyName string, componentType string) error {
 	if strings.EqualFold(params[model.ParamValue], "PERIOD") {
 		for part := range strings.SplitSeq(value, ",") {
-			period, err := parsePeriod(part, true)
+			period, err := parsePeriod(part)
 			if err != nil {
 				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 			}
@@ -245,8 +245,8 @@ func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map
 	return nil
 }
 
-// parsePeriod parses start/end or start/duration. If requireUTC, both datetimes must be UTC.
-func parsePeriod(value string, requireUTC bool) (model.Period, error) {
+// parsePeriod parses a UTC PERIOD value as start/end or start/duration.
+func parsePeriod(value string) (model.Period, error) {
 	startStr, rest, found := strings.Cut(value, "/")
 	if !found || rest == "" {
 		return model.Period{}, icalerr.ErrInvalidFreeBusyFormat
@@ -255,13 +255,10 @@ func parsePeriod(value string, requireUTC bool) (model.Period, error) {
 	if err != nil {
 		return model.Period{}, err
 	}
-	if requireUTC && start.Form != icaldur.FormUTC {
+	if start.Form != icaldur.FormUTC {
 		return model.Period{}, icalerr.ErrUTCValueRequired
 	}
 	startDT := model.DateTime{Form: model.DateTimeFormUTC, Time: start.Time}
-	if start.Form == icaldur.FormFloating {
-		startDT.Form = model.DateTimeFormFloating
-	}
 
 	if strings.HasPrefix(rest, "P") || strings.HasPrefix(rest, "-P") || strings.HasPrefix(rest, "+P") {
 		dur, err := icaldur.ParseICalDuration(rest)
@@ -274,12 +271,11 @@ func parsePeriod(value string, requireUTC bool) (model.Period, error) {
 	if err != nil {
 		return model.Period{}, err
 	}
-	if requireUTC && end.Form != icaldur.FormUTC {
+	if end.Form != icaldur.FormUTC {
 		return model.Period{}, icalerr.ErrUTCValueRequired
 	}
-	endDT := model.DateTime{Form: model.DateTimeFormUTC, Time: end.Time}
-	if end.Form == icaldur.FormFloating {
-		endDT.Form = model.DateTimeFormFloating
-	}
-	return model.Period{Start: startDT, End: endDT}, nil
+	return model.Period{
+		Start: startDT,
+		End:   model.DateTime{Form: model.DateTimeFormUTC, Time: end.Time},
+	}, nil
 }

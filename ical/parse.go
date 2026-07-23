@@ -57,11 +57,6 @@ type skipTracker struct {
 	returnState parserState
 }
 
-// calendarParseState holds per-calendar parse bookkeeping.
-type calendarParseState struct {
-	sawComponent bool
-}
-
 // ReadSingle takes an io.Reader containing iCalendar data and parses it into a Calendar.
 // It asserts that the input contains exactly one VCALENDAR object; any content after
 // END:VCALENDAR (including another BEGIN:VCALENDAR) returns ErrContentAfterEndBlock.
@@ -130,7 +125,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 	currentState := stateCalendar
 	var cursor componentCursor
 	var skip skipTracker
-	var cps calendarParseState
+	var sawComponent bool
 
 	for {
 		line, ok := nextLogicalLine(scanner, pending, hasPending)
@@ -156,7 +151,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				skip.depth++
 				continue
 			}
-			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip, &cps); err != nil {
+			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip, &sawComponent); err != nil {
 				return nil, err
 			}
 		case "END":
@@ -172,7 +167,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				return nil, err
 			}
 			if currentState == stateFinished {
-				if err := validateCalendar(calendar, &cps); err != nil {
+				if err := validateCalendar(calendar, sawComponent); err != nil {
 					return nil, err
 				}
 				if err := validateCalendarTZIDs(calendar); err != nil {
@@ -259,7 +254,7 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	return nil
 }
 
-func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, cps *calendarParseState) error {
+func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, sawComponent *bool) error {
 	token := model.SectionToken(beginValue)
 
 	// Top-level calendar components may only begin from calendar state.
@@ -269,7 +264,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		if *currentState != stateCalendar {
 			return fmt.Errorf("%w: %s", icalerr.ErrComponentNotAllowedHere, beginValue)
 		}
-		cps.sawComponent = true
+		*sawComponent = true
 	case model.SectionTokenVCalendar:
 		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVAlarm, model.SectionTokenVStandard, model.SectionTokenVDaylight:
@@ -337,7 +332,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		cursor.tzProp = &cursor.timeZone.Daylight[len(cursor.timeZone.Daylight)-1]
 	default:
 		// RFC 5545: applications MUST ignore unrecognized x-comp / iana-comp.
-		cps.sawComponent = true
+		*sawComponent = true
 		skip.returnState = *currentState
 		skip.depth = 1
 		*currentState = stateSkipComponent
