@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/michael-gallo/simpleical/internal/icalerr"
 	"github.com/michael-gallo/simpleical/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,4 +49,45 @@ func TestAppendCommaSeparatedTimePropertyWithParams(t *testing.T) {
 		model.NewUTCDateTime(time.Date(1996, 4, 3, 1, 0, 0, 0, time.UTC)),
 		model.NewUTCDateTime(time.Date(1996, 4, 4, 1, 0, 0, 0, time.UTC)),
 	}, dates)
+}
+
+func TestParseRecurrenceIDRange(t *testing.T) {
+	t.Parallel()
+	got, err := parseRecurrenceIDRange(nil)
+	require.NoError(t, err)
+	assert.Empty(t, got)
+
+	got, err = parseRecurrenceIDRange(map[string]string{model.ParamRange: "THISANDFUTURE"})
+	require.NoError(t, err)
+	assert.Equal(t, "THISANDFUTURE", got)
+
+	_, err = parseRecurrenceIDRange(map[string]string{model.ParamRange: "THISANDPRIOR"})
+	require.ErrorIs(t, err, icalerr.ErrInvalidEnumValue)
+}
+
+func TestParsePeriodRejectsNonPositiveDuration(t *testing.T) {
+	t.Parallel()
+	_, err := parsePeriod("19970101T180000Z/PT0S")
+	require.ErrorIs(t, err, icalerr.ErrPositiveDurationRequired)
+
+	_, err = parsePeriod("19970101T180000Z/-PT1H")
+	require.ErrorIs(t, err, icalerr.ErrPositiveDurationRequired)
+
+	p, err := parsePeriod("19970101T180000Z/PT1H")
+	require.NoError(t, err)
+	assert.Equal(t, time.Hour, p.Duration)
+}
+
+func TestValidateFreeBusyRequiresUTCBoundaries(t *testing.T) {
+	t.Parallel()
+	fb := &model.FreeBusy{
+		UID:     "fb@example.com",
+		DTStamp: model.NewUTCDateTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+		DTStart: model.NewFloatingDateTime(time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC)),
+		DTEnd:   model.NewUTCDateTime(time.Date(2024, 1, 1, 17, 0, 0, 0, time.UTC)),
+	}
+	require.ErrorIs(t, validateFreeBusy(fb), icalerr.ErrUTCValueRequired)
+
+	fb.DTStart = model.NewUTCDateTime(time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC))
+	require.NoError(t, validateFreeBusy(fb))
 }

@@ -42,6 +42,18 @@ func setOnceBoundedInt(field *int, value string, lo, hi int, rangeErr error, pro
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
+const recurrenceIDRangeThisAndFuture = "THISANDFUTURE"
+
+// parseRecurrenceIDRange validates the RANGE parameter on RECURRENCE-ID.
+// Only an omitted value or THISANDFUTURE is allowed (RFC 5545 §3.2.13).
+func parseRecurrenceIDRange(params map[string]string) (string, error) {
+	r := params[model.ParamRange]
+	if r == "" || r == recurrenceIDRangeThisAndFuture {
+		return r, nil
+	}
+	return "", fmt.Errorf("%w: RANGE %s", icalerr.ErrInvalidEnumValue, r)
+}
+
 // dateValueAllowed reports whether propertyName may carry VALUE=DATE.
 func dateValueAllowed(propertyName string) bool {
 	switch propertyName {
@@ -217,7 +229,7 @@ func appendRelatedToProperty(field *[]model.RelatedToValue, value string, params
 	return nil
 }
 
-// appendRDateProperty appends RDATE DATE-TIME or PERIOD values to field.
+// appendRDateProperty appends RDATE DATE/DATE-TIME or PERIOD values to field.
 func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map[string]string, propertyName string, componentType string) error {
 	if strings.EqualFold(params[model.ParamValue], "PERIOD") {
 		for part := range strings.SplitSeq(value, ",") {
@@ -260,6 +272,9 @@ func parsePeriod(value string) (model.Period, error) {
 		dur, err := icaldur.ParseICalDuration(rest)
 		if err != nil {
 			return model.Period{}, err
+		}
+		if dur <= 0 {
+			return model.Period{}, icalerr.ErrPositiveDurationRequired
 		}
 		return model.Period{Start: startDT, Duration: dur}, nil
 	}

@@ -58,7 +58,11 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		if err := setOnceTimePropertyWithParams(&event.RecurrenceID, value, params, propertyName, eventLocation); err != nil {
 			return err
 		}
-		event.RecurrenceIDRange = params[model.ParamRange]
+		rangeParam, err := parseRecurrenceIDRange(params)
+		if err != nil {
+			return err
+		}
+		event.RecurrenceIDRange = rangeParam
 		return nil
 	case model.PropContact:
 		event.Contacts = append(event.Contacts, value)

@@ -39,7 +39,11 @@ func parseJournalProperty(propertyName string, value string, params map[string]s
 		if err := setOnceTimePropertyWithParams(&journal.RecurrenceID, value, params, propertyName, journalLocation); err != nil {
 			return err
 		}
-		journal.RecurrenceIDRange = params[model.ParamRange]
+		rangeParam, err := parseRecurrenceIDRange(params)
+		if err != nil {
+			return err
+		}
+		journal.RecurrenceIDRange = rangeParam
 		return nil
 	case model.PropSequence:
 		return setOnceIntProperty(&journal.Sequence, value, propertyName, journalLocation)

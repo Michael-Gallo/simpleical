@@ -547,56 +547,53 @@ func parseSignedIntListCustom(value string, valid func(int) bool, outOfRange err
 // parseByDay parses a BYDAY value string and returns the interval, weekday, and
 // whether an explicit ordinal prefix was present.
 // Formats: "MO", "1MO", "+1MO", "-1MO". If no ordinal is specified, interval is 1.
+// Ordinal form allows at most one leading sign and exactly 1–2 digits (RFC ordwk).
 func parseByDay(byDayString string) (int, Weekday, bool, error) {
 	if byDayString == "" {
 		return 0, "", false, errInvalidByDayString
 	}
 
 	s := byDayString
-	if s[0] == '+' {
-		s = s[1:]
-		if s == "" {
+	if isValidWeekday(Weekday(s)) {
+		return 1, Weekday(s), false, nil
+	}
+
+	sign := 1
+	i := 0
+	if s[0] == '+' || s[0] == '-' {
+		if s[0] == '-' {
+			sign = -1
+		}
+		i = 1
+		if i >= len(s) {
 			return 0, "", false, errInvalidByDayString
 		}
 	}
 
-	if len(s) > 0 && (s[0] >= '0' && s[0] <= '9' || s[0] == '-') {
-		digitEnd := 0
-		for i, char := range s {
-			if char < '0' || char > '9' {
-				if char == '-' && i == 0 {
-					continue
-				}
-				digitEnd = i
-				break
-			}
-			digitEnd = i + 1
-		}
-
-		intervalStr := s[:digitEnd]
-		weekday := Weekday(s[digitEnd:])
-
-		if !isValidWeekday(weekday) {
-			return 0, "", false, errInvalidByDayString
-		}
-
-		interval, err := strconv.Atoi(intervalStr)
-		if err != nil {
-			return 0, "", false, errInvalidByDayString
-		}
-		// ordwk is 1..53; reject 0 / -0 and out-of-range magnitudes.
-		if interval == 0 || interval > 53 || interval < -53 {
-			return 0, "", false, errInvalidByDayString
-		}
-
-		return interval, weekday, true, nil
+	digitStart := i
+	for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+		i++
 	}
-
-	if !isValidWeekday(Weekday(s)) {
+	digitLen := i - digitStart
+	if digitLen < 1 || digitLen > 2 {
 		return 0, "", false, errInvalidByDayString
 	}
 
-	return 1, Weekday(s), false, nil
+	weekday := Weekday(s[i:])
+	if !isValidWeekday(weekday) {
+		return 0, "", false, errInvalidByDayString
+	}
+
+	interval, err := strconv.Atoi(s[digitStart:i])
+	if err != nil {
+		return 0, "", false, errInvalidByDayString
+	}
+	// ordwk is 1..53; reject 0.
+	if interval < 1 || interval > 53 {
+		return 0, "", false, errInvalidByDayString
+	}
+
+	return sign * interval, weekday, true, nil
 }
 
 // isValidWeekday checks if the string is a valid weekday abbreviation.

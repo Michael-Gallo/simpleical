@@ -70,7 +70,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		if err := setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation); err != nil {
 			return err
 		}
-		todo.RecurrenceIDRange = params[model.ParamRange]
+		rangeParam, err := parseRecurrenceIDRange(params)
+		if err != nil {
+			return err
+		}
+		todo.RecurrenceIDRange = rangeParam
 		return nil
 	case model.PropSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)

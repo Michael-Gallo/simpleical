@@ -78,9 +78,9 @@ func validateFreeBusy(freeBusy *model.FreeBusy) error {
 	if freeBusy.DTStamp.IsZero() {
 		return icalerr.ErrMissingFreeBusyDTStampProperty
 	}
-	// VFREEBUSY DTSTART/DTEND must be UTC DATE-TIME, not DATE.
-	if (!freeBusy.DTStart.IsZero() && freeBusy.DTStart.IsDate()) ||
-		(!freeBusy.DTEnd.IsZero() && freeBusy.DTEnd.IsDate()) {
+	// VFREEBUSY DTSTART/DTEND must be UTC DATE-TIME when present.
+	if (!freeBusy.DTStart.IsZero() && !freeBusy.DTStart.IsUTC()) ||
+		(!freeBusy.DTEnd.IsZero() && !freeBusy.DTEnd.IsUTC()) {
 		return icalerr.ErrUTCValueRequired
 	}
 	return nil

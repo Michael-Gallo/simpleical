@@ -1037,6 +1037,21 @@ func TestParseByDay(t *testing.T) {
 			input:       "-54MO",
 			expectError: errInvalidByDayString,
 		},
+		{
+			name:        "Double-signed ordinal rejected",
+			input:       "+-1MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Overlong positive ordinal rejected",
+			input:       "001MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Overlong negative ordinal rejected",
+			input:       "-001MO",
+			expectError: errInvalidByDayString,
+		},
 	}
 
 	for _, test := range tests {
