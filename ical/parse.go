@@ -254,39 +254,56 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	return nil
 }
 
+// requireCalendarComponent ensures a top-level component begins from calendar state.
+func requireCalendarComponent(currentState *parserState, sawComponent *bool, beginValue string) error {
+	if *currentState != stateCalendar {
+		return fmt.Errorf("%w: %s", icalerr.ErrComponentNotAllowedHere, beginValue)
+	}
+	*sawComponent = true
+	return nil
+}
+
 func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, sawComponent *bool) error {
 	token := model.SectionToken(beginValue)
 
-	// Top-level calendar components may only begin from calendar state.
 	switch token {
-	case model.SectionTokenVEvent, model.SectionTokenVTodo, model.SectionTokenVJournal,
-		model.SectionTokenVFreebusy, model.SectionTokenVTimezone:
-		if *currentState != stateCalendar {
-			return fmt.Errorf("%w: %s", icalerr.ErrComponentNotAllowedHere, beginValue)
-		}
-		*sawComponent = true
 	case model.SectionTokenVCalendar:
 		return icalerr.ErrNestedBeginVCalendar
-	case model.SectionTokenVAlarm, model.SectionTokenVStandard, model.SectionTokenVDaylight:
-		// Nested components; parent checks happen in the dispatch switch below.
-	}
-
-	switch token {
 	case model.SectionTokenVEvent:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
 		cursor.event = &calendar.Events[len(calendar.Events)-1]
-	case model.SectionTokenVCalendar:
-		// Unreachable: rejected above. Kept for exhaustive switch coverage.
-		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVTimezone:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
 		cursor.timeZone = &calendar.TimeZones[len(calendar.TimeZones)-1]
 	case model.SectionTokenVFreebusy:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateFreebusy
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 		cursor.freeBusy = &calendar.FreeBusys[len(calendar.FreeBusys)-1]
+	case model.SectionTokenVJournal:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
+		*currentState = stateJournal
+		calendar.Journals = append(calendar.Journals, model.Journal{})
+		cursor.journal = &calendar.Journals[len(calendar.Journals)-1]
+	case model.SectionTokenVTodo:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
+		*currentState = stateTodo
+		calendar.Todos = append(calendar.Todos, model.Todo{})
+		cursor.todo = &calendar.Todos[len(calendar.Todos)-1]
 	case model.SectionTokenVAlarm:
 		switch *currentState { //nolint:exhaustive // VALARM is only valid inside VEVENT/VTODO; other states share the default error
 		case stateEvent:
@@ -308,14 +325,6 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		}
 		cursor.alarmParent = *currentState
 		*currentState = stateAlarm
-	case model.SectionTokenVJournal:
-		*currentState = stateJournal
-		calendar.Journals = append(calendar.Journals, model.Journal{})
-		cursor.journal = &calendar.Journals[len(calendar.Journals)-1]
-	case model.SectionTokenVTodo:
-		*currentState = stateTodo
-		calendar.Todos = append(calendar.Todos, model.Todo{})
-		cursor.todo = &calendar.Todos[len(calendar.Todos)-1]
 	case model.SectionTokenVStandard:
 		if *currentState != stateTimezone || cursor.timeZone == nil {
 			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
