@@ -51,7 +51,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropCreated:
 		return setOnceUTCTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
 	case model.PropPriority:
-		return setOncePriorityProperty(&event.Priority, value, propertyName, eventLocation)
+		return setOnceBoundedInt(&event.Priority, value, 0, 9, icalerr.ErrInvalidPriority, propertyName, eventLocation)
 	case model.PropURL:
 		return setOnceProperty(&event.URL, value, propertyName, eventLocation)
 	case model.PropRecurrenceID:

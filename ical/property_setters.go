@@ -30,26 +30,14 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
-// setOncePriorityProperty sets PRIORITY (0-9).
-func setOncePriorityProperty(field *int, value, propertyName string, componentType string) error {
+// setOnceBoundedInt parses an int, enforces [lo, hi], then setOnceProperty.
+func setOnceBoundedInt(field *int, value string, lo, hi int, rangeErr error, propertyName, componentType string) error {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
-	if intValue < 0 || intValue > 9 {
-		return icalerr.ErrInvalidPriority
-	}
-	return setOnceProperty(field, intValue, propertyName, componentType)
-}
-
-// setOncePercentCompleteProperty sets PERCENT-COMPLETE (0-100).
-func setOncePercentCompleteProperty(field *int, value, propertyName string, componentType string) error {
-	intValue, err := strconv.Atoi(value)
-	if err != nil {
-		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
-	}
-	if intValue < 0 || intValue > 100 {
-		return icalerr.ErrInvalidPercentComplete
+	if intValue < lo || intValue > hi {
+		return rangeErr
 	}
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }

@@ -7,65 +7,52 @@ import (
 	"github.com/michael-gallo/simpleical/model"
 )
 
-func parseClass(value string) (model.Class, error) {
-	switch model.Class(value) {
-	case model.ClassPublic, model.ClassPrivate, model.ClassConfidential:
-		return model.Class(value), nil
-	default:
-		return "", fmt.Errorf("%w: CLASS %s", icalerr.ErrInvalidEnumValue, value)
+// parseEnum accepts a string value when it matches one of the allowed constants.
+// label is included in the error (e.g. "CLASS"); pass "" to omit it (ALARM ACTION).
+func parseEnum[T ~string](value string, invalid error, label string, allowed ...T) (T, error) {
+	v := T(value)
+	for _, a := range allowed {
+		if v == a {
+			return v, nil
+		}
 	}
+	if label == "" {
+		return "", fmt.Errorf("%w: %s", invalid, value)
+	}
+	return "", fmt.Errorf("%w: %s %s", invalid, label, value)
+}
+
+func parseClass(value string) (model.Class, error) {
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "CLASS",
+		model.ClassPublic, model.ClassPrivate, model.ClassConfidential)
 }
 
 func parseEventStatus(value string) (model.EventStatus, error) {
-	switch model.EventStatus(value) {
-	case model.EventStatusConfirmed, model.EventStatusTentative, model.EventStatusCancelled:
-		return model.EventStatus(value), nil
-	default:
-		return "", fmt.Errorf("%w: STATUS %s", icalerr.ErrInvalidEnumValue, value)
-	}
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "STATUS",
+		model.EventStatusConfirmed, model.EventStatusTentative, model.EventStatusCancelled)
 }
 
 func parseTodoStatus(value string) (model.TodoStatus, error) {
-	switch model.TodoStatus(value) {
-	case model.TodoStatusNeedsAction, model.TodoStatusCompleted, model.TodoStatusInProcess, model.TodoStatusCancelled:
-		return model.TodoStatus(value), nil
-	default:
-		return "", fmt.Errorf("%w: STATUS %s", icalerr.ErrInvalidEnumValue, value)
-	}
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "STATUS",
+		model.TodoStatusNeedsAction, model.TodoStatusCompleted, model.TodoStatusInProcess, model.TodoStatusCancelled)
 }
 
 func parseJournalStatus(value string) (model.JournalStatus, error) {
-	switch model.JournalStatus(value) {
-	case model.JournalStatusDraft, model.JournalStatusFinal, model.JournalStatusCancelled:
-		return model.JournalStatus(value), nil
-	default:
-		return "", fmt.Errorf("%w: STATUS %s", icalerr.ErrInvalidEnumValue, value)
-	}
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "STATUS",
+		model.JournalStatusDraft, model.JournalStatusFinal, model.JournalStatusCancelled)
 }
 
 func parseTransp(value string) (model.Transp, error) {
-	switch model.Transp(value) {
-	case model.TranspTransparent, model.TranspOpaque:
-		return model.Transp(value), nil
-	default:
-		return "", fmt.Errorf("%w: TRANSP %s", icalerr.ErrInvalidEnumValue, value)
-	}
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "TRANSP",
+		model.TranspTransparent, model.TranspOpaque)
 }
 
 func parseFreeBusyStatus(value string) (model.FreeBusyStatus, error) {
-	switch model.FreeBusyStatus(value) {
-	case model.FreeBusyStatusFree, model.FreeBusyStatusBusy, model.FreeBusyStatusBusyTentative, model.FreeBusyStatusBusyUnavailable:
-		return model.FreeBusyStatus(value), nil
-	default:
-		return "", fmt.Errorf("%w: FBTYPE %s", icalerr.ErrInvalidEnumValue, value)
-	}
+	return parseEnum(value, icalerr.ErrInvalidEnumValue, "FBTYPE",
+		model.FreeBusyStatusFree, model.FreeBusyStatusBusy, model.FreeBusyStatusBusyTentative, model.FreeBusyStatusBusyUnavailable)
 }
 
 func parseAlarmAction(value string) (model.AlarmAction, error) {
-	switch model.AlarmAction(value) {
-	case model.AlarmActionAudio, model.AlarmActionDisplay, model.AlarmActionEmail:
-		return model.AlarmAction(value), nil
-	default:
-		return "", fmt.Errorf("%w: %s", icalerr.ErrUnknownAlarmAction, value)
-	}
+	return parseEnum(value, icalerr.ErrUnknownAlarmAction, "",
+		model.AlarmActionAudio, model.AlarmActionDisplay, model.AlarmActionEmail)
 }
