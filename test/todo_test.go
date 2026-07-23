@@ -89,7 +89,7 @@ func TestValidTodo(t *testing.T) {
 						Resources:  []string{"laptop", "meeting-room"},
 						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
-						IANAProp:   []model.ExtensionProperty{{Name: "PRIORITY", Value: "1"}},
+						Priority:   1,
 					},
 				},
 			},
@@ -128,7 +128,7 @@ func TestValidTodo(t *testing.T) {
 						Resources:  []string{"laptop", "meeting-room"},
 						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
-						IANAProp:   []model.ExtensionProperty{{Name: "PRIORITY", Value: "1"}},
+						Priority:   1,
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,
 							Interval:  1,

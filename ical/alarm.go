@@ -81,6 +81,10 @@ func parseTrigger(value string, params map[string]string) (model.Trigger, error)
 	valueType := strings.ToUpper(params[model.ParamValue])
 	asDateTime := valueType == "DATE-TIME" || (valueType != "DURATION" && triggerLooksLikeDateTime(value))
 	if asDateTime {
+		// RELATED is only valid for duration triggers (default START).
+		if related != model.TriggerRelatedStart {
+			return model.Trigger{}, icalerr.ErrInvalidAlarmTrigger
+		}
 		dt, err := parseUTCDateTimeValue(value, params, model.PropTrigger)
 		if err != nil {
 			return model.Trigger{}, fmt.Errorf("%w: %w", icalerr.ErrInvalidAlarmTrigger, err)

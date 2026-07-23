@@ -179,7 +179,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 			if currentState == stateSkipComponent {
 				continue
 			}
-			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor); err != nil {
+			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor, sawComponent); err != nil {
 				return nil, err
 			}
 		}
@@ -228,7 +228,7 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 	return line, true
 }
 
-func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
+func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor, sawComponent bool) error {
 	switch currentState {
 	case stateAlarm:
 		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
@@ -249,6 +249,9 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateFinished:
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
+		if sawComponent {
+			return fmt.Errorf("%w: %s", icalerr.ErrCalendarPropertyAfterComponent, propertyName)
+		}
 		return parseCalendarProperty(propertyName, value, params, calendar)
 	}
 	return nil

@@ -20,6 +20,7 @@ var (
 	ErrMissingCalendarVersionProperty    = errors.New("calendar must have a VERSION property")
 	ErrMissingCalendarProdIDProperty     = errors.New("calendar must have a PRODID property")
 	ErrMissingCalendarComponent          = errors.New("calendar must contain at least one component")
+	ErrCalendarPropertyAfterComponent    = errors.New("calendar property after component is not allowed")
 	ErrDuplicateParameter                = errors.New("duplicate property parameter")
 	ErrInvalidTextEscape                 = errors.New("invalid TEXT escape sequence")
 	ErrComponentNotAllowedHere           = errors.New("component begin not allowed in current state")

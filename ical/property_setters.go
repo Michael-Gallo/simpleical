@@ -103,7 +103,7 @@ func parseUTCDateTimeValue(value string, params map[string]string, propertyName 
 func setOnceTimePropertyWithParams(field *model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
 	parsed, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
-		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
+		return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 	}
 	return setOnceProperty(field, parsed, propertyName, componentType)
 }
@@ -141,7 +141,7 @@ func setOncePositiveDurationProperty(field *time.Duration, value, propertyName s
 func appendTimePropertyWithParams(field *[]model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
 	parsed, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
-		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
+		return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 	}
 	*field = append(*field, parsed)
 	return nil
@@ -173,11 +173,7 @@ func setOnceTextProperty(field *model.TextValue, value string, params map[string
 	if err != nil {
 		return err
 	}
-	if field.Value != "" {
-		return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, componentType)
-	}
-	*field = tv
-	return nil
+	return setOnceProperty(field, tv, propertyName, componentType)
 }
 
 func appendTextProperty(field *[]model.TextValue, value string, params map[string]string) error {
@@ -225,7 +221,7 @@ func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map
 	for part := range strings.SplitSeq(value, ",") {
 		dt, err := parseDateTimeValue(part, params, propertyName)
 		if err != nil {
-			return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
+			return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 		}
 		d := dt
 		*field = append(*field, model.RecurrenceDate{DateTime: &d})

@@ -303,7 +303,7 @@ func validateRRule(rrule *RRule) error {
 	// Cross-part restrictions from RFC 5545 section 3.3.10.
 	switch rrule.Frequency {
 	case FrequencyDaily:
-		if len(rrule.ByYearDay) > 0 || len(rrule.ByMonthDay) > 0 || len(rrule.ByWeekNo) > 0 {
+		if len(rrule.ByYearDay) > 0 || len(rrule.ByWeekNo) > 0 {
 			return errInvalidByPartForFrequency
 		}
 	case FrequencyWeekly:
@@ -321,6 +321,9 @@ func validateRRule(rrule *RRule) error {
 	for _, bd := range rrule.ByDay {
 		if bd.Ordinal {
 			if rrule.Frequency != FrequencyMonthly && rrule.Frequency != FrequencyYearly {
+				return errNumericByDayInvalidFrequency
+			}
+			if rrule.Frequency == FrequencyYearly && len(rrule.ByWeekNo) > 0 {
 				return errNumericByDayInvalidFrequency
 			}
 		}
@@ -572,6 +575,10 @@ func parseByDay(byDayString string) (int, Weekday, bool, error) {
 
 		interval, err := strconv.Atoi(intervalStr)
 		if err != nil {
+			return 0, "", false, errInvalidByDayString
+		}
+		// ordwk is 1..53; reject 0 / -0 and out-of-range magnitudes.
+		if interval == 0 || interval > 53 || interval < -53 {
 			return 0, "", false, errInvalidByDayString
 		}
 

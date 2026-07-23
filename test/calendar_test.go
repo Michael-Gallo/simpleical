@@ -59,6 +59,8 @@ var (
 	testMultipleCalendarsMissingEndInput string
 	//go:embed test_data/calendar/invalid_multiple_calendars_nested_begin.ical
 	testMultipleCalendarsNestedBeginInput string
+	//go:embed test_data/calendar/invalid_method_after_vevent.ical
+	testMethodAfterVEventInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
@@ -235,6 +237,11 @@ func TestParseCalendarError(t *testing.T) {
 			name:        "No VEVENT block",
 			input:       testEmptyCalendarInput,
 			expectedErr: icalerr.ErrMissingCalendarComponent,
+		},
+		{
+			name:        "METHOD after END:VEVENT",
+			input:       testMethodAfterVEventInput,
+			expectedErr: icalerr.ErrCalendarPropertyAfterComponent,
 		},
 	}
 	for _, tc := range testCases {

@@ -182,6 +182,15 @@ func ParseUTCOffset(value string) (string, error) {
 	if value[0] != '+' && value[0] != '-' {
 		return "", ErrInvalidUTCOffset
 	}
+	for i := 1; i < len(value); i++ {
+		if value[i] < '0' || value[i] > '9' {
+			return "", ErrInvalidUTCOffset
+		}
+	}
+	// RFC 5545 forbids negative-zero offsets.
+	if value == "-0000" || value == "-000000" {
+		return "", ErrInvalidUTCOffset
+	}
 	hour, err := strconv.Atoi(value[1:3])
 	if err != nil || hour > 23 {
 		return "", ErrInvalidUTCOffset

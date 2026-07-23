@@ -236,6 +236,38 @@ func TestParseIcalLocalTime(t *testing.T) {
 	}
 }
 
+func TestParseUTCOffset(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        string
+		expectError error
+	}{
+		{name: "Valid negative offset", input: "-0500", want: "-0500"},
+		{name: "Valid positive offset", input: "+0100", want: "+0100"},
+		{name: "Valid with seconds", input: "+010030", want: "+010030"},
+		{name: "Positive zero allowed", input: "+0000", want: "+0000"},
+		{name: "Negative zero rejected", input: "-0000", expectError: ErrInvalidUTCOffset},
+		{name: "Negative zero with seconds rejected", input: "-000000", expectError: ErrInvalidUTCOffset},
+		{name: "Non-digit rejected", input: "+-050", expectError: ErrInvalidUTCOffset},
+		{name: "Signed digit group rejected", input: "+-500", expectError: ErrInvalidUTCOffset},
+		{name: "Hour out of range", input: "+2400", expectError: ErrInvalidUTCOffset},
+		{name: "Minute out of range", input: "+0560", expectError: ErrInvalidUTCOffset},
+		{name: "Wrong length", input: "+050", expectError: ErrInvalidUTCOffset},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := ParseUTCOffset(test.input)
+			if test.expectError != nil {
+				require.ErrorIs(t, err, test.expectError)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
 func BenchmarkParseIcalTime(b *testing.B) {
 	times := []string{
 		"20250928T183000Z",

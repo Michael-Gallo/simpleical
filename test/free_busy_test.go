@@ -80,22 +80,6 @@ func TestValidFreeBusy(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:  "Valid all-day VFREEBUSY with VALUE=DATE",
-			input: testFreeBusyAllDayDateInput,
-			expectedCalendar: &model.Calendar{
-				ProdID:  "-//Test//FreeBusy Calendar//EN",
-				Version: "2.0",
-				FreeBusys: []model.FreeBusy{
-					{
-						UID:     "freebusy-date@example.com",
-						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
-						DTStart: dateDT(6, 28),
-						DTEnd:   dateDT(7, 9),
-					},
-				},
-			},
-		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -131,6 +115,11 @@ func TestInvalidFreeBusy(t *testing.T) {
 			name:        "VFREEBUSY duplicate UID",
 			input:       testFreeBusyDuplicateUIDInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "VFREEBUSY DTSTART/DTEND with VALUE=DATE",
+			input:       testFreeBusyAllDayDateInput,
+			expectedErr: icalerr.ErrUTCValueRequired,
 		},
 	}
 	for _, tc := range testCases {

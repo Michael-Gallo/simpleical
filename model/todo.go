@@ -98,9 +98,15 @@ type Todo struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.8
 	PercentComplete int
 
+	// Priority represents the priority of the to-do (0-9, where 0 is undefined, 1 is highest, 9 is lowest).
+	// Refers to the PRIORITY property.
+	// OPTIONAL, MUST NOT occur more than once.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.9
+	Priority int
+
 	// OPTIONAL, MUST NOT occur more than once
-	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
-	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.4
+	// Specifies a specific instance of a recurring to-do.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.4
 	RecurrenceID DateTime
 
 	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
