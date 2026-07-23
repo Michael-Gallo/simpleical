@@ -228,6 +228,8 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 	return line, true
 }
 
+// parsePropertyLine dispatches a content line to the handler for the current component state.
+// Calendar properties are rejected once sawComponent is true (calprops must precede components).
 func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor, sawComponent bool) error {
 	switch currentState {
 	case stateAlarm:
@@ -266,6 +268,7 @@ func requireCalendarComponent(currentState *parserState, sawComponent *bool, beg
 	return nil
 }
 
+// handleBeginBlock transitions parser state for a BEGIN: token and allocates the new component.
 func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, sawComponent *bool) error {
 	token := model.SectionToken(beginValue)
 
@@ -352,6 +355,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 	return nil
 }
 
+// handleEndBlock validates and closes the component matching endLineValue.
 func handleEndBlock(endLineValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):

@@ -252,6 +252,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 	return rrule, nil
 }
 
+// setOnceValue sets a comparable RRULE part once, rejecting duplicates.
 func setOnceValue[T comparable](field *T, value T, tag string) error {
 	var zero T
 	if *field != zero {
@@ -261,6 +262,7 @@ func setOnceValue[T comparable](field *T, value T, tag string) error {
 	return nil
 }
 
+// setOnceInterval sets INTERVAL once using a separate isSet flag (zero is valid).
 func setOnceInterval(field *int, isSet *bool, value int, tag string) error {
 	if *isSet {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -270,6 +272,7 @@ func setOnceInterval(field *int, isSet *bool, value int, tag string) error {
 	return nil
 }
 
+// setOncePointer sets a pointer RRULE part (COUNT/UNTIL) once, rejecting duplicates.
 func setOncePointer[T any](field **T, value T, tag string) error {
 	if *field != nil {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -278,6 +281,7 @@ func setOncePointer[T any](field **T, value T, tag string) error {
 	return nil
 }
 
+// setOnceSlice sets a slice RRULE part once, rejecting duplicates.
 func setOnceSlice[T any](field *[]T, value []T, tag string) error {
 	if *field != nil {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -286,6 +290,7 @@ func setOnceSlice[T any](field *[]T, value []T, tag string) error {
 	return nil
 }
 
+// validateRRule enforces required FREQ, mutual exclusion, and RFC 5545 cross-part BY* rules.
 func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
@@ -331,10 +336,12 @@ func validateRRule(rrule *RRule) error {
 	return nil
 }
 
+// validByMonthDay reports whether v is in the RFC BYMONTHDAY range (±1..±31).
 func validByMonthDay(v int) bool {
 	return (v >= 1 && v <= 31) || (v <= -1 && v >= -31)
 }
 
+// validByYearDay reports whether v is in the RFC BYYEARDAY range (±1..±366).
 func validByYearDay(v int) bool {
 	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
 }
@@ -602,6 +609,7 @@ func isValidWeekday(weekday Weekday) bool {
 	}
 }
 
+// isValidFrequency reports whether frequency is one of the RFC 5545 FREQ values.
 func isValidFrequency(frequency Frequency) bool {
 	switch frequency {
 	case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly:

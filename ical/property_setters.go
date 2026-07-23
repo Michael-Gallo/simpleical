@@ -42,6 +42,7 @@ func setOnceBoundedInt(field *int, value string, lo, hi int, rangeErr error, pro
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
+// dateValueAllowed reports whether propertyName may carry VALUE=DATE.
 func dateValueAllowed(propertyName string) bool {
 	switch propertyName {
 	case model.PropDTStart,
@@ -56,6 +57,7 @@ func dateValueAllowed(propertyName string) bool {
 	}
 }
 
+// timeValueType returns the VALUE parameter for date-capable properties, else "".
 func timeValueType(propertyName string, params map[string]string) string {
 	if !dateValueAllowed(propertyName) {
 		return ""
@@ -63,6 +65,7 @@ func timeValueType(propertyName string, params map[string]string) string {
 	return params[model.ParamValue]
 }
 
+// parseDateTimeValue parses a DATE or DATE-TIME value and applies TZID when present.
 func parseDateTimeValue(value string, params map[string]string, propertyName string) (model.DateTime, error) {
 	valueType := timeValueType(propertyName, params)
 	temporal, err := icaldur.ParseTemporal(value, valueType)
@@ -88,6 +91,7 @@ func parseDateTimeValue(value string, params map[string]string, propertyName str
 	}
 }
 
+// parseUTCDateTimeValue parses a DATE-TIME and requires UTC form (trailing Z).
 func parseUTCDateTimeValue(value string, params map[string]string, propertyName string) (model.DateTime, error) {
 	dt, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
@@ -138,6 +142,7 @@ func setOncePositiveDurationProperty(field *time.Duration, value, propertyName s
 	return setOnceProperty(field, duration, propertyName, componentType)
 }
 
+// appendTimePropertyWithParams parses one DATE/DATE-TIME and appends it to field.
 func appendTimePropertyWithParams(field *[]model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
 	parsed, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
@@ -147,6 +152,7 @@ func appendTimePropertyWithParams(field *[]model.DateTime, value string, params 
 	return nil
 }
 
+// appendCommaSeparatedTimePropertyWithParams appends each comma-separated DATE/DATE-TIME value.
 func appendCommaSeparatedTimePropertyWithParams(field *[]model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
 	for part := range strings.SplitSeq(value, ",") {
 		if err := appendTimePropertyWithParams(field, part, params, propertyName, componentType); err != nil {
@@ -156,6 +162,7 @@ func appendCommaSeparatedTimePropertyWithParams(field *[]model.DateTime, value s
 	return nil
 }
 
+// parseTextValue unescapes TEXT and captures LANGUAGE/ALTREP parameters.
 func parseTextValue(value string, params map[string]string) (model.TextValue, error) {
 	unescaped, err := unescapeText(value)
 	if err != nil {
@@ -168,6 +175,7 @@ func parseTextValue(value string, params map[string]string) (model.TextValue, er
 	}, nil
 }
 
+// setOnceTextProperty parses TEXT and sets field only if it has not been set.
 func setOnceTextProperty(field *model.TextValue, value string, params map[string]string, propertyName string, componentType string) error {
 	tv, err := parseTextValue(value, params)
 	if err != nil {
@@ -176,6 +184,7 @@ func setOnceTextProperty(field *model.TextValue, value string, params map[string
 	return setOnceProperty(field, tv, propertyName, componentType)
 }
 
+// appendTextProperty parses TEXT and appends it to a multi-valued property.
 func appendTextProperty(field *[]model.TextValue, value string, params map[string]string) error {
 	tv, err := parseTextValue(value, params)
 	if err != nil {
@@ -185,6 +194,7 @@ func appendTextProperty(field *[]model.TextValue, value string, params map[strin
 	return nil
 }
 
+// appendTextListProperty splits an unescaped-comma TEXT list and appends the parts.
 func appendTextListProperty(field *[]string, value string) error {
 	parts, err := splitUnescapedComma(value)
 	if err != nil {
@@ -194,6 +204,7 @@ func appendTextListProperty(field *[]string, value string) error {
 	return nil
 }
 
+// appendRelatedToProperty parses RELATED-TO and appends value plus RELTYPE.
 func appendRelatedToProperty(field *[]model.RelatedToValue, value string, params map[string]string) error {
 	unescaped, err := unescapeText(value)
 	if err != nil {
@@ -206,6 +217,7 @@ func appendRelatedToProperty(field *[]model.RelatedToValue, value string, params
 	return nil
 }
 
+// appendRDateProperty appends RDATE DATE-TIME or PERIOD values to field.
 func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map[string]string, propertyName string, componentType string) error {
 	if strings.EqualFold(params[model.ParamValue], "PERIOD") {
 		for part := range strings.SplitSeq(value, ",") {

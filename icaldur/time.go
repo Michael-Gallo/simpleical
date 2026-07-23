@@ -59,6 +59,7 @@ func parseDateParts(value string) (year, month, day int, err error) {
 	return year, month, day, nil
 }
 
+// parseIcalDate parses an 8-digit DATE value (YYYYMMDD) into a Temporal.
 func parseIcalDate(value string) (Temporal, error) {
 	if len(value) != 8 {
 		return Temporal{}, ErrInvalidTimeFormat

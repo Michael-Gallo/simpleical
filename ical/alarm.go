@@ -65,6 +65,8 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 	return nil
 }
 
+// parseTrigger parses a TRIGGER as absolute UTC DATE-TIME or relative DURATION.
+// RELATED is only valid for duration triggers; absolute triggers reject non-default RELATED.
 func parseTrigger(value string, params map[string]string) (model.Trigger, error) {
 	related := model.TriggerRelatedStart
 	if raw := params[model.ParamRelated]; raw != "" {
@@ -99,6 +101,7 @@ func parseTrigger(value string, params map[string]string) (model.Trigger, error)
 	return model.Trigger{Duration: &dur, Related: related}, nil
 }
 
+// triggerLooksLikeDateTime reports whether value looks like a DATE-TIME rather than a DURATION.
 func triggerLooksLikeDateTime(value string) bool {
 	if value == "" {
 		return false

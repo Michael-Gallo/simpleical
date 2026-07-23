@@ -22,6 +22,7 @@ func parseCalendarProperty(propertyName string, value string, params map[string]
 	}
 }
 
+// validateCalendar checks required VCALENDAR properties and that at least one component was seen.
 func validateCalendar(calendar *model.Calendar, sawComponent bool) error {
 	if calendar.Version == "" {
 		return icalerr.ErrMissingCalendarVersionProperty
