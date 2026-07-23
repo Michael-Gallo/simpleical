@@ -29,8 +29,3 @@ type Period struct {
 	End      DateTime
 	Duration time.Duration
 }
-
-// HasDuration reports whether this period uses the start/duration form.
-func (p Period) HasDuration() bool {
-	return p.Duration != 0
-}

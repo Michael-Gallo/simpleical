@@ -58,9 +58,3 @@ func ExampleDateTime_IsZero() {
 	// true
 	// false
 }
-
-func ExamplePeriod_HasDuration() {
-	p := model.Period{Duration: time.Hour}
-	fmt.Println(p.HasDuration())
-	// Output: true
-}

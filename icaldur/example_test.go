@@ -2,7 +2,6 @@ package icaldur_test
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/michael-gallo/simpleical/icaldur"
 )
@@ -63,15 +62,6 @@ func ExampleParseTemporalDateTime() {
 	}
 	fmt.Println(temporal.Form == icaldur.FormFloating)
 	// Output: true
-}
-
-func ExampleParseIcalUTCTime() {
-	t, err := icaldur.ParseIcalUTCTime("19970714T170000Z")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(t.Format(time.RFC3339))
-	// Output: 1997-07-14T17:00:00Z
 }
 
 func ExampleParseIcalLocalTime() {

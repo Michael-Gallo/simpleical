@@ -15,7 +15,6 @@ var (
 	ErrInvalidTimeFormat = errors.New("invalid iCal time format")
 	ErrInvalidTimeValue  = errors.New("invalid time value")
 	ErrLocalTimeRequired = errors.New("local time required; UTC designator Z is not allowed")
-	ErrUTCRequired       = errors.New("UTC time required")
 	ErrInvalidUTCOffset  = errors.New("invalid UTC-OFFSET format")
 	ErrTZIDWithUTC       = errors.New("TZID must not be applied to UTC DATE-TIME values")
 )
@@ -170,18 +169,6 @@ func ParseIcalLocalTime(value string) (time.Time, error) {
 	}
 	if t.Form == FormUTC {
 		return time.Time{}, ErrLocalTimeRequired
-	}
-	return t.Time, nil
-}
-
-// ParseIcalUTCTime parses a DATE-TIME that must be UTC (trailing Z).
-func ParseIcalUTCTime(value string) (time.Time, error) {
-	t, err := ParseTemporalDateTime(value)
-	if err != nil {
-		return time.Time{}, err
-	}
-	if t.Form != FormUTC {
-		return time.Time{}, ErrUTCRequired
 	}
 	return t.Time, nil
 }
