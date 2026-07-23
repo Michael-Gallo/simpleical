@@ -1,15 +1,10 @@
 # Simple-ical
 
-An RFC 5545 iCalendar parser for Go, focused on correctness, performance, and clear documentation with frequent links to the spec.
+A very much not ready ICAL parser for Golang intended to follow the official [ICAL 2.0 spec](https://datatracker.ietf.org/doc/html/rfc5545) as closely as is reasonable.
+
+Focused on ease of use and good documentation, with frequent links to the spec.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/michael-gallo/simpleical.svg)](https://pkg.go.dev/github.com/michael-gallo/simpleical)
-
-## Scope
-
-This library is a **parser only**:
-
-- Supported: reading iCalendar streams into typed Go values (`ical.Read` / `ical.ReadSingle`)
-- Explicit non-goals: serialization/writing and recurrence expansion
 
 ## Documentation
 
