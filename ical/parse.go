@@ -272,6 +272,8 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		cps.sawComponent = true
 	case model.SectionTokenVCalendar:
 		return icalerr.ErrNestedBeginVCalendar
+	case model.SectionTokenVAlarm, model.SectionTokenVStandard, model.SectionTokenVDaylight:
+		// Nested components; parent checks happen in the dispatch switch below.
 	}
 
 	switch token {
@@ -279,6 +281,9 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
 		cursor.event = &calendar.Events[len(calendar.Events)-1]
+	case model.SectionTokenVCalendar:
+		// Unreachable: rejected above. Kept for exhaustive switch coverage.
+		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVTimezone:
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
@@ -288,7 +293,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 		cursor.freeBusy = &calendar.FreeBusys[len(calendar.FreeBusys)-1]
 	case model.SectionTokenVAlarm:
-		switch *currentState {
+		switch *currentState { //nolint:exhaustive // VALARM is only valid inside VEVENT/VTODO; other states share the default error
 		case stateEvent:
 			if cursor.event == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)

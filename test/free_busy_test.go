@@ -90,8 +90,8 @@ func TestValidFreeBusy(t *testing.T) {
 					{
 						UID:     "freebusy-date@example.com",
 						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
-						DTStart: dateDT(2007, 6, 28),
-						DTEnd:   dateDT(2007, 7, 9),
+						DTStart: dateDT(6, 28),
+						DTEnd:   dateDT(7, 9),
 					},
 				},
 			},

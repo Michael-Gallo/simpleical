@@ -47,8 +47,7 @@ func validateCalendarTZIDs(calendar *model.Calendar) error {
 		tzids[id] = struct{}{}
 	}
 
-	var check func(dt model.DateTime) error
-	check = func(dt model.DateTime) error {
+	check := func(dt model.DateTime) error {
 		if dt.Form != model.DateTimeFormLocalTZ {
 			return nil
 		}

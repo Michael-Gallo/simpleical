@@ -314,6 +314,8 @@ func validateRRule(rrule *RRule) error {
 		if len(rrule.ByYearDay) > 0 || len(rrule.ByWeekNo) > 0 {
 			return errInvalidByPartForFrequency
 		}
+	case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyYearly:
+		// No additional BY* prohibitions beyond BYWEEKNO (already checked above).
 	}
 
 	for _, bd := range rrule.ByDay {

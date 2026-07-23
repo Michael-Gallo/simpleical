@@ -75,7 +75,7 @@ func timeValueType(propertyName string, params map[string]string) string {
 	return params[model.ParamValue]
 }
 
-func parseDateTimeValue(value string, params map[string]string, propertyName string, requireUTC bool) (model.DateTime, error) {
+func parseDateTimeValue(value string, params map[string]string, propertyName string) (model.DateTime, error) {
 	valueType := timeValueType(propertyName, params)
 	temporal, err := icaldur.ParseTemporal(value, valueType)
 	if err != nil {
@@ -85,27 +85,23 @@ func parseDateTimeValue(value string, params map[string]string, propertyName str
 	if tzid != "" && temporal.Form == icaldur.FormUTC {
 		return model.DateTime{}, icaldur.ErrTZIDWithUTC
 	}
-	if requireUTC && temporal.Form != icaldur.FormUTC && temporal.Form != icaldur.FormDate {
-		// UTC-only properties require UTC DATE-TIME (not DATE, not floating).
-		if temporal.Form != icaldur.FormUTC {
-			return model.DateTime{}, icalerr.ErrUTCValueRequired
-		}
-	}
 	switch temporal.Form {
 	case icaldur.FormDate:
 		return model.DateTime{Form: model.DateTimeFormDate, Time: temporal.Time}, nil
 	case icaldur.FormUTC:
 		return model.DateTime{Form: model.DateTimeFormUTC, Time: temporal.Time}, nil
-	default:
+	case icaldur.FormFloating:
 		if tzid != "" {
 			return model.DateTime{Form: model.DateTimeFormLocalTZ, Time: temporal.Time, TZID: tzid}, nil
 		}
 		return model.DateTime{Form: model.DateTimeFormFloating, Time: temporal.Time}, nil
+	default:
+		return model.DateTime{}, icalerr.ErrParseErrorInComponent
 	}
 }
 
 func parseUTCDateTimeValue(value string, params map[string]string, propertyName string) (model.DateTime, error) {
-	dt, err := parseDateTimeValue(value, params, propertyName, false)
+	dt, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
 		return model.DateTime{}, err
 	}
@@ -117,7 +113,7 @@ func parseUTCDateTimeValue(value string, params map[string]string, propertyName 
 
 // setOnceTimePropertyWithParams sets a DateTime field only if it hasn't been set before.
 func setOnceTimePropertyWithParams(field *model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
-	parsed, err := parseDateTimeValue(value, params, propertyName, false)
+	parsed, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
@@ -155,7 +151,7 @@ func setOncePositiveDurationProperty(field *time.Duration, value, propertyName s
 }
 
 func appendTimePropertyWithParams(field *[]model.DateTime, value string, params map[string]string, propertyName string, componentType string) error {
-	parsed, err := parseDateTimeValue(value, params, propertyName, false)
+	parsed, err := parseDateTimeValue(value, params, propertyName)
 	if err != nil {
 		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 	}
@@ -239,7 +235,7 @@ func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map
 		return nil
 	}
 	for part := range strings.SplitSeq(value, ",") {
-		dt, err := parseDateTimeValue(part, params, propertyName, false)
+		dt, err := parseDateTimeValue(part, params, propertyName)
 		if err != nil {
 			return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
 		}
@@ -286,17 +282,4 @@ func parsePeriod(value string, requireUTC bool) (model.Period, error) {
 		endDT.Form = model.DateTimeFormFloating
 	}
 	return model.Period{Start: startDT, End: endDT}, nil
-}
-
-func durationIsDayOrWeekOnly(d time.Duration, raw string) bool {
-	// Prefer raw string check: day/week forms don't include T time designator after P (except empty).
-	// PnW or PnD without T.
-	s := strings.ToUpper(raw)
-	if strings.HasPrefix(s, "-") || strings.HasPrefix(s, "+") {
-		s = s[1:]
-	}
-	if !strings.HasPrefix(s, "P") {
-		return false
-	}
-	return !strings.Contains(s, "T")
 }

@@ -97,7 +97,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 					{
 						TimeZoneOffsetFrom: model.UTCOffset("+0000"),
 						TimeZoneOffsetTo:   model.UTCOffset("+0000"),
-						DTStart:            floatDT(1970, 1, 1, 0, 0, 0),
+						DTStart:            floatDT(1970, 1, 0),
 					},
 				},
 			},

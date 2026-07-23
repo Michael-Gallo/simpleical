@@ -114,7 +114,7 @@ var (
 
 	ErrMissingAlarmAttendeesForEmail = errors.New("EMAIL alarm must have at least one ATTENDEE property")
 
-	ErrAlarmAttachTooManyForAudio = errors.New("AUDIO alarm must not have more than one ATTACH property")
+	ErrAlarmAttachTooManyForAudio  = errors.New("AUDIO alarm must not have more than one ATTACH property")
 	ErrAlarmDurationRepeatCoupling = errors.New("DURATION and REPEAT must both be present or both absent")
 	ErrInvalidAlarmTrigger         = errors.New("invalid TRIGGER property")
 	ErrTodoTranspNotAllowed        = errors.New("TRANSP is not allowed on VTODO")

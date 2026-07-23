@@ -138,7 +138,7 @@ func TestValidEvent(t *testing.T) {
 							{
 								TimeZoneOffsetFrom: model.UTCOffset("+0000"),
 								TimeZoneOffsetTo:   model.UTCOffset("+0000"),
-								DTStart:            floatDT(1970, 1, 1, 0, 0, 0),
+								DTStart:            floatDT(1970, 1, 0),
 							},
 						},
 					},
@@ -242,11 +242,11 @@ func TestValidEvent(t *testing.T) {
 				Version: "2.0",
 				Events: []model.Event{
 					{
-						UID:         "13235@example.com",
-						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
-						Start:       utcDT(2025, 9, 28, 18, 30, 0),
-						End:         utcDT(2025, 9, 28, 20, 30, 0),
-						Summary:     text("Event with Alarm"),
+						UID:     "13235@example.com",
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
+						Summary: text("Event with Alarm"),
 						Alarms: []model.Alarm{
 							{
 								Action:  model.AlarmActionAudio,
@@ -345,8 +345,8 @@ func TestValidEvent(t *testing.T) {
 							utcDT(2025, 10, 6, 18, 30, 0),
 						},
 						Rdate: []model.RecurrenceDate{
-							rdateUTC(2025, 10, 12, 18, 30, 0),
-							rdateUTC(2025, 10, 19, 18, 30, 0),
+							rdateUTC(2025, 10, 12, 18, 30),
+							rdateUTC(2025, 10, 19, 18, 30),
 						},
 						RequestStatus: []string{"2.0;Success"},
 						Related:       related("parent-event@example.com"),
@@ -382,8 +382,8 @@ func TestValidEvent(t *testing.T) {
 					{
 						UID:     "19970901T130000Z-123403@example.com",
 						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
-						Start:   dateDT(2007, 6, 28),
-						End:     dateDT(2007, 7, 9),
+						Start:   dateDT(6, 28),
+						End:     dateDT(7, 9),
 						Summary: text("Festival International de Jazz de Montreal"),
 						Transp:  model.TranspTransparent,
 					},
