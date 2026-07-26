@@ -39,13 +39,15 @@ const (
 	WeekdaySunday    Weekday = "SU"
 )
 
-// ByDay represents a BYDAY property with an optional interval prefix.
+// ByDay represents a BYDAY property with an optional ordinal prefix.
 type ByDay struct {
 	// The day of the week that the event occurs on.
 	Weekday Weekday
-	// The interval between occurrences of the event.
-	// eg: If Weekday is Tuesday, and Interval is 2, then the event will happen every other Tuesday.
+	// Ordinal week number within the FREQ period (e.g. 1 = first, -1 = last).
+	// When Ordinal is false, Interval is ignored and all matching weekdays apply.
 	Interval int
+	// Ordinal is true when an explicit numeric prefix was present (including +1 / 1 / -1).
+	Ordinal bool
 }
 
 // RRule represents an ical reccurence rule.
@@ -57,6 +59,8 @@ type RRule struct {
 	// The date and time until the rule ends, inclusive.
 	// Can not occur with the Count property.
 	Until *time.Time
+	// UntilIsDate is true when UNTIL was a DATE value rather than DATE-TIME.
+	UntilIsDate bool
 	// The number of occurrences of the event.
 	// Can not occur with the Until property.
 	// DTStart always counts as the first occurrence.
@@ -137,23 +141,29 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "UNTIL":
-			until, err := icaldur.ParseIcalTime(value)
+			untilTemporal, err := icaldur.ParseTemporal(value, "")
 			if err != nil {
+				// Try DATE form (8-character).
+				untilTemporal, err = icaldur.ParseTemporal(value, "DATE")
+				if err != nil {
+					return nil, err
+				}
+			}
+			if err := setOncePointer(&rrule.Until, untilTemporal.Time, tag); err != nil {
 				return nil, err
 			}
-			if err := setOncePointer(&rrule.Until, until, tag); err != nil {
-				return nil, err
+			if untilTemporal.Form == icaldur.FormDate {
+				rrule.UntilIsDate = true
 			}
 		case "BYDAY":
 			weekdays := strings.Split(value, ",")
 			byDay := make([]ByDay, 0, len(weekdays))
 			for _, weekday := range weekdays {
-				// if there is an interval other than 1, it can be expressed as the number at the start of the string
-				interval, weekday, err := parseByDay(weekday)
+				interval, wd, ordinal, err := parseByDay(weekday)
 				if err != nil {
 					return nil, err
 				}
-				byDay = append(byDay, ByDay{Weekday: weekday, Interval: interval})
+				byDay = append(byDay, ByDay{Weekday: wd, Interval: interval, Ordinal: ordinal})
 			}
 			if err := setOnceSlice(&rrule.ByDay, byDay, tag); err != nil {
 				return nil, err
@@ -222,7 +232,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 				return nil, err
 			}
 		case "BYSECOND":
-			bySecond, err := parseUint8List(value, 59, errInvalidBySecond)
+			bySecond, err := parseUint8List(value, 60, errInvalidBySecond)
 			if err != nil {
 				return nil, err
 			}
@@ -242,6 +252,7 @@ func ParseRRule(rruleString string) (*RRule, error) {
 	return rrule, nil
 }
 
+// setOnceValue sets a comparable RRULE part once, rejecting duplicates.
 func setOnceValue[T comparable](field *T, value T, tag string) error {
 	var zero T
 	if *field != zero {
@@ -251,6 +262,7 @@ func setOnceValue[T comparable](field *T, value T, tag string) error {
 	return nil
 }
 
+// setOnceInterval sets INTERVAL once using a separate isSet flag (zero is valid).
 func setOnceInterval(field *int, isSet *bool, value int, tag string) error {
 	if *isSet {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -260,6 +272,7 @@ func setOnceInterval(field *int, isSet *bool, value int, tag string) error {
 	return nil
 }
 
+// setOncePointer sets a pointer RRULE part (COUNT/UNTIL) once, rejecting duplicates.
 func setOncePointer[T any](field **T, value T, tag string) error {
 	if *field != nil {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -268,6 +281,7 @@ func setOncePointer[T any](field **T, value T, tag string) error {
 	return nil
 }
 
+// setOnceSlice sets a slice RRULE part once, rejecting duplicates.
 func setOnceSlice[T any](field *[]T, value []T, tag string) error {
 	if *field != nil {
 		return fmt.Errorf("%w: %s", errDuplicateRRulePart, tag)
@@ -276,6 +290,7 @@ func setOnceSlice[T any](field *[]T, value []T, tag string) error {
 	return nil
 }
 
+// validateRRule enforces required FREQ, mutual exclusion, and RFC 5545 cross-part BY* rules.
 func validateRRule(rrule *RRule) error {
 	if rrule.Frequency == "" {
 		return errFrequencyRequired
@@ -289,13 +304,45 @@ func validateRRule(rrule *RRule) error {
 	if rrule.Interval <= 0 {
 		return errInvalidInterval
 	}
+
+	// Cross-part restrictions from RFC 5545 section 3.3.10.
+	// BYWEEKNO is already restricted to YEARLY above.
+	switch rrule.Frequency {
+	case FrequencyDaily:
+		if len(rrule.ByYearDay) > 0 {
+			return errInvalidByPartForFrequency
+		}
+	case FrequencyWeekly:
+		if len(rrule.ByYearDay) > 0 || len(rrule.ByMonthDay) > 0 {
+			return errInvalidByPartForFrequency
+		}
+	case FrequencyMonthly:
+		if len(rrule.ByYearDay) > 0 {
+			return errInvalidByPartForFrequency
+		}
+	case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyYearly:
+		// No additional BY* prohibitions for these frequencies.
+	}
+
+	for _, bd := range rrule.ByDay {
+		if bd.Ordinal {
+			if rrule.Frequency != FrequencyMonthly && rrule.Frequency != FrequencyYearly {
+				return errNumericByDayInvalidFrequency
+			}
+			if rrule.Frequency == FrequencyYearly && len(rrule.ByWeekNo) > 0 {
+				return errNumericByDayInvalidFrequency
+			}
+		}
+	}
 	return nil
 }
 
+// validByMonthDay reports whether v is in the RFC BYMONTHDAY range (±1..±31).
 func validByMonthDay(v int) bool {
 	return (v >= 1 && v <= 31) || (v <= -1 && v >= -31)
 }
 
+// validByYearDay reports whether v is in the RFC BYYEARDAY range (±1..±366).
 func validByYearDay(v int) bool {
 	return (v >= 1 && v <= 366) || (v <= -1 && v >= -366)
 }
@@ -498,56 +545,56 @@ func parseSignedIntListCustom(value string, valid func(int) bool, outOfRange err
 	return parsed, nil
 }
 
-// parseByDay parses a BYDAY value string and returns the interval and weekday.
-// The string can be in the format "20MO" (interval + weekday) or just "MO" (weekday only).
-// If no interval is specified, the interval defaults to 1.
-// Valid weekdays are: MO, TU, WE, TH, FR, SA, SU.
-// Returns (interval, weekday, error) where interval is an integer and weekday is a string.
-func parseByDay(byDayString string) (int, Weekday, error) {
+// parseByDay parses a BYDAY value string and returns the interval, weekday, and
+// whether an explicit ordinal prefix was present.
+// Formats: "MO", "1MO", "+1MO", "-1MO". If no ordinal is specified, interval is 1.
+// Ordinal form allows at most one leading sign and exactly 1–2 digits (RFC ordwk).
+func parseByDay(byDayString string) (int, Weekday, bool, error) {
 	if byDayString == "" {
-		return 0, "", errInvalidByDayString
+		return 0, "", false, errInvalidByDayString
 	}
 
-	// Check if string starts with a digit or minus sign
-	if len(byDayString) > 0 && (byDayString[0] >= '0' && byDayString[0] <= '9' || byDayString[0] == '-') {
-		// Find where the digits end (including negative sign)
-		digitEnd := 0
-		for i, char := range byDayString {
-			if char < '0' || char > '9' {
-				// Allow minus sign at the beginning
-				if char == '-' && i == 0 {
-					continue
-				}
-				digitEnd = i
-				break
-			}
-			digitEnd = i + 1
-		}
-
-		// Extract interval and weekday
-		intervalStr := byDayString[:digitEnd]
-		weekday := Weekday(byDayString[digitEnd:])
-
-		// Validate weekday
-		if !isValidWeekday(weekday) {
-			return 0, "", errInvalidByDayString
-		}
-
-		// Parse interval (can be negative)
-		interval, err := strconv.Atoi(intervalStr)
-		if err != nil {
-			return 0, "", errInvalidByDayString
-		}
-
-		return interval, weekday, nil
+	s := byDayString
+	if isValidWeekday(Weekday(s)) {
+		return 1, Weekday(s), false, nil
 	}
 
-	// No interval prefix, check if it's a valid weekday
-	if !isValidWeekday(Weekday(byDayString)) {
-		return 0, "", errInvalidByDayString
+	sign := 1
+	i := 0
+	if s[0] == '+' || s[0] == '-' {
+		if s[0] == '-' {
+			sign = -1
+		}
+		i = 1
+		if i >= len(s) {
+			return 0, "", false, errInvalidByDayString
+		}
 	}
 
-	return 1, Weekday(byDayString), nil
+	digitStart := i
+	for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+		i++
+	}
+	digitLen := i - digitStart
+	if digitLen < 1 || digitLen > 2 {
+		return 0, "", false, errInvalidByDayString
+	}
+
+	weekday := Weekday(s[i:])
+	if !isValidWeekday(weekday) {
+		return 0, "", false, errInvalidByDayString
+	}
+
+	interval, err := strconv.Atoi(s[digitStart:i])
+	if err != nil {
+		return 0, "", false, errInvalidByDayString
+	}
+	// ordwk is 1..53; reject 0.
+	if interval < 1 || interval > 53 {
+		return 0, "", false, errInvalidByDayString
+	}
+
+	return sign * interval, weekday, true, nil
 }
 
 // isValidWeekday checks if the string is a valid weekday abbreviation.
@@ -560,6 +607,7 @@ func isValidWeekday(weekday Weekday) bool {
 	}
 }
 
+// isValidFrequency reports whether frequency is one of the RFC 5545 FREQ values.
 func isValidFrequency(frequency Frequency) bool {
 	switch frequency {
 	case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyDaily, FrequencyWeekly, FrequencyMonthly, FrequencyYearly:

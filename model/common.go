@@ -9,6 +9,11 @@ import (
 )
 
 // Class is the CLASS property value shared by VEVENT, VTODO, and VJOURNAL.
+// classvalue is open: it admits iana-token and x-name alongside the three
+// constants below. Recognized values are stored in canonical uppercase form;
+// other valid tokens are retained verbatim. RFC 5545 requires consumers to
+// treat a value they do not recognize the same way they would ClassPrivate.
+// An absent CLASS defaults to ClassPublic.
 // See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.3
 type Class string
 

@@ -2,7 +2,6 @@ package ical
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -13,33 +12,36 @@ import (
 const todoLocation = "Todo"
 
 // parseTodoProperty parses a single iCalendar TODO property line and applies it to the provided Todo.
-// It updates the appropriate field(s) on todo (including appending repeatable properties), performs type
-// conversions, and enforces single-assignment rules. It also validates the Geo latitude;longitude format.
-// An error is returned for invalid property names, duplicate
-// assignments, or any parse failures.
 func parseTodoProperty(propertyName string, value string, params map[string]string, todo *model.Todo) error {
 	switch propertyName {
 	case model.PropDTStamp:
-		return setOnceTimePropertyWithParams(&todo.DTStamp, value, params, propertyName, todoLocation)
+		return setOnceUTCTimePropertyWithParams(&todo.DTStamp, value, params, propertyName, todoLocation)
 	case model.PropUID:
 		return setOnceProperty(&todo.UID, value, propertyName, todoLocation)
 	case model.PropClass:
-		return setOnceProperty(&todo.Class, model.Class(value), propertyName, todoLocation)
+		class, err := parseClass(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&todo.Class, class, propertyName, todoLocation)
 	case model.PropCompleted:
-		return setOnceTimePropertyWithParams(&todo.Completed, value, params, propertyName, todoLocation)
+		return setOnceUTCTimePropertyWithParams(&todo.Completed, value, params, propertyName, todoLocation)
 	case model.PropCreated:
-		return setOnceTimePropertyWithParams(&todo.Created, value, params, propertyName, todoLocation)
+		return setOnceUTCTimePropertyWithParams(&todo.Created, value, params, propertyName, todoLocation)
 	case model.PropDescription:
-		return setOnceProperty(&todo.Description, value, propertyName, todoLocation)
+		return setOnceTextProperty(&todo.Description, value, params, propertyName, todoLocation)
 	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&todo.DTStart, value, params, propertyName, todoLocation)
 	case model.PropDue:
-		return setOnceTimePropertyWithParams(&todo.Due, value, params, propertyName, todoLocation)
-	case model.PropDuration:
-		if todo.Due != (time.Time{}) {
+		if todo.Duration != 0 {
 			return icalerr.ErrInvalidDurationPropertyDue
 		}
-		return setOnceDurationProperty(&todo.Duration, value, propertyName, todoLocation)
+		return setOnceTimePropertyWithParams(&todo.Due, value, params, propertyName, todoLocation)
+	case model.PropDuration:
+		if !todo.Due.IsZero() {
+			return icalerr.ErrInvalidDurationPropertyDue
+		}
+		return setOncePositiveDurationProperty(&todo.Duration, value, propertyName, todoLocation)
 
 	case model.PropGeo:
 		if todo.Geo != nil {
@@ -51,9 +53,9 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		todo.Geo = &geo
 	case model.PropLastModified:
-		return setOnceTimePropertyWithParams(&todo.LastModified, value, params, propertyName, todoLocation)
+		return setOnceUTCTimePropertyWithParams(&todo.LastModified, value, params, propertyName, todoLocation)
 	case model.PropLocation:
-		return setOnceProperty(&todo.Location, value, propertyName, todoLocation)
+		return setOnceTextProperty(&todo.Location, value, params, propertyName, todoLocation)
 	case model.PropOrganizer:
 		organizer, err := parseOrganizer(value, params)
 		if err != nil {
@@ -61,17 +63,29 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		return setOnceProperty(&todo.Organizer, organizer, propertyName, todoLocation)
 	case model.PropPercentComplete:
-		return setOnceIntProperty(&todo.PercentComplete, value, propertyName, todoLocation)
+		return setOnceBoundedInt(&todo.PercentComplete, value, 0, 100, icalerr.ErrInvalidPercentComplete, propertyName, todoLocation)
 	case model.PropPriority:
-		return setOnceIntProperty(&todo.Priority, value, propertyName, todoLocation)
+		return setOnceBoundedInt(&todo.Priority, value, 0, 9, icalerr.ErrInvalidPriority, propertyName, todoLocation)
 	case model.PropRecurrenceID:
-		return setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation)
+		if err := setOnceTimePropertyWithParams(&todo.RecurrenceID, value, params, propertyName, todoLocation); err != nil {
+			return err
+		}
+		rangeParam, err := parseRecurrenceIDRange(params)
+		if err != nil {
+			return err
+		}
+		todo.RecurrenceIDRange = rangeParam
+		return nil
 	case model.PropSequence:
 		return setOnceIntProperty(&todo.Sequence, value, propertyName, todoLocation)
 	case model.PropStatus:
-		return setOnceProperty(&todo.Status, model.TodoStatus(value), propertyName, todoLocation)
+		status, err := parseTodoStatus(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&todo.Status, status, propertyName, todoLocation)
 	case model.PropSummary:
-		return setOnceProperty(&todo.Summary, value, propertyName, todoLocation)
+		return setOnceTextProperty(&todo.Summary, value, params, propertyName, todoLocation)
 	case model.PropRRule:
 		rule, err := rrule.ParseRRule(value)
 		if err != nil {
@@ -79,7 +93,7 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		return setOnceProperty(&todo.RRule, rule, propertyName, todoLocation)
 	case model.PropTransp:
-		return setOnceProperty(&todo.Transp, model.Transp(value), propertyName, todoLocation)
+		return icalerr.ErrTodoTranspNotAllowed
 	case model.PropURL:
 		return setOnceProperty(&todo.URL, value, propertyName, todoLocation)
 
@@ -98,9 +112,9 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 		}
 		todo.Attendees = append(todo.Attendees, *attendee)
 	case model.PropCategories:
-		todo.Categories = append(todo.Categories, strings.Split(value, ",")...)
+		return appendTextListProperty(&todo.Categories, value)
 	case model.PropComment:
-		todo.Comment = append(todo.Comment, value)
+		return appendTextProperty(&todo.Comment, value, params)
 	case model.PropContact:
 		todo.Contacts = append(todo.Contacts, value)
 	case model.PropExDate:
@@ -108,11 +122,11 @@ func parseTodoProperty(propertyName string, value string, params map[string]stri
 	case model.PropRequestStatus:
 		todo.RequestStatus = append(todo.RequestStatus, value)
 	case model.PropRelatedTo:
-		todo.Related = append(todo.Related, value)
+		return appendRelatedToProperty(&todo.Related, value, params)
 	case model.PropResources:
-		todo.Resources = append(todo.Resources, strings.Split(value, ",")...)
+		return appendTextListProperty(&todo.Resources, value)
 	case model.PropRDate:
-		return appendCommaSeparatedTimePropertyWithParams(&todo.Rdate, value, params, propertyName, todoLocation)
+		return appendRDateProperty(&todo.Rdate, value, params, propertyName, todoLocation)
 	default:
 		appendExtensionProperty(&todo.XProp, &todo.IANAProp, propertyName, value, params)
 	}
@@ -138,6 +152,13 @@ func validateTodo(todo *model.Todo) error {
 		if !todo.Due.IsZero() {
 			return icalerr.ErrInvalidDurationPropertyDue
 		}
+		if todo.DTStart.IsDate() && todo.Duration%(24*time.Hour) != 0 {
+			return icalerr.ErrDateDurationMustBeDayOrWeek
+		}
+	}
+
+	if !todo.DTStart.IsZero() && !todo.Due.IsZero() && todo.DTStart.IsDate() != todo.Due.IsDate() {
+		return icalerr.ErrMismatchedDateValueTypes
 	}
 
 	return nil

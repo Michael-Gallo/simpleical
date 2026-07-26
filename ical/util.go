@@ -11,26 +11,22 @@ import (
 // parseIcalLineWithReusableMap parses a single property line using a reusable parameter map.
 // This avoids allocating a new map for every property with parameters.
 func parseIcalLineWithReusableMap(line string, reusableParams map[string]string) (propertyName string, params map[string]string, value string, err error) {
-	// Find the first colon that is not inside quotes
 	colonIndex := findUnquotedColonIndex(line)
 	if colonIndex == -1 {
 		err = fmt.Errorf("%w: %s", icalerr.ErrInvalidPropertyLine, line)
 		return "", nil, "", err
 	}
 
-	// Split the line at the colon
 	beforeColon := line[:colonIndex]
-
-	// The property name is the first part before any semicolon
 	propertyName = beforeColon
 	if before, after, ok := strings.Cut(beforeColon, ";"); ok {
 		propertyName = before
-		// Extract parameters from the part between property name and colon
 		paramString := after
 		if paramString != "" {
-			// Use the reusable map (caller has already cleared it)
 			params = reusableParams
-			splitParametersWithReusableMap(paramString, params)
+			if err := splitParametersWithReusableMap(paramString, params); err != nil {
+				return "", nil, "", err
+			}
 		}
 	}
 
@@ -38,11 +34,20 @@ func parseIcalLineWithReusableMap(line string, reusableParams map[string]string)
 }
 
 // splitParametersWithReusableMap splits parameters using a reusable map.
-// Byte-oriented scan avoids rune decoding; keys/values are sliced from the input string.
-func splitParametersWithReusableMap(paramString string, params map[string]string) {
+// Parameter names are uppercased (RFC 5545 case-insensitive). Duplicate names error.
+func splitParametersWithReusableMap(paramString string, params map[string]string) error {
 	keyStart := 0
 	valStart := -1
 	inQuotes := false
+
+	store := func(rawKey, rawVal string) error {
+		key := strings.ToUpper(rawKey)
+		if _, exists := params[key]; exists {
+			return fmt.Errorf("%w: %s", icalerr.ErrDuplicateParameter, key)
+		}
+		params[key] = unquoteParam(rawVal)
+		return nil
+	}
 
 	for i := 0; i < len(paramString); i++ {
 		c := paramString[i]
@@ -59,15 +64,20 @@ func splitParametersWithReusableMap(paramString string, params map[string]string
 				continue
 			}
 			if valStart >= 0 {
-				params[paramString[keyStart:valStart-1]] = unquoteParam(paramString[valStart:i])
+				if err := store(paramString[keyStart:valStart-1], paramString[valStart:i]); err != nil {
+					return err
+				}
 			}
 			keyStart = i + 1
 			valStart = -1
 		}
 	}
 	if valStart >= 0 {
-		params[paramString[keyStart:valStart-1]] = unquoteParam(paramString[valStart:])
+		if err := store(paramString[keyStart:valStart-1], paramString[valStart:]); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // unquoteParam strips surrounding DQUOTE if present (RFC 5545 paramtext / quoted-string).
@@ -78,7 +88,7 @@ func unquoteParam(s string) string {
 	return s
 }
 
-// parseGeo parses a GEO property value "lat;lng" into two floats.
+// parseGeo parses a GEO property value "lat;lng" into two floats with range checks.
 func parseGeo(value string) ([2]float64, error) {
 	latitudeString, longitudeString, found := strings.Cut(value, ";")
 	if !found {
@@ -91,6 +101,12 @@ func parseGeo(value string) ([2]float64, error) {
 	longitude, err := strconv.ParseFloat(longitudeString, 64)
 	if err != nil {
 		return [2]float64{}, icalerr.ErrInvalidGeoPropertyLongitude
+	}
+	if latitude < -90 || latitude > 90 {
+		return [2]float64{}, icalerr.ErrGeoLatitudeOutOfRange
+	}
+	if longitude < -180 || longitude > 180 {
+		return [2]float64{}, icalerr.ErrGeoLongitudeOutOfRange
 	}
 	return [2]float64{latitude, longitude}, nil
 }

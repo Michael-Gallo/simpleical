@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -21,12 +20,16 @@ var (
 
 	//go:embed test_data/freebusy/test_freebusy_missing_uid.ical
 	testFreeBusyMissingUIDInput string
+	//go:embed test_data/freebusy/test_freebusy_missing_dtstamp.ical
+	testFreeBusyMissingDTStampInput string
 	//go:embed test_data/freebusy/test_freebusy_duplicate_uid.ical
 	testFreeBusyDuplicateUIDInput string
 	//go:embed test_data/freebusy/test_freebusy_invalid_freebusy.ical
 	testFreeBusyInvalidFreeBusyInput string
 	//go:embed test_data/freebusy/valid_test_freebusy_all_day_date.ical
 	testFreeBusyAllDayDateInput string
+	//go:embed test_data/freebusy/invalid_freebusy_non_utc_period.ical
+	testFreeBusyNonUTCPeriodInput string
 )
 
 func TestValidFreeBusy(t *testing.T) {
@@ -44,10 +47,10 @@ func TestValidFreeBusy(t *testing.T) {
 				FreeBusys: []model.FreeBusy{
 					{
 						UID:     "freebusy123@example.com",
-						DTStamp: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						DTStamp: utcDT(2024, 1, 1, 0, 0, 0),
 						Contact: "John Doe, Scheduling Assistant, +1-555-0123",
-						DTStart: time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						DTEnd:   time.Date(2024, time.January, 31, 23, 59, 59, 0, time.UTC),
+						DTStart: utcDT(2024, 1, 1, 0, 0, 0),
+						DTEnd:   utcDT(2024, 1, 31, 23, 59, 59),
 						Organizer: &model.Organizer{
 							CommonName: "Calendar Owner",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "owner@example.com"},
@@ -56,41 +59,25 @@ func TestValidFreeBusy(t *testing.T) {
 							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user1@example.com"}},
 							{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user2@example.com"}},
 						},
-						Comment: []string{"Available for meetings during business hours"},
+						Comment: texts("Available for meetings during business hours"),
 						FreeBusy: []model.FreeBusyTime{
 							{
-								Start:  time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-								End:    time.Date(2024, time.January, 1, 12, 0, 0, 0, time.UTC),
-								Status: model.FreeBusyStatusBusy,
+								Start:  utcDT(2024, 1, 1, 9, 0, 0),
+								End:    utcDT(2024, 1, 1, 12, 0, 0),
+								FBType: model.FreeBusyStatusBusy,
 							},
 							{
-								Start:  time.Date(2024, time.January, 1, 13, 0, 0, 0, time.UTC),
-								End:    time.Date(2024, time.January, 1, 17, 0, 0, 0, time.UTC),
-								Status: model.FreeBusyStatusBusy,
+								Start:  utcDT(2024, 1, 1, 13, 0, 0),
+								End:    utcDT(2024, 1, 1, 17, 0, 0),
+								FBType: model.FreeBusyStatusBusy,
 							},
 							{
-								Start:  time.Date(2024, time.January, 2, 10, 0, 0, 0, time.UTC),
-								End:    time.Date(2024, time.January, 2, 11, 0, 0, 0, time.UTC),
-								Status: model.FreeBusyStatusBusyTentative,
+								Start:  utcDT(2024, 1, 2, 10, 0, 0),
+								End:    utcDT(2024, 1, 2, 11, 0, 0),
+								FBType: model.FreeBusyStatusBusyTentative,
 							},
 						},
 						URL: "https://calendar.example.com/freebusy/123",
-					},
-				},
-			},
-		},
-		{
-			name:  "Valid all-day VFREEBUSY with VALUE=DATE",
-			input: testFreeBusyAllDayDateInput,
-			expectedCalendar: &model.Calendar{
-				ProdID:  "-//Test//FreeBusy Calendar//EN",
-				Version: "2.0",
-				FreeBusys: []model.FreeBusy{
-					{
-						UID:     "freebusy-date@example.com",
-						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
-						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
-						DTEnd:   time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
 					},
 				},
 			},
@@ -117,6 +104,11 @@ func TestInvalidFreeBusy(t *testing.T) {
 			expectedErr: icalerr.ErrMissingFreeBusyUIDProperty,
 		},
 		{
+			name:        "VFREEBUSY missing DTSTAMP",
+			input:       testFreeBusyMissingDTStampInput,
+			expectedErr: icalerr.ErrMissingFreeBusyDTStampProperty,
+		},
+		{
 			name:        "VFREEBUSY invalid FREEBUSY format",
 			input:       testFreeBusyInvalidFreeBusyInput,
 			expectedErr: icalerr.ErrInvalidFreeBusyFormat,
@@ -125,6 +117,16 @@ func TestInvalidFreeBusy(t *testing.T) {
 			name:        "VFREEBUSY duplicate UID",
 			input:       testFreeBusyDuplicateUIDInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "VFREEBUSY DTSTART/DTEND with VALUE=DATE",
+			input:       testFreeBusyAllDayDateInput,
+			expectedErr: icalerr.ErrUTCValueRequired,
+		},
+		{
+			name:        "VFREEBUSY FREEBUSY period in floating time",
+			input:       testFreeBusyNonUTCPeriodInput,
+			expectedErr: icalerr.ErrUTCValueRequired,
 		},
 	}
 	for _, tc := range testCases {

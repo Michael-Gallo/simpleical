@@ -51,6 +51,8 @@ var (
 	testIcalMissingUIDInput string
 	//go:embed test_data/events/test_event_missing_dtstart.ical
 	testIcalMissingDTStartInput string
+	//go:embed test_data/events/test_event_missing_dtstamp.ical
+	testIcalMissingDTStampInput string
 	//go:embed test_data/events/test_event_with_alarm.ical
 	testEventWithAlarmInput string
 	//go:embed test_data/events/test_event_alarm_missing_action.ical
@@ -83,6 +85,24 @@ var (
 	testEventDuplicateClassInput string
 	//go:embed test_data/events/test_event_duplicate_created.ical
 	testEventDuplicateCreatedInput string
+	//go:embed test_data/events/valid_class_lowercase.ical
+	testEventClassLowercaseInput string
+	//go:embed test_data/events/invalid_class_malformed.ical
+	testEventClassMalformedInput string
+	//go:embed test_data/events/valid_alarm_action_lowercase.ical
+	testEventAlarmActionLowercaseInput string
+	//go:embed test_data/events/invalid_alarm_action_malformed.ical
+	testEventAlarmActionMalformedInput string
+	//go:embed test_data/events/invalid_alarm_action_empty_then_display.ical
+	testEventAlarmActionEmptyThenDisplayInput string
+	//go:embed test_data/events/valid_solidus_tzid_with_vtimezone.ical
+	testEventSolidusTZIDWithVTimezoneInput string
+	//go:embed test_data/events/invalid_display_alarm_with_attendee.ical
+	testEventDisplayAlarmWithAttendeeInput string
+	//go:embed test_data/events/invalid_display_alarm_with_summary.ical
+	testEventDisplayAlarmWithSummaryInput string
+	//go:embed test_data/events/invalid_audio_alarm_with_description.ical
+	testEventAudioAlarmWithDescriptionInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -101,13 +121,13 @@ func TestValidEvent(t *testing.T) {
 				CalScale: "GREGORIAN",
 				Events: []model.Event{
 					{
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
 						UID:         "13235@example.com",
-						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:     "Event Summary",
-						Description: "Event Description",
-						Location:    "555 Fake Street",
+						Start:       utcDT(2025, 9, 28, 18, 30, 0),
+						End:         utcDT(2025, 9, 28, 20, 30, 0),
+						Summary:     text("Event Summary"),
+						Description: text("Event Description"),
+						Location:    text("555 Fake Street"),
 						Organizer: &model.Organizer{
 							CommonName: "JohnSmith",
 							Directory:  &url.URL{Scheme: "ldap", Host: "example.com:6666", Path: "/o=DC Associates,c=US", RawQuery: "??(cn=John%20Smith)"},
@@ -121,12 +141,12 @@ func TestValidEvent(t *testing.T) {
 						},
 						Status:       model.EventStatusConfirmed,
 						Sequence:     1,
-						Comment:      []string{"I Am", "A Comment"},
+						Comment:      texts("I Am", "A Comment"),
 						Categories:   []string{"first", "second", "third"},
 						Geo:          &[2]float64{37.386013, -122.082932},
 						Transp:       model.TranspOpaque,
 						Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
-						LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+						LastModified: utcDT(2021, 1, 1, 0, 0, 0),
 					},
 				},
 				TimeZones: []model.TimeZone{
@@ -134,9 +154,9 @@ func TestValidEvent(t *testing.T) {
 						TimeZoneID: "America/Detroit",
 						Standard: []model.TimeZoneProperty{
 							{
-								TimeZoneOffsetFrom: "+0000",
-								TimeZoneOffsetTo:   "+0000",
-								DTStart:            time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+								TimeZoneOffsetFrom: model.UTCOffset("+0000"),
+								TimeZoneOffsetTo:   model.UTCOffset("+0000"),
+								DTStart:            floatDT(1970, 1, 0),
 							},
 						},
 					},
@@ -152,11 +172,11 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:         "13235@example.com",
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:     "Event with attachment",
-						Description: "Event Description",
+						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
+						Start:       utcDT(2025, 9, 28, 18, 30, 0),
+						End:         utcDT(2025, 9, 28, 20, 30, 0),
+						Summary:     text("Event with attachment"),
+						Description: text("Event Description"),
 						Attach: []model.Attachment{
 							{
 								FormatType: "application/pdf",
@@ -177,10 +197,10 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:     "attendee-params@example.com",
-						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary: "Event with Attendee Params",
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
+						Summary: text("Event with Attendee Params"),
 						Attendees: []model.Attendee{
 							{
 								CommonName: "Jane Doe",
@@ -205,27 +225,50 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:         "13235@example.com",
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:     "Event with Alarm",
-						Description: "Event Description",
+						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
+						Start:       utcDT(2025, 9, 28, 18, 30, 0),
+						End:         utcDT(2025, 9, 28, 20, 30, 0),
+						Summary:     text("Event with Alarm"),
+						Description: text("Event Description"),
 						Alarms: []model.Alarm{
 							{
 								Action:      model.AlarmActionDisplay,
-								Trigger:     "-PT15M",
+								Trigger:     triggerStart(-15 * time.Minute),
 								Description: "Reminder: Event starting in 15 minutes",
-								Repeat:      2,
+								Repeat:      intPtr(2),
 								Duration:    5 * time.Minute,
 							},
 							{
 								Action:      model.AlarmActionEmail,
-								Trigger:     "-PT1H",
+								Trigger:     triggerStart(-1 * time.Hour),
 								Description: "Email reminder for upcoming event",
 								Summary:     "Event Reminder",
 								Attendees: []model.Attendee{
 									{CalAddress: &url.URL{Scheme: "mailto", Opaque: "user@example.com"}},
 								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Valid VEVENT with AUDIO VALARM without ATTACH",
+			input: testEventAlarmMissingAttachAudioInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Event//Event Calendar//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "13235@example.com",
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
+						Summary: text("Event with Alarm"),
+						Alarms: []model.Alarm{
+							{
+								Action:  model.AlarmActionAudio,
+								Trigger: triggerStart(-15 * time.Minute),
 							},
 						},
 					},
@@ -241,16 +284,16 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:     "13235@example.com",
-						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,
 							Interval:  1,
 							Count:     new(10),
 						},
-						Summary:     "Event with recurrence rule",
-						Description: "Event Description",
+						Summary:     text("Event with recurrence rule"),
+						Description: text("Event Description"),
 					},
 				},
 			},
@@ -264,23 +307,23 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:     "13235@example.com",
-						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyYearly,
 							Interval:  1,
 							ByWeekNo:  []int8{1, -2, 53},
 							ByDay:     []rrule.ByDay{{Weekday: rrule.WeekdayMonday, Interval: 1}},
 						},
-						Summary:     "Event with multi-value BYWEEKNO",
-						Description: "Event Description",
+						Summary:     text("Event with multi-value BYWEEKNO"),
+						Description: text("Event Description"),
 					},
 					{
 						UID:     "13236@example.com",
-						DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						End:     utcDT(2025, 9, 28, 20, 30, 0),
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyMonthly,
 							Interval:  1,
@@ -291,8 +334,8 @@ func TestValidEvent(t *testing.T) {
 							},
 							BySetPos: []int16{1, -1, 366},
 						},
-						Summary:     "Event with multi-value BYSETPOS",
-						Description: "Event Description",
+						Summary:     text("Event with multi-value BYSETPOS"),
+						Description: text("Event Description"),
 					},
 				},
 			},
@@ -306,25 +349,25 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:          "13235@example.com",
-						DTStamp:      time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Start:        time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:          time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:      "Event with new properties",
+						DTStamp:      utcDT(1970, 1, 1, 0, 0, 0),
+						Start:        utcDT(2025, 9, 28, 18, 30, 0),
+						End:          utcDT(2025, 9, 28, 20, 30, 0),
+						Summary:      text("Event with new properties"),
 						Class:        model.ClassPrivate,
-						Created:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
+						Created:      utcDT(2024, 1, 1, 0, 0, 0),
 						Priority:     5,
 						URL:          "https://example.com/event/13235",
-						RecurrenceID: time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						ExceptionDates: []time.Time{
-							time.Date(2025, time.October, 5, 18, 30, 0, 0, time.UTC),
-							time.Date(2025, time.October, 6, 18, 30, 0, 0, time.UTC),
+						RecurrenceID: utcDT(2025, 9, 28, 18, 30, 0),
+						ExceptionDates: []model.DateTime{
+							utcDT(2025, 10, 5, 18, 30, 0),
+							utcDT(2025, 10, 6, 18, 30, 0),
 						},
-						Rdate: []time.Time{
-							time.Date(2025, time.October, 12, 18, 30, 0, 0, time.UTC),
-							time.Date(2025, time.October, 19, 18, 30, 0, 0, time.UTC),
+						Rdate: []model.RecurrenceDate{
+							rdateUTC(2025, 10, 12, 18, 30),
+							rdateUTC(2025, 10, 19, 18, 30),
 						},
 						RequestStatus: []string{"2.0;Success"},
-						Related:       []string{"parent-event@example.com"},
+						Related:       related("parent-event@example.com"),
 						Resources:     []string{"projector", "whiteboard"},
 					},
 				},
@@ -340,9 +383,9 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:         "13235@example.com",
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Summary:     "Event without DTSTART",
-						Description: "METHOD is present so DTSTART is optional",
+						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
+						Summary:     text("Event without DTSTART"),
+						Description: text("METHOD is present so DTSTART is optional"),
 					},
 				},
 			},
@@ -356,11 +399,77 @@ func TestValidEvent(t *testing.T) {
 				Events: []model.Event{
 					{
 						UID:     "19970901T130000Z-123403@example.com",
-						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
-						Start:   time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
-						End:     time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
-						Summary: "Festival International de Jazz de Montreal",
+						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
+						Start:   dateDT(6, 28),
+						End:     dateDT(7, 9),
+						Summary: text("Festival International de Jazz de Montreal"),
 						Transp:  model.TranspTransparent,
+					},
+				},
+			},
+		},
+		{
+			name:  "CLASS lowercase canonicalizes to PUBLIC",
+			input: testEventClassLowercaseInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "class-lower@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+						Class:   model.ClassPublic,
+					},
+				},
+			},
+		},
+		{
+			name:  "ACTION lowercase canonicalizes to DISPLAY",
+			input: testEventAlarmActionLowercaseInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "action-lower@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+						Alarms: []model.Alarm{
+							{
+								Action:      model.AlarmActionDisplay,
+								Trigger:     triggerStart(-15 * time.Minute),
+								Description: "Reminder",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "SOLIDUS-prefixed TZID with matching VTIMEZONE",
+			input: testEventSolidusTZIDWithVTimezoneInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				TimeZones: []model.TimeZone{
+					{
+						TimeZoneID: "/US/Eastern",
+						Standard: []model.TimeZoneProperty{
+							{
+								DTStart:            floatDT(1970, 11, 2),
+								TimeZoneOffsetFrom: model.UTCOffset("-0400"),
+								TimeZoneOffsetTo:   model.UTCOffset("-0500"),
+								TimeZoneName:       []string{"EST"},
+							},
+						},
+					},
+				},
+				Events: []model.Event{
+					{
+						UID:     "solidus-tz@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   localDT("/US/Eastern", 1997, 1, 1, 9, 0, 0),
 					},
 				},
 			},
@@ -457,6 +566,11 @@ func TestInvalidEvent(t *testing.T) {
 			expectedErr: icalerr.ErrMissingEventDTStartProperty,
 		},
 		{
+			name:        "Missing DTSTAMP",
+			input:       testIcalMissingDTStampInput,
+			expectedErr: icalerr.ErrMissingEventDTStampProperty,
+		},
+		{
 			name:        "VALARM missing ACTION",
 			input:       testEventAlarmMissingActionInput,
 			expectedErr: icalerr.ErrMissingAlarmActionProperty,
@@ -470,11 +584,6 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "VALARM EMAIL missing ATTENDEE",
 			input:       testEventAlarmMissingAttendeeEmailInput,
 			expectedErr: icalerr.ErrMissingAlarmAttendeesForEmail,
-		},
-		{
-			name:        "VALARM AUDIO missing ATTACH",
-			input:       testEventAlarmMissingAttachAudioInput,
-			expectedErr: icalerr.ErrMissingAlarmAttachForAudio,
 		},
 		{
 			name:        "VALARM multiple DESCRIPTION",
@@ -500,6 +609,36 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "Duplicate CREATED",
 			input:       testEventDuplicateCreatedInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "CLASS with malformed token",
+			input:       testEventClassMalformedInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "VALARM ACTION with malformed token",
+			input:       testEventAlarmActionMalformedInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "VALARM empty ACTION then DISPLAY",
+			input:       testEventAlarmActionEmptyThenDisplayInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "DISPLAY VALARM with ATTENDEE",
+			input:       testEventDisplayAlarmWithAttendeeInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
+		},
+		{
+			name:        "DISPLAY VALARM with SUMMARY",
+			input:       testEventDisplayAlarmWithSummaryInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
+		},
+		{
+			name:        "AUDIO VALARM with DESCRIPTION",
+			input:       testEventAudioAlarmWithDescriptionInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
 		},
 	}
 	for _, tc := range testCases {

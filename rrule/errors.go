@@ -40,11 +40,15 @@ var (
 
 	errInvalidByHour = errors.New("BYHOUR must be between 0 and 23")
 
-	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 59")
+	errInvalidBySecond = errors.New("BYSECOND must be between 0 and 60")
 
 	errInvalidByMonth = errors.New("BYMONTH out of range: must be 1..12")
 
 	errInvalidByMonthDay = errors.New("BYMONTHDAY out of range: must be -31..-1 or 1..31")
 
 	errInvalidByYearDay = errors.New("BYYEARDAY out of range: must be -366..-1 or 1..366")
+
+	errInvalidByPartForFrequency = errors.New("BY rule part is not allowed with this FREQ")
+
+	errNumericByDayInvalidFrequency = errors.New("numeric BYDAY is only allowed with MONTHLY or YEARLY FREQ")
 )

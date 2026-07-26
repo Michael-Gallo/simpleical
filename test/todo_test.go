@@ -41,6 +41,8 @@ var (
 	testTodoDurationWithoutDTStartInput string
 	//go:embed test_data/todos/test_todo_missing_dtstamp.ical
 	testTodoMissingDTStampInput string
+	//go:embed test_data/todos/test_todo_transp_not_allowed.ical
+	testTodoTranspNotAllowedInput string
 	//go:embed test_data/todos/valid_test_todo_all_day_date.ical
 	testTodoAllDayDateInput string
 	//go:embed test_data/todos/valid_test_todo_attach_exdate_rdate_alarm.ical
@@ -62,18 +64,17 @@ func TestValidTodo(t *testing.T) {
 				Todos: []model.Todo{
 					{
 						UID:             "todo123@example.com",
-						DTStamp:         time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Summary:         "Complete project documentation",
-						Description:     "Write comprehensive documentation for the new API",
-						Location:        "Office",
+						DTStamp:         utcDT(2024, 1, 1, 0, 0, 0),
+						Summary:         text("Complete project documentation"),
+						Description:     text("Write comprehensive documentation for the new API"),
+						Location:        text("Office"),
 						Class:           model.ClassConfidential,
 						Status:          model.TodoStatusInProcess,
-						Priority:        1,
 						PercentComplete: 75,
-						Created:         time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						LastModified:    time.Date(2024, time.January, 15, 12, 0, 0, 0, time.UTC),
-						DTStart:         time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						Due:             time.Date(2024, time.January, 30, 17, 0, 0, 0, time.UTC),
+						Created:         utcDT(2024, 1, 1, 0, 0, 0),
+						LastModified:    utcDT(2024, 1, 15, 12, 0, 0),
+						DTStart:         utcDT(2024, 1, 1, 9, 0, 0),
+						Due:             utcDT(2024, 1, 30, 17, 0, 0),
 						Organizer: &model.Organizer{
 							CommonName: "Project Manager",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "pm@example.com"},
@@ -84,10 +85,11 @@ func TestValidTodo(t *testing.T) {
 						},
 						Contacts:   []string{"John Doe, Engineering Team, +1-555-0123"},
 						Categories: []string{"work", "urgent", "project"},
-						Comment:    []string{"This is a critical task for the Q1 release"},
+						Comment:    texts("This is a critical task for the Q1 release"),
 						Resources:  []string{"laptop", "meeting-room"},
 						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
+						Priority:   1,
 					},
 				},
 			},
@@ -101,18 +103,17 @@ func TestValidTodo(t *testing.T) {
 				Todos: []model.Todo{
 					{
 						UID:             "todo123@example.com",
-						DTStamp:         time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Summary:         "Complete project documentation",
-						Description:     "Write comprehensive documentation for the new API",
-						Location:        "Office",
+						DTStamp:         utcDT(2024, 1, 1, 0, 0, 0),
+						Summary:         text("Complete project documentation"),
+						Description:     text("Write comprehensive documentation for the new API"),
+						Location:        text("Office"),
 						Class:           model.ClassConfidential,
 						Status:          model.TodoStatusInProcess,
-						Priority:        1,
 						PercentComplete: 75,
-						Created:         time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						LastModified:    time.Date(2024, time.January, 15, 12, 0, 0, 0, time.UTC),
-						DTStart:         time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						Due:             time.Date(2024, time.January, 30, 17, 0, 0, 0, time.UTC),
+						Created:         utcDT(2024, 1, 1, 0, 0, 0),
+						LastModified:    utcDT(2024, 1, 15, 12, 0, 0),
+						DTStart:         utcDT(2024, 1, 1, 9, 0, 0),
+						Due:             utcDT(2024, 1, 30, 17, 0, 0),
 						Organizer: &model.Organizer{
 							CommonName: "Project Manager",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "pm@example.com"},
@@ -123,10 +124,11 @@ func TestValidTodo(t *testing.T) {
 						},
 						Contacts:   []string{"John Doe, Engineering Team, +1-555-0123"},
 						Categories: []string{"work", "urgent", "project"},
-						Comment:    []string{"This is a critical task for the Q1 release"},
+						Comment:    texts("This is a critical task for the Q1 release"),
 						Resources:  []string{"laptop", "meeting-room"},
 						Geo:        &[2]float64{37.7749, -122.4194},
 						URL:        "https://project.example.com/todo/123",
+						Priority:   1,
 						RRule: &rrule.RRule{
 							Frequency: rrule.FrequencyDaily,
 							Interval:  1,
@@ -145,16 +147,16 @@ func TestValidTodo(t *testing.T) {
 				Todos: []model.Todo{
 					{
 						UID:     "todo-date@example.com",
-						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
-						Summary: "All-day todo",
-						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
-						Due:     time.Date(2007, time.July, 9, 0, 0, 0, 0, time.UTC),
+						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
+						Summary: text("All-day todo"),
+						DTStart: dateDT(6, 28),
+						Due:     dateDT(7, 9),
 					},
 				},
 			},
 		},
 		{
-			name:  "Valid VTODO with ATTACH, COMPLETED, TRANSP, SEQUENCE, RECURRENCE-ID, EXDATE, RDATE, RELATED-TO, REQUEST-STATUS, VALARM",
+			name:  "Valid VTODO with ATTACH, COMPLETED, SEQUENCE, RECURRENCE-ID, EXDATE, RDATE, RELATED-TO, REQUEST-STATUS, VALARM",
 			input: testTodoAttachExdateRdateAlarmInput,
 			expectedCalendar: &model.Calendar{
 				ProdID:  "-//Test//Todo Calendar//EN",
@@ -162,14 +164,13 @@ func TestValidTodo(t *testing.T) {
 				Todos: []model.Todo{
 					{
 						UID:          "todo-attach-exdate-rdate-alarm@example.com",
-						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						DTStart:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						Due:          time.Date(2024, time.January, 30, 17, 0, 0, 0, time.UTC),
-						Summary:      "Todo with ATTACH EXDATE RDATE VALARM",
-						Completed:    time.Date(2024, time.January, 20, 15, 0, 0, 0, time.UTC),
-						Transp:       model.TranspOpaque,
+						DTStamp:      utcDT(2024, 1, 1, 0, 0, 0),
+						DTStart:      utcDT(2024, 1, 1, 9, 0, 0),
+						Due:          utcDT(2024, 1, 30, 17, 0, 0),
+						Summary:      text("Todo with ATTACH EXDATE RDATE VALARM"),
+						Completed:    utcDT(2024, 1, 20, 15, 0, 0),
 						Sequence:     3,
-						RecurrenceID: time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						RecurrenceID: utcDT(2024, 1, 1, 9, 0, 0),
 						Attach: []model.Attachment{
 							{
 								FormatType: "application/pdf",
@@ -177,22 +178,22 @@ func TestValidTodo(t *testing.T) {
 								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/todo.pdf"},
 							},
 						},
-						ExceptionDates: []time.Time{
-							time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC),
-							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),
+						ExceptionDates: []model.DateTime{
+							utcDT(2024, 1, 8, 9, 0, 0),
+							utcDT(2024, 1, 15, 9, 0, 0),
 						},
-						Rdate: []time.Time{
-							time.Date(2024, time.January, 22, 9, 0, 0, 0, time.UTC),
-							time.Date(2024, time.January, 29, 9, 0, 0, 0, time.UTC),
+						Rdate: []model.RecurrenceDate{
+							rdateUTC(2024, 1, 22, 9, 0),
+							rdateUTC(2024, 1, 29, 9, 0),
 						},
 						RequestStatus: []string{"2.0;Success"},
-						Related:       []string{"parent-todo@example.com"},
+						Related:       related("parent-todo@example.com"),
 						Alarms: []model.Alarm{
 							{
 								Action:      model.AlarmActionDisplay,
-								Trigger:     "-PT15M",
+								Trigger:     triggerStart(-15 * time.Minute),
 								Description: "Reminder: todo due soon",
-								Repeat:      2,
+								Repeat:      intPtr(2),
 								Duration:    5 * time.Minute,
 							},
 						},
@@ -265,6 +266,11 @@ func TestInvalidTodo(t *testing.T) {
 			name:        "VTODO missing DTSTAMP",
 			input:       testTodoMissingDTStampInput,
 			expectedErr: icalerr.ErrMissingTodoDTStampProperty,
+		},
+		{
+			name:        "VTODO TRANSP not allowed",
+			input:       testTodoTranspNotAllowedInput,
+			expectedErr: icalerr.ErrTodoTranspNotAllowed,
 		},
 	}
 	for _, tc := range testCases {

@@ -5,8 +5,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/michael-gallo/simpleical/rrule"
 )
 
@@ -28,7 +26,7 @@ type Journal struct {
 	// REQUIRED, MUST NOT occur more than once
 	// a DTSTAMP property defines the date and time that the instance of the calendar component was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
-	DTStamp time.Time
+	DTStamp DateTime
 
 	// REQUIRED, MUST NOT occur more than once
 	// The unique identifier for the journal entry.
@@ -43,17 +41,17 @@ type Journal struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the calendar information was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.1
-	Created time.Time
+	Created DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component begins.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	DTStart time.Time
+	DTStart DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the information associated with the calendar component was last revised.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.3
-	LastModified time.Time
+	LastModified DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// The organizer of the activity.
@@ -63,7 +61,10 @@ type Journal struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.4
-	RecurrenceID time.Time
+	RecurrenceID DateTime
+
+	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
+	RecurrenceIDRange string
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
@@ -78,7 +79,7 @@ type Journal struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// A short, one-line summary about the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.12
-	Summary string
+	Summary TextValue
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies a URL associated with the activity.
@@ -108,7 +109,7 @@ type Journal struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies non-processing information intended to provide a comment to the calendar user.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4
-	Comment []string
+	Comment []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the contact information for the activity.
@@ -118,22 +119,22 @@ type Journal struct {
 	// OPTIONAL, MAY occur more than once
 	// Used to capture lengthy textual descriptions associated with the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
-	Description []string
+	Description []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the list of date/time exceptions for a recurring calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.1
-	ExceptionDates []time.Time
+	ExceptionDates []DateTime
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies a relationship or reference between one calendar component and another.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.5
-	Related []string
+	Related []RelatedToValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the list of date/time values for recurring activities.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.2
-	Rdate []time.Time
+	Rdate []RecurrenceDate
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the status code returned for a scheduling request.

@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/model"
@@ -33,7 +32,7 @@ func TestExtensionPropertiesAndUnknownComponents(t *testing.T) {
 
 	require.Len(t, calendar.Events, 1)
 	event := calendar.Events[0]
-	assert.Equal(t, "Lowercase Summary", event.Summary)
+	assert.Equal(t, text("Lowercase Summary"), event.Summary)
 	assert.Equal(t, []model.ExtensionProperty{
 		{
 			Name:  "X-ABC-MMSUBJ",
@@ -85,7 +84,7 @@ func TestExtensionPropertiesAndUnknownComponents(t *testing.T) {
 
 	// Unknown components are ignored, not stored.
 	assert.Empty(t, calendar.TimeZones)
-	assert.Equal(t, time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC), event.Start)
+	assert.Equal(t, utcDT(2024, 1, 1, 9, 0, 0), event.Start)
 }
 
 func TestTimezoneExtensionProperties(t *testing.T) {
@@ -112,9 +111,11 @@ func TestTimezoneExtensionProperties(t *testing.T) {
 }
 
 func TestCaseInsensitiveBeginVCalendar(t *testing.T) {
-	input := "begin:vcalendar\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nEND:VCALENDAR\r\n"
+	input := "begin:vcalendar\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nUID:min@example.com\r\nDTSTAMP:19700101T000000Z\r\nDTSTART:19700101T000000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n"
 	calendar, err := ical.ReadSingle(strings.NewReader(input))
 	require.NoError(t, err)
 	assert.Equal(t, "2.0", calendar.Version)
 	assert.Equal(t, "-//Test//EN", calendar.ProdID)
+	require.Len(t, calendar.Events, 1)
+	assert.Equal(t, "min@example.com", calendar.Events[0].UID)
 }

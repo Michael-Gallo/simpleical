@@ -144,7 +144,7 @@ func TestParseRRule(t *testing.T) {
 			want: &RRule{
 				Frequency: FrequencyYearly,
 				Interval:  1,
-				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 20}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 20, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -275,6 +275,12 @@ func TestParseRRule(t *testing.T) {
 			expectError: errByWeekNoWithInvalidFrequency,
 		},
 		{
+			name:        "Error: Week Number set for sub-daily frequency",
+			input:       "FREQ=HOURLY;BYWEEKNO=20",
+			want:        nil,
+			expectError: errByWeekNoWithInvalidFrequency,
+		},
+		{
 			name:        "Error: BYHOUR set to negative number",
 			input:       "FREQ=DAILY;BYHOUR=-1",
 			want:        nil,
@@ -299,8 +305,17 @@ func TestParseRRule(t *testing.T) {
 			expectError: errInvalidByMinute,
 		},
 		{
-			name:        "Error: BySecond set to number greater than 59",
-			input:       "FREQ=DAILY;BYSECOND=60",
+			name:  "BYSECOND leap second 60 accepted",
+			input: "FREQ=DAILY;BYSECOND=60",
+			want: &RRule{
+				Frequency: FrequencyDaily,
+				Interval:  1,
+				BySecond:  []uint8{60},
+			},
+		},
+		{
+			name:        "Error: BySecond set to number greater than 60",
+			input:       "FREQ=DAILY;BYSECOND=61",
 			want:        nil,
 			expectError: errInvalidBySecond,
 		},
@@ -309,6 +324,25 @@ func TestParseRRule(t *testing.T) {
 			input:       "FREQ=DAILY;BYSECOND=-1",
 			want:        nil,
 			expectError: strconv.ErrSyntax,
+		},
+		{
+			name:  "DATE form UNTIL",
+			input: "FREQ=DAILY;UNTIL=19971224",
+			want: &RRule{
+				Frequency:   FrequencyDaily,
+				Interval:    1,
+				Until:       new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
+				UntilIsDate: true,
+			},
+		},
+		{
+			name:  "BYDAY with explicit +1 ordinal",
+			input: "FREQ=MONTHLY;BYDAY=+1MO",
+			want: &RRule{
+				Frequency: FrequencyMonthly,
+				Interval:  1,
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: 1, Ordinal: true}},
+			},
 		},
 		{
 			name:        "Error: BYMONTH out of range (0)",
@@ -449,7 +483,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     new(10),
-				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -460,7 +494,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Until:     new(time.Date(1997, 12, 24, 0, 0, 0, 0, time.UTC)),
-				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1}},
+				ByDay:     []ByDay{{Weekday: WeekdayFriday, Interval: 1, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -472,8 +506,8 @@ func TestParseRRule(t *testing.T) {
 				Interval:  2,
 				Count:     new(10),
 				ByDay: []ByDay{
-					{Weekday: WeekdaySunday, Interval: 1},
-					{Weekday: WeekdaySunday, Interval: -1},
+					{Weekday: WeekdaySunday, Interval: 1, Ordinal: true},
+					{Weekday: WeekdaySunday, Interval: -1, Ordinal: true},
 				},
 			},
 			expectError: nil,
@@ -485,7 +519,7 @@ func TestParseRRule(t *testing.T) {
 				Frequency: FrequencyMonthly,
 				Interval:  1,
 				Count:     new(6),
-				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2}},
+				ByDay:     []ByDay{{Weekday: WeekdayMonday, Interval: -2, Ordinal: true}},
 			},
 			expectError: nil,
 		},
@@ -666,6 +700,27 @@ func TestParseRRule(t *testing.T) {
 			},
 			expectError: nil,
 		},
+		{
+			name:  "Daily with BYMONTHDAY is allowed",
+			input: "FREQ=DAILY;BYMONTHDAY=1,15",
+			want: &RRule{
+				Frequency:  FrequencyDaily,
+				Interval:   1,
+				ByMonthDay: []int{1, 15},
+			},
+			expectError: nil,
+		},
+		{
+			name:        "Error: ordinal BYDAY with YEARLY and BYWEEKNO",
+			input:       "FREQ=YEARLY;BYWEEKNO=20;BYDAY=1MO",
+			expectError: errNumericByDayInvalidFrequency,
+		},
+		{
+			name:        "Error: Daily with BYYEARDAY",
+			input:       "FREQ=DAILY;BYYEARDAY=1",
+			expectError: errInvalidByPartForFrequency,
+		},
+
 		{
 			name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",
 			input: "FREQ=MONTHLY;COUNT=3;BYDAY=TU,WE,TH;BYSETPOS=3",
@@ -968,11 +1023,46 @@ func TestParseByDay(t *testing.T) {
 			expectedWeekDay: WeekdayFriday,
 			expectError:     nil,
 		},
+		{
+			name:        "Zero ordinal rejected",
+			input:       "0MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Negative zero ordinal rejected",
+			input:       "-0MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Ordinal magnitude greater than 53 rejected",
+			input:       "54MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Negative ordinal magnitude greater than 53 rejected",
+			input:       "-54MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Double-signed ordinal rejected",
+			input:       "+-1MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Overlong positive ordinal rejected",
+			input:       "001MO",
+			expectError: errInvalidByDayString,
+		},
+		{
+			name:        "Overlong negative ordinal rejected",
+			input:       "-001MO",
+			expectError: errInvalidByDayString,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			interval, weekday, err := parseByDay(test.input)
+			interval, weekday, _, err := parseByDay(test.input)
 			if test.expectError != nil {
 				require.ErrorIs(t, err, test.expectError)
 				return

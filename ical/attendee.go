@@ -80,6 +80,7 @@ func parseAttendee(value string, params map[string]string) (*model.Attendee, err
 	return attendee, nil
 }
 
+// parseCalAddress parses a calendar user address (typically a mailto URI).
 func parseCalAddress(value string) (*url.URL, error) {
 	parsedURI, err := url.Parse(value)
 	if err != nil {
@@ -88,6 +89,7 @@ func parseCalAddress(value string) (*url.URL, error) {
 	return parsedURI, nil
 }
 
+// parseCalAddressList parses a comma-separated list of calendar user addresses.
 func parseCalAddressList(propValue string) ([]*url.URL, error) {
 	addresses := make([]*url.URL, 0, strings.Count(propValue, ",")+1)
 	for part := range strings.SplitSeq(propValue, ",") {
