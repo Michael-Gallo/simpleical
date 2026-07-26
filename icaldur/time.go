@@ -16,7 +16,7 @@ var (
 	ErrInvalidTimeValue  = errors.New("invalid time value")
 	ErrLocalTimeRequired = errors.New("local time required; UTC designator Z is not allowed")
 	ErrInvalidUTCOffset  = errors.New("invalid UTC-OFFSET format")
-	ErrTZIDWithUTC       = errors.New("TZID must not be applied to UTC DATE-TIME values")
+	ErrTZIDWithUTC       = errors.New("TZID must not be applied to DATE or UTC DATE-TIME values")
 )
 
 // Form identifies the RFC 5545 DATE / DATE-TIME form of a parsed value.

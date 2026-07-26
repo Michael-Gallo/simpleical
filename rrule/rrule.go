@@ -306,21 +306,22 @@ func validateRRule(rrule *RRule) error {
 	}
 
 	// Cross-part restrictions from RFC 5545 section 3.3.10.
+	// BYWEEKNO is already restricted to YEARLY above.
 	switch rrule.Frequency {
 	case FrequencyDaily:
-		if len(rrule.ByYearDay) > 0 || len(rrule.ByWeekNo) > 0 {
+		if len(rrule.ByYearDay) > 0 {
 			return errInvalidByPartForFrequency
 		}
 	case FrequencyWeekly:
-		if len(rrule.ByYearDay) > 0 || len(rrule.ByMonthDay) > 0 || len(rrule.ByWeekNo) > 0 {
+		if len(rrule.ByYearDay) > 0 || len(rrule.ByMonthDay) > 0 {
 			return errInvalidByPartForFrequency
 		}
 	case FrequencyMonthly:
-		if len(rrule.ByYearDay) > 0 || len(rrule.ByWeekNo) > 0 {
+		if len(rrule.ByYearDay) > 0 {
 			return errInvalidByPartForFrequency
 		}
 	case FrequencySecondly, FrequencyMinutely, FrequencyHourly, FrequencyYearly:
-		// No additional BY* prohibitions beyond BYWEEKNO (already checked above).
+		// No additional BY* prohibitions for these frequencies.
 	}
 
 	for _, bd := range rrule.ByDay {

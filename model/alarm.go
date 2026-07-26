@@ -9,6 +9,10 @@ import (
 )
 
 // AlarmAction represents the possible values for a VALARM's ACTION field.
+// actionvalue also admits iana-token and x-name. Recognized values are stored
+// in canonical uppercase form. RFC 5545 requires applications to ignore alarms
+// whose action they do not recognize, so the parser discards those alarms and
+// only the three constants below reach a parsed Alarm.
 // See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.1
 type AlarmAction string
 
@@ -57,8 +61,9 @@ type Alarm struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1
 	Attach []Attachment
 
-	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
+	// OPTIONAL, MUST NOT occur more than once.
 	// Specifies a positive duration of time for repeating alarms.
+	// Must co-occur with Repeat (both present or both absent).
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.5
 	Duration time.Duration
 
@@ -67,10 +72,11 @@ type Alarm struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
 	Description string
 
-	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
-	// Defines the number of times the alarm should be repeated.
+	// OPTIONAL, MUST NOT occur more than once.
+	// Defines the number of times the alarm should be repeated, including zero.
+	// Nil means the property was absent; must co-occur with Duration.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.4
-	Repeat int
+	Repeat *int
 
 	// OPTIONAL, MUST NOT occur more than once (for EMAIL action)
 	// Defines a short summary or subject for the alarm.

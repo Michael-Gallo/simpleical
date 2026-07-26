@@ -275,6 +275,12 @@ func TestParseRRule(t *testing.T) {
 			expectError: errByWeekNoWithInvalidFrequency,
 		},
 		{
+			name:        "Error: Week Number set for sub-daily frequency",
+			input:       "FREQ=HOURLY;BYWEEKNO=20",
+			want:        nil,
+			expectError: errByWeekNoWithInvalidFrequency,
+		},
+		{
 			name:        "Error: BYHOUR set to negative number",
 			input:       "FREQ=DAILY;BYHOUR=-1",
 			want:        nil,

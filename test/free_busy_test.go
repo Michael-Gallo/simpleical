@@ -28,6 +28,8 @@ var (
 	testFreeBusyInvalidFreeBusyInput string
 	//go:embed test_data/freebusy/valid_test_freebusy_all_day_date.ical
 	testFreeBusyAllDayDateInput string
+	//go:embed test_data/freebusy/invalid_freebusy_non_utc_period.ical
+	testFreeBusyNonUTCPeriodInput string
 )
 
 func TestValidFreeBusy(t *testing.T) {
@@ -119,6 +121,11 @@ func TestInvalidFreeBusy(t *testing.T) {
 		{
 			name:        "VFREEBUSY DTSTART/DTEND with VALUE=DATE",
 			input:       testFreeBusyAllDayDateInput,
+			expectedErr: icalerr.ErrUTCValueRequired,
+		},
+		{
+			name:        "VFREEBUSY FREEBUSY period in floating time",
+			input:       testFreeBusyNonUTCPeriodInput,
 			expectedErr: icalerr.ErrUTCValueRequired,
 		},
 	}

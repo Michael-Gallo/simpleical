@@ -59,8 +59,16 @@ var (
 	testMultipleCalendarsMissingEndInput string
 	//go:embed test_data/calendar/invalid_multiple_calendars_nested_begin.ical
 	testMultipleCalendarsNestedBeginInput string
-	//go:embed test_data/calendar/invalid_method_after_vevent.ical
+	//go:embed test_data/calendar/valid_method_after_vevent.ical
 	testMethodAfterVEventInput string
+	//go:embed test_data/calendar/valid_method_after_vevent_no_dtstart.ical
+	testMethodAfterVEventNoDTStartInput string
+	//go:embed test_data/calendar/invalid_vevent_missing_dtstart_no_method.ical
+	testMissingDTStartNoMethodInput string
+	//go:embed test_data/spec_gaps/valid_begin_vcalendar_trailing_whitespace.ical
+	testBeginVCalendarTrailingWhitespaceInput string
+	//go:embed test_data/spec_gaps/valid_component_end_trailing_whitespace.ical
+	testComponentEndTrailingWhitespaceInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
@@ -141,6 +149,71 @@ func TestParseCalendarSuccess(t *testing.T) {
 				Method:   "REQUEST   ",
 				CalScale: "GREGORIAN",
 				Events:   []model.Event{minimalEvent},
+			},
+		},
+		{
+			name:  "METHOD after END:VEVENT",
+			input: testMethodAfterVEventInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Calendar//EN",
+				Version: "2.0",
+				Method:  "REQUEST",
+				Events: []model.Event{
+					{
+						UID:     "13235@example.com",
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						Summary: text("Event"),
+					},
+				},
+			},
+		},
+		{
+			// Compatibility: late METHOD still exempts DTSTART after the event closes.
+			name:  "METHOD after END:VEVENT without DTSTART",
+			input: testMethodAfterVEventNoDTStartInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Method:  "REQUEST",
+				Events: []model.Event{
+					{
+						UID:     "late-method-no-dtstart@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Summary: text("No DTSTART but late METHOD"),
+					},
+				},
+			},
+		},
+		{
+			// Compatibility: trailing whitespace on structural BEGIN/END lines.
+			name:  "BEGIN:VCALENDAR with trailing whitespace",
+			input: testBeginVCalendarTrailingWhitespaceInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "begin-space@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+					},
+				},
+			},
+		},
+		{
+			name:  "END component lines with trailing whitespace",
+			input: testComponentEndTrailingWhitespaceInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "end-space@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+					},
+				},
 			},
 		},
 		{
@@ -239,9 +312,9 @@ func TestParseCalendarError(t *testing.T) {
 			expectedErr: icalerr.ErrMissingCalendarComponent,
 		},
 		{
-			name:        "METHOD after END:VEVENT",
-			input:       testMethodAfterVEventInput,
-			expectedErr: icalerr.ErrCalendarPropertyAfterComponent,
+			name:        "VEVENT missing DTSTART without METHOD",
+			input:       testMissingDTStartNoMethodInput,
+			expectedErr: icalerr.ErrMissingEventDTStartProperty,
 		},
 	}
 	for _, tc := range testCases {

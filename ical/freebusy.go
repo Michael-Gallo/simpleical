@@ -51,9 +51,13 @@ func parseFreeBusyProperty(propertyName string, value string, params map[string]
 			fbType = parsed
 		}
 		for part := range strings.SplitSeq(value, ",") {
-			period, err := parsePeriod(part)
+			period, err := parsePeriod(part, params, propertyName)
 			if err != nil {
 				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, freeBusyLocation, propertyName, err)
+			}
+			// RFC 5545 3.8.2.6: fbvalue time values MUST be in UTC form.
+			if !period.Start.IsUTC() || (!period.End.IsZero() && !period.End.IsUTC()) {
+				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, freeBusyLocation, propertyName, icalerr.ErrUTCValueRequired)
 			}
 			freeBusy.FreeBusy = append(freeBusy.FreeBusy, model.FreeBusyTime{
 				Start:    period.Start,

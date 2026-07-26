@@ -7,7 +7,11 @@ package model
 import "time"
 
 // FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property FBTYPE parameter.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.6
+// fbtypeparam is open: it admits iana-token and x-name alongside the four
+// constants below. Recognized values are stored in canonical uppercase form;
+// other valid tokens are retained verbatim. RFC 5545 requires consumers to
+// treat a value they do not recognize the same way they would FreeBusyStatusBusy.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.9
 type FreeBusyStatus string
 
 const (

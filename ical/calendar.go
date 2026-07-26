@@ -23,6 +23,8 @@ func parseCalendarProperty(propertyName string, value string, params map[string]
 }
 
 // validateCalendar checks required VCALENDAR properties and that at least one component was seen.
+// Event validation runs here so a late METHOD (accepted as a compatibility tolerance) can
+// still influence METHOD-dependent VEVENT rules such as DTSTART.
 func validateCalendar(calendar *model.Calendar, sawComponent bool) error {
 	if calendar.Version == "" {
 		return icalerr.ErrMissingCalendarVersionProperty
@@ -32,6 +34,11 @@ func validateCalendar(calendar *model.Calendar, sawComponent bool) error {
 	}
 	if !sawComponent {
 		return icalerr.ErrMissingCalendarComponent
+	}
+	for i := range calendar.Events {
+		if err := validateEvent(&calendar.Events[i], calendar.Method); err != nil {
+			return err
+		}
 	}
 	return nil
 }

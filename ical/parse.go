@@ -91,7 +91,9 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 		if !ok {
 			break
 		}
-		if !strings.EqualFold(line, beginVCalendarLine) {
+		// Trailing whitespace on BEGIN/END is common in real producers; trim only
+		// for the structural match so property values stay byte-exact.
+		if !strings.EqualFold(strings.TrimRight(line, " \t"), beginVCalendarLine) {
 			if line == "" {
 				return nil, icalerr.ErrInvalidCalendarEmptyLine
 			}
@@ -146,7 +148,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		propertyName = strings.ToUpper(propertyName)
 		switch propertyName {
 		case "BEGIN":
-			value = strings.ToUpper(value)
+			value = strings.ToUpper(strings.TrimRight(value, " \t"))
 			if currentState == stateSkipComponent {
 				skip.depth++
 				continue
@@ -155,7 +157,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				return nil, err
 			}
 		case "END":
-			value = strings.ToUpper(value)
+			value = strings.ToUpper(strings.TrimRight(value, " \t"))
 			if currentState == stateSkipComponent {
 				skip.depth--
 				if skip.depth == 0 {
@@ -179,7 +181,7 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 			if currentState == stateSkipComponent {
 				continue
 			}
-			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor, sawComponent); err != nil {
+			if err := parsePropertyLine(propertyName, value, params, currentState, calendar, &cursor); err != nil {
 				return nil, err
 			}
 		}
@@ -229,8 +231,7 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 }
 
 // parsePropertyLine dispatches a content line to the handler for the current component state.
-// Calendar properties are rejected once sawComponent is true (calprops must precede components).
-func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor, sawComponent bool) error {
+func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch currentState {
 	case stateAlarm:
 		return parseAlarmProperty(propertyName, value, params, cursor.alarm)
@@ -251,9 +252,6 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateFinished:
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
-		if sawComponent {
-			return fmt.Errorf("%w: %s", icalerr.ErrCalendarPropertyAfterComponent, propertyName)
-		}
 		return parseCalendarProperty(propertyName, value, params, calendar)
 	}
 	return nil
@@ -355,16 +353,30 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 	return nil
 }
 
+// dropAlarm removes the alarm the cursor points at from its parent component.
+// cursor.alarm always addresses the last element of that parent's slice, since
+// VALARM cannot nest.
+func dropAlarm(cursor *componentCursor) {
+	switch cursor.alarmParent { //nolint:exhaustive // VALARM only opens inside VEVENT or VTODO
+	case stateEvent:
+		if cursor.event != nil {
+			cursor.event.Alarms = cursor.event.Alarms[:len(cursor.event.Alarms)-1]
+		}
+	case stateTodo:
+		if cursor.todo != nil {
+			cursor.todo.Alarms = cursor.todo.Alarms[:len(cursor.todo.Alarms)-1]
+		}
+	}
+}
+
 // handleEndBlock validates and closes the component matching endLineValue.
-func handleEndBlock(endLineValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor) error {
+func handleEndBlock(endLineValue string, currentState *parserState, _ *model.Calendar, cursor *componentCursor) error {
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):
 		if *currentState != stateEvent || cursor.event == nil {
 			return fmt.Errorf("%w: END:VEVENT", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateEvent(cursor.event, calendar.Method); err != nil {
-			return err
-		}
+		// Validation is deferred to validateCalendar so a late METHOD still applies.
 		cursor.event = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVCalendar):
@@ -394,7 +406,11 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		if *currentState != stateAlarm || cursor.alarm == nil {
 			return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateAlarm(cursor.alarm); err != nil {
+		// An absent ACTION is a missing required property, which validateAlarm
+		// reports; a present but unrecognized one means the alarm is ignored.
+		if cursor.alarm.Action != "" && !isKnownAlarmAction(cursor.alarm.Action) {
+			dropAlarm(cursor)
+		} else if err := validateAlarm(cursor.alarm); err != nil {
 			return err
 		}
 		cursor.alarm = nil

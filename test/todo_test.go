@@ -193,7 +193,7 @@ func TestValidTodo(t *testing.T) {
 								Action:      model.AlarmActionDisplay,
 								Trigger:     triggerStart(-15 * time.Minute),
 								Description: "Reminder: todo due soon",
-								Repeat:      2,
+								Repeat:      intPtr(2),
 								Duration:    5 * time.Minute,
 							},
 						},

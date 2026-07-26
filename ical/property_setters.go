@@ -30,6 +30,19 @@ func setOnceIntProperty(field *int, value, propertyName string, componentType st
 	return setOnceProperty(field, intValue, propertyName, componentType)
 }
 
+// setOnceIntPtrProperty sets a *int field, distinguishing absent from explicitly zero.
+func setOnceIntPtrProperty(field **int, value, propertyName string, componentType string) error {
+	if *field != nil {
+		return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, componentType)
+	}
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
+	}
+	*field = &intValue
+	return nil
+}
+
 // setOnceBoundedInt parses an int, enforces [lo, hi], then setOnceProperty.
 func setOnceBoundedInt(field *int, value string, lo, hi int, rangeErr error, propertyName, componentType string) error {
 	intValue, err := strconv.Atoi(value)
@@ -85,7 +98,8 @@ func parseDateTimeValue(value string, params map[string]string, propertyName str
 		return model.DateTime{}, err
 	}
 	tzid := params[model.ParamTZID]
-	if tzid != "" && temporal.Form == icaldur.FormUTC {
+	if tzid != "" && (temporal.Form == icaldur.FormUTC || temporal.Form == icaldur.FormDate) {
+		// RFC 5545 3.2.19: TZID MUST NOT be applied to DATE or UTC DATE-TIME.
 		return model.DateTime{}, icaldur.ErrTZIDWithUTC
 	}
 	switch temporal.Form {
@@ -131,15 +145,6 @@ func setOnceUTCTimePropertyWithParams(field *model.DateTime, value string, param
 		return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 	}
 	return setOnceProperty(field, parsed, propertyName, componentType)
-}
-
-// setOnceDurationProperty sets a duration field only if it hasn't been set before.
-func setOnceDurationProperty(field *time.Duration, value, propertyName string, componentType string) error {
-	duration, err := icaldur.ParseICalDuration(value)
-	if err != nil {
-		return fmt.Errorf("%w: %s property %s in iCal", icalerr.ErrParseErrorInComponent, componentType, propertyName)
-	}
-	return setOnceProperty(field, duration, propertyName, componentType)
 }
 
 // setOncePositiveDurationProperty requires a positive duration.
@@ -233,7 +238,7 @@ func appendRelatedToProperty(field *[]model.RelatedToValue, value string, params
 func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map[string]string, propertyName string, componentType string) error {
 	if strings.EqualFold(params[model.ParamValue], "PERIOD") {
 		for part := range strings.SplitSeq(value, ",") {
-			period, err := parsePeriod(part)
+			period, err := parsePeriod(part, params, propertyName)
 			if err != nil {
 				return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, componentType, propertyName, err)
 			}
@@ -253,20 +258,20 @@ func appendRDateProperty(field *[]model.RecurrenceDate, value string, params map
 	return nil
 }
 
-// parsePeriod parses a UTC PERIOD value as start/end or start/duration.
-func parsePeriod(value string) (model.Period, error) {
+// parsePeriod parses a PERIOD value as start/end or start/duration. Endpoints
+// honor the property's TZID, since RDATE permits a non-UTC period; callers that
+// require UTC (FREEBUSY) must check the returned forms themselves.
+func parsePeriod(value string, params map[string]string, propertyName string) (model.Period, error) {
 	startStr, rest, found := strings.Cut(value, "/")
 	if !found || rest == "" {
 		return model.Period{}, icalerr.ErrInvalidFreeBusyFormat
 	}
-	start, err := icaldur.ParseTemporalDateTime(startStr)
+	// Both endpoints are DATE-TIME and share the property's TZID, so they are
+	// resolved the same way any other DATE-TIME on this property would be.
+	startDT, err := parseDateTimeValue(startStr, params, propertyName)
 	if err != nil {
 		return model.Period{}, err
 	}
-	if start.Form != icaldur.FormUTC {
-		return model.Period{}, icalerr.ErrUTCValueRequired
-	}
-	startDT := model.DateTime{Form: model.DateTimeFormUTC, Time: start.Time}
 
 	if strings.HasPrefix(rest, "P") || strings.HasPrefix(rest, "-P") || strings.HasPrefix(rest, "+P") {
 		dur, err := icaldur.ParseICalDuration(rest)
@@ -278,19 +283,13 @@ func parsePeriod(value string) (model.Period, error) {
 		}
 		return model.Period{Start: startDT, Duration: dur}, nil
 	}
-	end, err := icaldur.ParseTemporalDateTime(rest)
+	endDT, err := parseDateTimeValue(rest, params, propertyName)
 	if err != nil {
 		return model.Period{}, err
 	}
-	if end.Form != icaldur.FormUTC {
-		return model.Period{}, icalerr.ErrUTCValueRequired
-	}
-	// RFC 5545 §3.3.9: explicit period start MUST be before end.
-	if !end.Time.After(startDT.Time) {
+	// RFC 5545 3.3.9: explicit period start MUST be before end.
+	if !endDT.Time.After(startDT.Time) {
 		return model.Period{}, icalerr.ErrPeriodEndNotAfterStart
 	}
-	return model.Period{
-		Start: startDT,
-		End:   model.DateTime{Form: model.DateTimeFormUTC, Time: end.Time},
-	}, nil
+	return model.Period{Start: startDT, End: endDT}, nil
 }

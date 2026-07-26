@@ -38,7 +38,7 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		alarm.Attach = append(alarm.Attach, *attachment)
 		return nil
 	case model.PropDuration:
-		return setOnceDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)
+		return setOncePositiveDurationProperty(&alarm.Duration, value, propertyName, alarmLocation)
 	case model.PropDescription:
 		unescaped, err := unescapeText(value)
 		if err != nil {
@@ -46,7 +46,7 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		}
 		return setOnceProperty(&alarm.Description, unescaped, propertyName, alarmLocation)
 	case model.PropRepeat:
-		return setOnceIntProperty(&alarm.Repeat, value, propertyName, alarmLocation)
+		return setOnceIntPtrProperty(&alarm.Repeat, value, propertyName, alarmLocation)
 	case model.PropSummary:
 		unescaped, err := unescapeText(value)
 		if err != nil {
@@ -60,9 +60,65 @@ func parseAlarmProperty(propertyName string, value string, params map[string]str
 		}
 		alarm.Attendees = append(alarm.Attendees, *attendee)
 	default:
+		if isRFCDefinedProperty(propertyName) {
+			return fmt.Errorf("%w: %s", icalerr.ErrPropertyNotAllowedInAlarm, propertyName)
+		}
 		appendExtensionProperty(&alarm.XProp, &alarm.IANAProp, propertyName, value, params)
 	}
 	return nil
+}
+
+// isRFCDefinedProperty reports whether name is a property defined by RFC 5545.
+// Such names must not be accepted as iana-prop inside VALARM unless the alarm
+// productions list them.
+func isRFCDefinedProperty(name string) bool {
+	switch name {
+	case model.PropAction,
+		model.PropAttach,
+		model.PropAttendee,
+		model.PropCategories,
+		model.PropClass,
+		model.PropComment,
+		model.PropCompleted,
+		model.PropContact,
+		model.PropCreated,
+		model.PropDescription,
+		model.PropDTEnd,
+		model.PropDTStamp,
+		model.PropDTStart,
+		model.PropDue,
+		model.PropDuration,
+		model.PropExDate,
+		model.PropFreeBusy,
+		model.PropGeo,
+		model.PropLastModified,
+		model.PropLocation,
+		model.PropOrganizer,
+		model.PropPercentComplete,
+		model.PropPriority,
+		model.PropRDate,
+		model.PropRecurrenceID,
+		model.PropRelatedTo,
+		model.PropRepeat,
+		model.PropRequestStatus,
+		model.PropResources,
+		model.PropRRule,
+		model.PropSequence,
+		model.PropStatus,
+		model.PropSummary,
+		model.PropTransp,
+		model.PropTrigger,
+		model.PropTZID,
+		model.PropTZName,
+		model.PropTZOffsetFrom,
+		model.PropTZOffsetTo,
+		model.PropTZURL,
+		model.PropUID,
+		model.PropURL:
+		return true
+	default:
+		return false
+	}
 }
 
 // parseTrigger parses a TRIGGER as absolute UTC DATE-TIME or relative DURATION.
@@ -119,12 +175,14 @@ func triggerLooksLikeDateTime(value string) bool {
 }
 
 // validateAlarm ensures that all required values are present for an alarm.
+// Callers must have established that the action is one of AUDIO, DISPLAY, or
+// EMAIL; alarms with any other action are discarded before reaching here.
 //
 //   - ACTION and TRIGGER are always required
-//   - DISPLAY requires DESCRIPTION
-//   - EMAIL requires DESCRIPTION, SUMMARY, and at least one ATTENDEE
-//   - AUDIO may include at most one ATTACH
 //   - DURATION and REPEAT must both be present or both absent
+//   - DISPLAY requires DESCRIPTION; forbids ATTACH, ATTENDEE, SUMMARY
+//   - EMAIL requires DESCRIPTION, SUMMARY, and at least one ATTENDEE
+//   - AUDIO may include at most one ATTACH; forbids DESCRIPTION, SUMMARY, ATTENDEE
 func validateAlarm(alarm *model.Alarm) error {
 	if alarm.Action == "" {
 		return icalerr.ErrMissingAlarmActionProperty
@@ -134,7 +192,7 @@ func validateAlarm(alarm *model.Alarm) error {
 	}
 
 	hasDuration := alarm.Duration != 0
-	hasRepeat := alarm.Repeat != 0
+	hasRepeat := alarm.Repeat != nil
 	if hasDuration != hasRepeat {
 		return icalerr.ErrAlarmDurationRepeatCoupling
 	}
@@ -143,6 +201,15 @@ func validateAlarm(alarm *model.Alarm) error {
 	case model.AlarmActionDisplay:
 		if alarm.Description == "" {
 			return icalerr.ErrMissingAlarmDescriptionForDisplay
+		}
+		if len(alarm.Attach) > 0 {
+			return icalerr.ErrAlarmAttachNotAllowedForDisplay
+		}
+		if len(alarm.Attendees) > 0 {
+			return fmt.Errorf("%w: ATTENDEE", icalerr.ErrAlarmPropertyNotAllowed)
+		}
+		if alarm.Summary != "" {
+			return fmt.Errorf("%w: SUMMARY", icalerr.ErrAlarmPropertyNotAllowed)
 		}
 	case model.AlarmActionEmail:
 		if alarm.Description == "" {
@@ -158,8 +225,15 @@ func validateAlarm(alarm *model.Alarm) error {
 		if len(alarm.Attach) > 1 {
 			return icalerr.ErrAlarmAttachTooManyForAudio
 		}
-	default:
-		return fmt.Errorf("%w: %s", icalerr.ErrUnknownAlarmAction, alarm.Action)
+		if alarm.Description != "" {
+			return fmt.Errorf("%w: DESCRIPTION", icalerr.ErrAlarmPropertyNotAllowed)
+		}
+		if alarm.Summary != "" {
+			return fmt.Errorf("%w: SUMMARY", icalerr.ErrAlarmPropertyNotAllowed)
+		}
+		if len(alarm.Attendees) > 0 {
+			return fmt.Errorf("%w: ATTENDEE", icalerr.ErrAlarmPropertyNotAllowed)
+		}
 	}
 
 	return nil

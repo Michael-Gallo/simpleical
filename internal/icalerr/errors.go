@@ -20,7 +20,6 @@ var (
 	ErrMissingCalendarVersionProperty    = errors.New("calendar must have a VERSION property")
 	ErrMissingCalendarProdIDProperty     = errors.New("calendar must have a PRODID property")
 	ErrMissingCalendarComponent          = errors.New("calendar must contain at least one component")
-	ErrCalendarPropertyAfterComponent    = errors.New("calendar property after component is not allowed")
 	ErrDuplicateParameter                = errors.New("duplicate property parameter")
 	ErrInvalidTextEscape                 = errors.New("invalid TEXT escape sequence")
 	ErrComponentNotAllowedHere           = errors.New("component begin not allowed in current state")
@@ -102,8 +101,6 @@ var (
 
 // Alarm-specific errors.
 var (
-	ErrUnknownAlarmAction = errors.New("unknown alarm action")
-
 	ErrMissingAlarmActionProperty = errors.New("alarm must have an ACTION property")
 
 	ErrMissingAlarmTriggerProperty = errors.New("alarm must have a TRIGGER property")
@@ -116,10 +113,13 @@ var (
 
 	ErrMissingAlarmAttendeesForEmail = errors.New("EMAIL alarm must have at least one ATTENDEE property")
 
-	ErrAlarmAttachTooManyForAudio  = errors.New("AUDIO alarm must not have more than one ATTACH property")
-	ErrAlarmDurationRepeatCoupling = errors.New("DURATION and REPEAT must both be present or both absent")
-	ErrInvalidAlarmTrigger         = errors.New("invalid TRIGGER property")
-	ErrTodoTranspNotAllowed        = errors.New("TRANSP is not allowed on VTODO")
+	ErrAlarmAttachTooManyForAudio      = errors.New("AUDIO alarm must not have more than one ATTACH property")
+	ErrAlarmAttachNotAllowedForDisplay = errors.New("DISPLAY alarm must not have an ATTACH property")
+	ErrAlarmPropertyNotAllowed         = errors.New("property not allowed on this VALARM action")
+	ErrPropertyNotAllowedInAlarm       = errors.New("property not allowed in VALARM")
+	ErrAlarmDurationRepeatCoupling     = errors.New("DURATION and REPEAT must both be present or both absent")
+	ErrInvalidAlarmTrigger             = errors.New("invalid TRIGGER property")
+	ErrTodoTranspNotAllowed            = errors.New("TRANSP is not allowed on VTODO")
 )
 
 // Property Setter errors.

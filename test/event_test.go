@@ -85,6 +85,24 @@ var (
 	testEventDuplicateClassInput string
 	//go:embed test_data/events/test_event_duplicate_created.ical
 	testEventDuplicateCreatedInput string
+	//go:embed test_data/events/valid_class_lowercase.ical
+	testEventClassLowercaseInput string
+	//go:embed test_data/events/invalid_class_malformed.ical
+	testEventClassMalformedInput string
+	//go:embed test_data/events/valid_alarm_action_lowercase.ical
+	testEventAlarmActionLowercaseInput string
+	//go:embed test_data/events/invalid_alarm_action_malformed.ical
+	testEventAlarmActionMalformedInput string
+	//go:embed test_data/events/invalid_alarm_action_empty_then_display.ical
+	testEventAlarmActionEmptyThenDisplayInput string
+	//go:embed test_data/events/valid_solidus_tzid_with_vtimezone.ical
+	testEventSolidusTZIDWithVTimezoneInput string
+	//go:embed test_data/events/invalid_display_alarm_with_attendee.ical
+	testEventDisplayAlarmWithAttendeeInput string
+	//go:embed test_data/events/invalid_display_alarm_with_summary.ical
+	testEventDisplayAlarmWithSummaryInput string
+	//go:embed test_data/events/invalid_audio_alarm_with_description.ical
+	testEventAudioAlarmWithDescriptionInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -217,7 +235,7 @@ func TestValidEvent(t *testing.T) {
 								Action:      model.AlarmActionDisplay,
 								Trigger:     triggerStart(-15 * time.Minute),
 								Description: "Reminder: Event starting in 15 minutes",
-								Repeat:      2,
+								Repeat:      intPtr(2),
 								Duration:    5 * time.Minute,
 							},
 							{
@@ -390,6 +408,72 @@ func TestValidEvent(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "CLASS lowercase canonicalizes to PUBLIC",
+			input: testEventClassLowercaseInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "class-lower@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+						Class:   model.ClassPublic,
+					},
+				},
+			},
+		},
+		{
+			name:  "ACTION lowercase canonicalizes to DISPLAY",
+			input: testEventAlarmActionLowercaseInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "action-lower@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+						Alarms: []model.Alarm{
+							{
+								Action:      model.AlarmActionDisplay,
+								Trigger:     triggerStart(-15 * time.Minute),
+								Description: "Reminder",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "SOLIDUS-prefixed TZID with matching VTIMEZONE",
+			input: testEventSolidusTZIDWithVTimezoneInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				TimeZones: []model.TimeZone{
+					{
+						TimeZoneID: "/US/Eastern",
+						Standard: []model.TimeZoneProperty{
+							{
+								DTStart:            floatDT(1970, 11, 2),
+								TimeZoneOffsetFrom: model.UTCOffset("-0400"),
+								TimeZoneOffsetTo:   model.UTCOffset("-0500"),
+								TimeZoneName:       []string{"EST"},
+							},
+						},
+					},
+				},
+				Events: []model.Event{
+					{
+						UID:     "solidus-tz@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   localDT("/US/Eastern", 1997, 1, 1, 9, 0, 0),
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -525,6 +609,36 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "Duplicate CREATED",
 			input:       testEventDuplicateCreatedInput,
 			expectedErr: icalerr.ErrDuplicatePropertyInComponent,
+		},
+		{
+			name:        "CLASS with malformed token",
+			input:       testEventClassMalformedInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "VALARM ACTION with malformed token",
+			input:       testEventAlarmActionMalformedInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "VALARM empty ACTION then DISPLAY",
+			input:       testEventAlarmActionEmptyThenDisplayInput,
+			expectedErr: icalerr.ErrInvalidEnumValue,
+		},
+		{
+			name:        "DISPLAY VALARM with ATTENDEE",
+			input:       testEventDisplayAlarmWithAttendeeInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
+		},
+		{
+			name:        "DISPLAY VALARM with SUMMARY",
+			input:       testEventDisplayAlarmWithSummaryInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
+		},
+		{
+			name:        "AUDIO VALARM with DESCRIPTION",
+			input:       testEventAudioAlarmWithDescriptionInput,
+			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
 		},
 	}
 	for _, tc := range testCases {

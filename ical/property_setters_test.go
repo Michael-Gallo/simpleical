@@ -67,26 +67,26 @@ func TestParseRecurrenceIDRange(t *testing.T) {
 
 func TestParsePeriodRejectsNonPositiveDuration(t *testing.T) {
 	t.Parallel()
-	_, err := parsePeriod("19970101T180000Z/PT0S")
+	_, err := parsePeriod("19970101T180000Z/PT0S", nil, model.PropFreeBusy)
 	require.ErrorIs(t, err, icalerr.ErrPositiveDurationRequired)
 
-	_, err = parsePeriod("19970101T180000Z/-PT1H")
+	_, err = parsePeriod("19970101T180000Z/-PT1H", nil, model.PropFreeBusy)
 	require.ErrorIs(t, err, icalerr.ErrPositiveDurationRequired)
 
-	p, err := parsePeriod("19970101T180000Z/PT1H")
+	p, err := parsePeriod("19970101T180000Z/PT1H", nil, model.PropFreeBusy)
 	require.NoError(t, err)
 	assert.Equal(t, time.Hour, p.Duration)
 }
 
 func TestParsePeriodRejectsEndNotAfterStart(t *testing.T) {
 	t.Parallel()
-	_, err := parsePeriod("19970101T180000Z/19970101T180000Z")
+	_, err := parsePeriod("19970101T180000Z/19970101T180000Z", nil, model.PropFreeBusy)
 	require.ErrorIs(t, err, icalerr.ErrPeriodEndNotAfterStart)
 
-	_, err = parsePeriod("19970102T070000Z/19970101T180000Z")
+	_, err = parsePeriod("19970102T070000Z/19970101T180000Z", nil, model.PropFreeBusy)
 	require.ErrorIs(t, err, icalerr.ErrPeriodEndNotAfterStart)
 
-	p, err := parsePeriod("19970101T180000Z/19970102T070000Z")
+	p, err := parsePeriod("19970101T180000Z/19970102T070000Z", nil, model.PropFreeBusy)
 	require.NoError(t, err)
 	assert.True(t, p.End.Time.After(p.Start.Time))
 }
