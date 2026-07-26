@@ -45,6 +45,7 @@ var (
 	ErrDateDurationMustBeDayOrWeek  = errors.New("DURATION with DATE DTSTART must be day or week granularity")
 	ErrMismatchedDateValueTypes     = errors.New("DTSTART and DTEND/DUE must use matching DATE or DATE-TIME value types")
 	ErrPositiveDurationRequired     = errors.New("duration must be positive")
+	ErrPeriodEndNotAfterStart       = errors.New("PERIOD end must be after start")
 	ErrInvalidPriority              = errors.New("PRIORITY must be an integer from 0 to 9")
 	ErrInvalidPercentComplete       = errors.New("PERCENT-COMPLETE must be an integer from 0 to 100")
 	ErrInvalidEnumValue             = errors.New("invalid enumerated property value")

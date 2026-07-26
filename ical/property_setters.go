@@ -285,6 +285,10 @@ func parsePeriod(value string) (model.Period, error) {
 	if end.Form != icaldur.FormUTC {
 		return model.Period{}, icalerr.ErrUTCValueRequired
 	}
+	// RFC 5545 §3.3.9: explicit period start MUST be before end.
+	if !end.Time.After(startDT.Time) {
+		return model.Period{}, icalerr.ErrPeriodEndNotAfterStart
+	}
 	return model.Period{
 		Start: startDT,
 		End:   model.DateTime{Form: model.DateTimeFormUTC, Time: end.Time},
