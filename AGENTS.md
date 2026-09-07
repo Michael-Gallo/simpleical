@@ -11,6 +11,11 @@ This is an icalendar parser focused on performance and compliance with the RFC55
   - `docs/specs/rfc5545/properties/` — property definitions (e.g. `rrule.md`)
   - `docs/specs/rfc5545/components/` — component definitions (e.g. `vevent.md`)
 
+# Performance
+
+- **Do not preallocate large fixed-size buffers per parse call.** v0.6.0 shipped `scanner.Buffer(make([]byte, 64*1024), maxPhysicalLineBytes)` and paid ~13x B/op and ~3x sec/op on every parse until it was caught. `bufio.Scanner` lazily allocates 4 KiB and only grows when a single token needs more, so upfront preallocation is pure waste for every calendar smaller than the buffer, and growth reallocs are amortized and cheap. Pass `nil` and let the scanner size itself.
+- Run the comparative benchmarks (`benchmarks/`) before and after touching the parse hot path, and watch B/op and allocs, not just sec/op — allocation counts are what caught the regression above.
+
 # Setting Properties
 
 - We have `setOnce` functions in property_setters.go, which handle errors related to setting duplicate properties; please use these when appropriate
