@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"time"
+	"strings"
 
 	"github.com/michael-gallo/simpleical/icaldur"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -32,7 +32,7 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 	case model.PropTZID:
 		return setOnceProperty(&timezone.TimeZoneID, value, propertyName, timezoneLocation)
 	case model.PropLastModified:
-		return setOnceTimePropertyWithParams(&timezone.LastMod, value, params, propertyName, timezoneLocation)
+		return setOnceUTCTimePropertyWithParams(&timezone.LastMod, value, params, propertyName, timezoneLocation)
 	case model.PropTZURL:
 		parsedURL, err := url.Parse(value)
 		if err != nil {
@@ -49,9 +49,17 @@ func parseTimezoneProperty(propertyName string, value string, params map[string]
 func parseTimeZonePropertySubComponent(propertyName string, value string, params map[string]string, tzProp *model.TimeZoneProperty) error {
 	switch propertyName {
 	case model.PropTZOffsetFrom:
-		return setOnceProperty(&tzProp.TimeZoneOffsetFrom, value, propertyName, timezoneLocation)
+		offset, err := icaldur.ParseUTCOffset(value)
+		if err != nil {
+			return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName, err)
+		}
+		return setOnceProperty(&tzProp.TimeZoneOffsetFrom, model.UTCOffset(offset), propertyName, timezoneLocation)
 	case model.PropTZOffsetTo:
-		return setOnceProperty(&tzProp.TimeZoneOffsetTo, value, propertyName, timezoneLocation)
+		offset, err := icaldur.ParseUTCOffset(value)
+		if err != nil {
+			return fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName, err)
+		}
+		return setOnceProperty(&tzProp.TimeZoneOffsetTo, model.UTCOffset(offset), propertyName, timezoneLocation)
 	case model.PropDTStart:
 		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
 		if err != nil {
@@ -59,13 +67,15 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, params
 		}
 		return setOnceProperty(&tzProp.DTStart, parsedTime, propertyName, timezoneLocation)
 	case model.PropComment:
-		tzProp.Comment = append(tzProp.Comment, value)
+		return appendTextProperty(&tzProp.Comment, value, params)
 	case model.PropRDate:
-		parsedTime, err := parseTimezoneLocalTime(value, propertyName)
-		if err != nil {
-			return err
+		for part := range strings.SplitSeq(value, ",") {
+			parsedTime, err := parseTimezoneLocalTime(part, propertyName)
+			if err != nil {
+				return err
+			}
+			tzProp.Rdate = append(tzProp.Rdate, parsedTime)
 		}
-		tzProp.Rdate = append(tzProp.Rdate, parsedTime)
 	case model.PropTZName:
 		tzProp.TimeZoneName = append(tzProp.TimeZoneName, value)
 	case model.PropRRule:
@@ -82,21 +92,41 @@ func parseTimeZonePropertySubComponent(propertyName string, value string, params
 
 // parseTimezoneLocalTime parses DTSTART/RDATE values for STANDARD/DAYLIGHT.
 // RFC 5545 requires these to be local wall-time values (no trailing "Z").
-func parseTimezoneLocalTime(value, propertyName string) (time.Time, error) {
-	parsedTime, err := icaldur.ParseIcalLocalTime(value)
+func parseTimezoneLocalTime(value, propertyName string) (model.DateTime, error) {
+	temporal, err := icaldur.ParseTemporalDateTime(value)
 	if err != nil {
 		if errors.Is(err, icaldur.ErrLocalTimeRequired) {
-			return time.Time{}, icalerr.ErrTimezoneLocalTimeRequired
+			return model.DateTime{}, icalerr.ErrTimezoneLocalTimeRequired
 		}
-		return time.Time{}, fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName, err)
+		return model.DateTime{}, fmt.Errorf("%w: %s property %s in iCal: %w", icalerr.ErrParseErrorInComponent, timezoneLocation, propertyName, err)
 	}
-	return parsedTime, nil
+	if temporal.Form == icaldur.FormUTC {
+		return model.DateTime{}, icalerr.ErrTimezoneLocalTimeRequired
+	}
+	return model.DateTime{Form: model.DateTimeFormFloating, Time: temporal.Time}, nil
 }
 
 // validateTimeZone ensures that all required values are present for a timezone.
 func validateTimeZone(timezone *model.TimeZone) error {
 	if timezone.TimeZoneID == "" {
 		return icalerr.ErrMissingTimezoneTZIDProperty
+	}
+	if len(timezone.Standard) == 0 && len(timezone.Daylight) == 0 {
+		return icalerr.ErrMissingTimezoneObservance
+	}
+	return nil
+}
+
+// validateObservance ensures required STANDARD/DAYLIGHT properties are present.
+func validateObservance(tzProp *model.TimeZoneProperty) error {
+	if tzProp.DTStart.IsZero() {
+		return icalerr.ErrMissingObservanceDTStart
+	}
+	if tzProp.TimeZoneOffsetFrom == "" {
+		return icalerr.ErrMissingObservanceOffsetFrom
+	}
+	if tzProp.TimeZoneOffsetTo == "" {
+		return icalerr.ErrMissingObservanceOffsetTo
 	}
 	return nil
 }

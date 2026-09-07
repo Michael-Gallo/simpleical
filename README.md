@@ -10,11 +10,6 @@ Focused on ease of use and good documentation, with frequent links to the spec.
 
 Full API documentation is available on [pkg.go.dev](https://pkg.go.dev/github.com/michael-gallo/simpleical).
 
-## Deviations from spec
-
-1. The VCALENDAR spec does not address whitespace at the end of lines. We assume in this parser it is to be ignored and right-trim all whitespace.
-2. The `DTSTAMP` property is [mandatory](https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1), however, I have seen real-life examples where it is not filled out. Ergo I will not be enforcing it here. If I do enforce it in the future, it will be in an opt-in strict mode.
-
 ## License
 
 This project is licensed under the Mozilla Public License 2.0. See the [LICENSE](LICENSE) file for details.

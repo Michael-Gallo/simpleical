@@ -9,15 +9,37 @@ import (
 )
 
 // AlarmAction represents the possible values for a VALARM's ACTION field.
+// actionvalue also admits iana-token and x-name. Recognized values are stored
+// in canonical uppercase form. RFC 5545 requires applications to ignore alarms
+// whose action they do not recognize, so the parser discards those alarms and
+// only the three constants below reach a parsed Alarm.
 // See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.1
 type AlarmAction string
 
 const (
-	AlarmActionAudio     AlarmAction = "AUDIO"
-	AlarmActionDisplay   AlarmAction = "DISPLAY"
-	AlarmActionEmail     AlarmAction = "EMAIL"
-	AlarmActionProcedure AlarmAction = "PROCEDURE"
+	AlarmActionAudio   AlarmAction = "AUDIO"
+	AlarmActionDisplay AlarmAction = "DISPLAY"
+	AlarmActionEmail   AlarmAction = "EMAIL"
 )
+
+// TriggerRelated is the RELATED parameter on TRIGGER (START or END).
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.14
+type TriggerRelated string
+
+const (
+	TriggerRelatedStart TriggerRelated = "START"
+	TriggerRelatedEnd   TriggerRelated = "END"
+)
+
+// Trigger specifies when an alarm will trigger.
+// Exactly one of Duration or Absolute is set.
+// Related defaults to START when unset.
+// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.3
+type Trigger struct {
+	Duration *time.Duration // set for DURATION form
+	Absolute *DateTime      // set for DATE-TIME form
+	Related  TriggerRelated // RELATED param, default START
+}
 
 // Alarm represents a VALARM component in the iCalendar format.
 // A VALARM is a grouping of component properties that defines an alarm.
@@ -32,15 +54,16 @@ type Alarm struct {
 	// REQUIRED, MUST NOT occur more than once
 	// Specifies when an alarm will trigger.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.3
-	Trigger string
+	Trigger Trigger
 
-	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
+	// OPTIONAL, MAY occur more than once for EMAIL; at most one for AUDIO.
 	// Provides the capability to associate a document object with an alarm.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.1
-	Attach *Attachment
+	Attach []Attachment
 
-	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
+	// OPTIONAL, MUST NOT occur more than once.
 	// Specifies a positive duration of time for repeating alarms.
+	// Must co-occur with Repeat (both present or both absent).
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.5
 	Duration time.Duration
 
@@ -49,10 +72,11 @@ type Alarm struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
 	Description string
 
-	// OPTIONAL, MUST NOT occur more than once (for AUDIO and EMAIL actions)
-	// Defines the number of times the alarm should be repeated.
+	// OPTIONAL, MUST NOT occur more than once.
+	// Defines the number of times the alarm should be repeated, including zero.
+	// Nil means the property was absent; must co-occur with Duration.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.6.4
-	Repeat int
+	Repeat *int
 
 	// OPTIONAL, MUST NOT occur more than once (for EMAIL action)
 	// Defines a short summary or subject for the alarm.

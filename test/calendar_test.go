@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -32,7 +31,7 @@ var (
 	testIcalWithEventAndTimezoneInput string
 	//go:embed test_data/calendar/valid_calendar.ical
 	testValidCalendarInput string
-	//go:embed test_data/calendar/valid_empty_calendar.ical
+	//go:embed test_data/calendar/invalid_empty_calendar.ical
 	testEmptyCalendarInput string
 	//go:embed test_data/calendar/invalid_calendar_double_begin.ical
 	testCalendarDoubleBeginInput string
@@ -60,6 +59,16 @@ var (
 	testMultipleCalendarsMissingEndInput string
 	//go:embed test_data/calendar/invalid_multiple_calendars_nested_begin.ical
 	testMultipleCalendarsNestedBeginInput string
+	//go:embed test_data/calendar/valid_method_after_vevent.ical
+	testMethodAfterVEventInput string
+	//go:embed test_data/calendar/valid_method_after_vevent_no_dtstart.ical
+	testMethodAfterVEventNoDTStartInput string
+	//go:embed test_data/calendar/invalid_vevent_missing_dtstart_no_method.ical
+	testMissingDTStartNoMethodInput string
+	//go:embed test_data/spec_gaps/valid_begin_vcalendar_trailing_whitespace.ical
+	testBeginVCalendarTrailingWhitespaceInput string
+	//go:embed test_data/spec_gaps/valid_component_end_trailing_whitespace.ical
+	testComponentEndTrailingWhitespaceInput string
 )
 
 func TestParseCalendarSuccess(t *testing.T) {
@@ -70,14 +79,14 @@ func TestParseCalendarSuccess(t *testing.T) {
 		CalScale: "GREGORIAN",
 		Events: []model.Event{
 			{
-				DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
 				UID:         "13235@example.com",
-				Comment:     []string{"I Am", "A Comment"},
-				Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-				End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-				Summary:     "Event Summary",
-				Description: "Event Description",
-				Location:    "555 Fake Street",
+				Comment:     texts("I Am", "A Comment"),
+				Start:       utcDT(2025, 9, 28, 18, 30, 0),
+				End:         utcDT(2025, 9, 28, 20, 30, 0),
+				Summary:     text("Event Summary"),
+				Description: text("Event Description"),
+				Location:    text("555 Fake Street"),
 				Organizer: &model.Organizer{
 					CommonName: "Org",
 					CalAddress: &url.URL{Scheme: "mailto", Opaque: "hello@world"},
@@ -86,7 +95,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				Sequence:     1,
 				Transp:       model.TranspOpaque,
 				Contacts:     []string{"Jim Dolittle, ABC Industries, +1-919-555-1234"},
-				LastModified: time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+				LastModified: utcDT(2021, 1, 1, 0, 0, 0),
 				Categories:   []string{"first", "second", "third"},
 				Geo:          &[2]float64{37.386013, -122.082932},
 			},
@@ -96,13 +105,19 @@ func TestParseCalendarSuccess(t *testing.T) {
 				TimeZoneID: "America/Detroit",
 				Standard: []model.TimeZoneProperty{
 					{
-						TimeZoneOffsetFrom: "+0000",
-						TimeZoneOffsetTo:   "+0000",
-						DTStart:            time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						TimeZoneOffsetFrom: model.UTCOffset("+0000"),
+						TimeZoneOffsetTo:   model.UTCOffset("+0000"),
+						DTStart:            floatDT(1970, 1, 0),
 					},
 				},
 			},
 		},
+	}
+	minimalEvent := model.Event{
+		UID:     "minimal@example.com",
+		DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+		Start:   utcDT(1970, 1, 1, 0, 0, 0),
+		Summary: text("Minimal Event"),
 	}
 	testCases := []struct {
 		name             string
@@ -122,15 +137,7 @@ func TestParseCalendarSuccess(t *testing.T) {
 				Version:  "2.0",
 				Method:   "REQUEST",
 				CalScale: "GREGORIAN",
-			},
-		},
-		{
-			name:  "No VEVENT block",
-			input: testEmptyCalendarInput,
-			expectedCalendar: &model.Calendar{
-				Version: "2.0",
-				ProdID:  "Id",
-				Events:  nil,
+				Events:   []model.Event{minimalEvent},
 			},
 		},
 		{
@@ -138,9 +145,75 @@ func TestParseCalendarSuccess(t *testing.T) {
 			input: testTrailingWithSpaceInput,
 			expectedCalendar: &model.Calendar{
 				ProdID:   "-//Event//Event Calendar//EN",
-				Version:  "2.0",
-				Method:   "REQUEST",
+				Version:  "2.0   ",
+				Method:   "REQUEST   ",
 				CalScale: "GREGORIAN",
+				Events:   []model.Event{minimalEvent},
+			},
+		},
+		{
+			name:  "METHOD after END:VEVENT",
+			input: testMethodAfterVEventInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//Calendar//EN",
+				Version: "2.0",
+				Method:  "REQUEST",
+				Events: []model.Event{
+					{
+						UID:     "13235@example.com",
+						DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+						Start:   utcDT(2025, 9, 28, 18, 30, 0),
+						Summary: text("Event"),
+					},
+				},
+			},
+		},
+		{
+			// Compatibility: late METHOD still exempts DTSTART after the event closes.
+			name:  "METHOD after END:VEVENT without DTSTART",
+			input: testMethodAfterVEventNoDTStartInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Method:  "REQUEST",
+				Events: []model.Event{
+					{
+						UID:     "late-method-no-dtstart@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Summary: text("No DTSTART but late METHOD"),
+					},
+				},
+			},
+		},
+		{
+			// Compatibility: trailing whitespace on structural BEGIN/END lines.
+			name:  "BEGIN:VCALENDAR with trailing whitespace",
+			input: testBeginVCalendarTrailingWhitespaceInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "begin-space@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+					},
+				},
+			},
+		},
+		{
+			name:  "END component lines with trailing whitespace",
+			input: testComponentEndTrailingWhitespaceInput,
+			expectedCalendar: &model.Calendar{
+				ProdID:  "-//Test//EN",
+				Version: "2.0",
+				Events: []model.Event{
+					{
+						UID:     "end-space@example.com",
+						DTStamp: utcDT(1997, 1, 1, 0, 0, 0),
+						Start:   utcDT(1997, 1, 1, 0, 0, 0),
+					},
+				},
 			},
 		},
 		{
@@ -158,13 +231,13 @@ func TestParseCalendarSuccess(t *testing.T) {
 				CalScale: "GREGORIAN",
 				Events: []model.Event{
 					{
-						DTStamp:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+						DTStamp:     utcDT(1970, 1, 1, 0, 0, 0),
 						UID:         "13235@example.com",
-						Start:       time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-						End:         time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-						Summary:     "Event Summary",
-						Description: "This is a long description that exists on a long line.",
-						Location:    "555 Fake Street",
+						Start:       utcDT(2025, 9, 28, 18, 30, 0),
+						End:         utcDT(2025, 9, 28, 20, 30, 0),
+						Summary:     text("Event Summary"),
+						Description: text("This is a long description that exists on a long line."),
+						Location:    text("555 Fake Street"),
 					},
 				},
 			},
@@ -233,6 +306,16 @@ func TestParseCalendarError(t *testing.T) {
 			input:       "\n" + testValidCalendarInput,
 			expectedErr: icalerr.ErrInvalidCalendarEmptyLine,
 		},
+		{
+			name:        "No VEVENT block",
+			input:       testEmptyCalendarInput,
+			expectedErr: icalerr.ErrMissingCalendarComponent,
+		},
+		{
+			name:        "VEVENT missing DTSTART without METHOD",
+			input:       testMissingDTStartNoMethodInput,
+			expectedErr: icalerr.ErrMissingEventDTStartProperty,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -258,17 +341,25 @@ func TestParseMultipleCalendarsSuccess(t *testing.T) {
 					Version:  "2.0",
 					Method:   "REQUEST",
 					CalScale: "GREGORIAN",
+					Events: []model.Event{
+						{
+							UID:     "first@example.com",
+							DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+							Start:   utcDT(1970, 1, 1, 0, 0, 0),
+							Summary: text("First Calendar Event"),
+						},
+					},
 				},
 				{
 					ProdID:  "-//Second//Second Calendar//EN",
 					Version: "2.0",
 					Events: []model.Event{
 						{
-							DTStamp: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+							DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
 							UID:     "13235@example.com",
-							Start:   time.Date(2025, time.September, 28, 18, 30, 0, 0, time.UTC),
-							End:     time.Date(2025, time.September, 28, 20, 30, 0, 0, time.UTC),
-							Summary: "Event Summary",
+							Start:   utcDT(2025, 9, 28, 18, 30, 0),
+							End:     utcDT(2025, 9, 28, 20, 30, 0),
+							Summary: text("Event Summary"),
 						},
 					},
 				},
@@ -283,6 +374,14 @@ func TestParseMultipleCalendarsSuccess(t *testing.T) {
 					Version:  "2.0",
 					Method:   "REQUEST",
 					CalScale: "GREGORIAN",
+					Events: []model.Event{
+						{
+							UID:     "minimal@example.com",
+							DTStamp: utcDT(1970, 1, 1, 0, 0, 0),
+							Start:   utcDT(1970, 1, 1, 0, 0, 0),
+							Summary: text("Minimal Event"),
+						},
+					},
 				},
 			},
 		},

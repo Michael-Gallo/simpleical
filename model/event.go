@@ -24,9 +24,8 @@ const (
 // For more information see https://datatracker.ietf.org/doc/html/rfc5545#section-3.6.1.
 type Event struct {
 	// DTStamp defines the date and time that the event was created.
-	// Note: This is mandatory in RFC5545, but that is not enforced in this parser.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
-	DTStamp time.Time
+	DTStamp DateTime
 
 	// UID is the unique identifier for the event.
 	// REQUIRED, MUST NOT occur more than once.
@@ -36,7 +35,7 @@ type Event struct {
 	// Start defines the date and time that the event begins. Refers to the DTSTART property.
 	// REQUIRED if no METHOD property. MUST NOT occur more than once
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	Start time.Time
+	Start DateTime
 
 	// Class is the access classification for the event. Refers to the CLASS property.
 	// OPTIONAL, MUST NOT occur more than once.
@@ -47,17 +46,17 @@ type Event struct {
 	// Refers to the CREATED property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.1
-	Created time.Time
+	Created DateTime
 
 	// Summary is a short, one-line summary about the event. Refers to the SUMMARY property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.12
-	Summary string
+	Summary TextValue
 
 	// Description is used to capture lengthy textual descriptions associated with the event. Refers to the DESCRIPTION property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
-	Description string
+	Description TextValue
 
 	// Geo specifies the latitude and longitude of the activity specified by a calendar component.
 	// Refers to the GEO property. Can be specified in Events and Todos.
@@ -68,12 +67,12 @@ type Event struct {
 	// LastModified specifies the date and time that the information associated with the calendar information was last revised.
 	// Refers to the LAST-MODIFIED property. Can be specified in Events, Todos, Journals, and TimeZones.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.3.
-	LastModified time.Time
+	LastModified DateTime
 
 	// Location is the location where the event takes place. Refers to the LOCATION property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.7.
-	Location string
+	Location TextValue
 
 	// Organizer is the organizer of the event. Refers to the ORGANIZER property.
 	// OPTIONAL, MUST NOT occur more than once.
@@ -111,7 +110,11 @@ type Event struct {
 	// RecurrenceID is the recurrence identifier for the event. Refers to the RECURRENCE-ID property.
 	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.4.
-	RecurrenceID time.Time
+	RecurrenceID DateTime
+
+	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.13
+	RecurrenceIDRange string
 
 	// RRule is the recurrence rule for the event. Refers to the RRULE property.
 	// OPTIONAL, SHOULD NOT occur more than once.
@@ -122,7 +125,7 @@ type Event struct {
 	// dtend in the ICAL format.
 	// Can not be specified if a Duration is specified.
 	// See the datetime specification for more information: https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.5.
-	End time.Time
+	End DateTime
 
 	// The event's duration.
 	// Can not be specified if an End time is specified.
@@ -145,7 +148,7 @@ type Event struct {
 
 	// Comment specifies non-processing information intended to provide a comment to the calendar user.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4.
-	Comment []string
+	Comment []TextValue
 
 	// Contact is used to represent contact information.
 	// Can be specified in Events, Todos, Journals, and FreeBusy Components.
@@ -155,7 +158,7 @@ type Event struct {
 	// Exception Date-Times, property name EXDATE.
 	// This is optional and repeatable.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.1.
-	ExceptionDates []time.Time
+	ExceptionDates []DateTime
 
 	// Property Name: REQUEST-STATUS Represented as RSTATUS.
 	// The status code returned for a scheduling request.
@@ -165,7 +168,7 @@ type Event struct {
 	// Property Name: RELATED-TO.
 	// Used to represent a relationship or reference between one calendar component and another.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.5.
-	Related []string
+	Related []RelatedToValue
 
 	// Property Name: RESOURCES.
 	// Defines equipment or resources anticipated for an event.
@@ -175,7 +178,7 @@ type Event struct {
 	// Recurrence Date-Times.
 	// This is optional and repeatable.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.2.
-	Rdate []time.Time
+	Rdate []RecurrenceDate
 
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.
 	// OPTIONAL, MAY occur more than once. Parameters and repeats are preserved.

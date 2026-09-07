@@ -4,12 +4,14 @@
 
 package model
 
-import (
-	"time"
-)
+import "time"
 
-// FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property.
-// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.6
+// FreeBusyStatus represents the possible values for a VFREEBUSY's FREEBUSY property FBTYPE parameter.
+// fbtypeparam is open: it admits iana-token and x-name alongside the four
+// constants below. Recognized values are stored in canonical uppercase form;
+// other valid tokens are retained verbatim. RFC 5545 requires consumers to
+// treat a value they do not recognize the same way they would FreeBusyStatusBusy.
+// See: https://datatracker.ietf.org/doc/html/rfc5545#section-3.2.9
 type FreeBusyStatus string
 
 const (
@@ -27,7 +29,7 @@ type FreeBusy struct {
 	// REQUIRED, MUST NOT occur more than once
 	// a DTSTAMP property defines the date and time that the instance of the calendar component was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
-	DTStamp time.Time
+	DTStamp DateTime
 
 	// REQUIRED, MUST NOT occur more than once
 	// The unique identifier for the free/busy component.
@@ -42,12 +44,12 @@ type FreeBusy struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component begins.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	DTStart time.Time
+	DTStart DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component ends.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.2
-	DTEnd time.Time
+	DTEnd DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// The organizer of the activity.
@@ -67,7 +69,7 @@ type FreeBusy struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies non-processing information intended to provide a comment to the calendar user.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4
-	Comment []string
+	Comment []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies one or more free or busy time intervals.
@@ -92,12 +94,15 @@ type FreeBusy struct {
 	IANAProp []ExtensionProperty
 }
 
-// FreeBusyTime represents a single free/busy time interval with its status.
+// FreeBusyTime represents a single free/busy time interval with its FBTYPE.
+// Either End is set (start/end form) or Duration is non-zero (start/duration form).
 type FreeBusyTime struct {
-	// The start time of the free/busy interval.
-	Start time.Time
-	// The end time of the free/busy interval.
-	End time.Time
-	// The status of the time interval (FREE, BUSY, BUSY-TENTATIVE, BUSY-UNAVAILABLE).
-	Status FreeBusyStatus
+	// The start time of the free/busy interval (UTC).
+	Start DateTime
+	// The end time of the free/busy interval (UTC); zero when Duration form is used.
+	End DateTime
+	// Duration is set for the start/duration PERIOD form.
+	Duration time.Duration
+	// FBType is the FBTYPE parameter (FREE, BUSY, BUSY-TENTATIVE, BUSY-UNAVAILABLE).
+	FBType FreeBusyStatus
 }

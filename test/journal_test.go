@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/michael-gallo/simpleical/ical"
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -50,14 +49,14 @@ func TestValidJournal(t *testing.T) {
 				Journals: []model.Journal{
 					{
 						UID:          "journal123@example.com",
-						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						Summary:      "Project status update",
-						Description:  []string{"Completed the initial research phase", "Identified key stakeholders and requirements"},
+						DTStamp:      utcDT(2024, 1, 1, 0, 0, 0),
+						Summary:      text("Project status update"),
+						Description:  texts("Completed the initial research phase", "Identified key stakeholders and requirements"),
 						Class:        model.ClassConfidential,
 						Status:       model.JournalStatusFinal,
-						Created:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						LastModified: time.Date(2024, time.January, 15, 12, 0, 0, 0, time.UTC),
-						DTStart:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						Created:      utcDT(2024, 1, 1, 9, 0, 0),
+						LastModified: utcDT(2024, 1, 15, 12, 0, 0),
+						DTStart:      utcDT(2024, 1, 1, 9, 0, 0),
 						Organizer: &model.Organizer{
 							CommonName: "Project Lead",
 							CalAddress: &url.URL{Scheme: "mailto", Opaque: "lead@example.com"},
@@ -68,7 +67,7 @@ func TestValidJournal(t *testing.T) {
 						},
 						Contacts:   []string{"Jane Doe, Project Manager, +1-555-0456"},
 						Categories: []string{"work", "project", "status"},
-						Comment:    []string{"This journal entry documents the completion of Phase 1"},
+						Comment:    texts("This journal entry documents the completion of Phase 1"),
 						URL:        "https://project.example.com/journal/123",
 					},
 				},
@@ -83,16 +82,16 @@ func TestValidJournal(t *testing.T) {
 				Journals: []model.Journal{
 					{
 						UID:         "journal123@example.com",
-						DTStamp:     time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						DTStart:     time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						Summary:     "Journal with Multiple Exception Dates",
-						Description: []string{"This journal has multiple exception dates to test the append functionality"},
+						DTStamp:     utcDT(2024, 1, 1, 0, 0, 0),
+						DTStart:     utcDT(2024, 1, 1, 9, 0, 0),
+						Summary:     text("Journal with Multiple Exception Dates"),
+						Description: texts("This journal has multiple exception dates to test the append functionality"),
 						Class:       model.ClassConfidential,
 						Status:      model.JournalStatusFinal,
-						ExceptionDates: []time.Time{
-							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),
-							time.Date(2024, time.January, 22, 9, 0, 0, 0, time.UTC),
-							time.Date(2024, time.January, 29, 9, 0, 0, 0, time.UTC),
+						ExceptionDates: []model.DateTime{
+							utcDT(2024, 1, 15, 9, 0, 0),
+							utcDT(2024, 1, 22, 9, 0, 0),
+							utcDT(2024, 1, 29, 9, 0, 0),
 						},
 					},
 				},
@@ -107,9 +106,9 @@ func TestValidJournal(t *testing.T) {
 				Journals: []model.Journal{
 					{
 						UID:     "journal-date@example.com",
-						DTStamp: time.Date(1997, time.September, 1, 13, 0, 0, 0, time.UTC),
-						Summary: "All-day journal",
-						DTStart: time.Date(2007, time.June, 28, 0, 0, 0, 0, time.UTC),
+						DTStamp: utcDT(1997, 9, 1, 13, 0, 0),
+						Summary: text("All-day journal"),
+						DTStart: dateDT(6, 28),
 					},
 				},
 			},
@@ -123,11 +122,11 @@ func TestValidJournal(t *testing.T) {
 				Journals: []model.Journal{
 					{
 						UID:          "journal-attach-rdate-related@example.com",
-						DTStamp:      time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC),
-						DTStart:      time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
-						Summary:      "Journal with ATTACH RDATE RELATED-TO",
+						DTStamp:      utcDT(2024, 1, 1, 0, 0, 0),
+						DTStart:      utcDT(2024, 1, 1, 9, 0, 0),
+						Summary:      text("Journal with ATTACH RDATE RELATED-TO"),
 						Sequence:     2,
-						RecurrenceID: time.Date(2024, time.January, 1, 9, 0, 0, 0, time.UTC),
+						RecurrenceID: utcDT(2024, 1, 1, 9, 0, 0),
 						Attach: []model.Attachment{
 							{
 								FormatType: "application/pdf",
@@ -135,12 +134,12 @@ func TestValidJournal(t *testing.T) {
 								URI:        &url.URL{Scheme: "https", Host: "example.com", Path: "/files/journal.pdf"},
 							},
 						},
-						Rdate: []time.Time{
-							time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC),
-							time.Date(2024, time.January, 15, 9, 0, 0, 0, time.UTC),
+						Rdate: []model.RecurrenceDate{
+							rdateUTC(2024, 1, 8, 9, 0),
+							rdateUTC(2024, 1, 15, 9, 0),
 						},
 						RequestStatus: []string{"2.0;Success"},
-						Related:       []string{"parent-journal@example.com"},
+						Related:       related("parent-journal@example.com"),
 					},
 				},
 			},

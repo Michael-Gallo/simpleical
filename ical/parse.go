@@ -34,6 +34,10 @@ const (
 // beginVCalendarLine is the content line that opens a VCALENDAR object.
 const beginVCalendarLine = "BEGIN:VCALENDAR"
 
+// maxPhysicalLineBytes is the maximum size of a single physical line token.
+// RFC 5545 folds at 75 octets, but unfolded logical lines may be longer.
+const maxPhysicalLineBytes = 4 * 1024 * 1024
+
 // componentCursor caches pointers to the active component so property handlers
 // avoid repeated &slice[len-1] indexing on every line.
 type componentCursor struct {
@@ -75,9 +79,9 @@ func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 // than parsing each individually.
 // Use ReadSingle to assert that the input contains exactly one VCALENDAR object.
 func Read(reader io.Reader) ([]*model.Calendar, error) {
-	// Reusable parameter map to avoid allocations on every property
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
+	scanner.Buffer(make([]byte, 64*1024), maxPhysicalLineBytes)
 	var pending string
 	var hasPending bool
 	var calendars []*model.Calendar
@@ -87,7 +91,9 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 		if !ok {
 			break
 		}
-		if !strings.EqualFold(line, beginVCalendarLine) {
+		// Trailing whitespace on BEGIN/END is common in real producers; trim only
+		// for the structural match so property values stay byte-exact.
+		if !strings.EqualFold(strings.TrimRight(line, " \t"), beginVCalendarLine) {
 			if line == "" {
 				return nil, icalerr.ErrInvalidCalendarEmptyLine
 			}
@@ -116,14 +122,12 @@ func Read(reader io.Reader) ([]*model.Calendar, error) {
 
 // parseOneCalendar parses a single VCALENDAR body, starting just after its
 // BEGIN:VCALENDAR line, and returns as soon as END:VCALENDAR is validated.
-// The scanner, line-unfolding state, and parameter map are owned by the caller
-// so multiple calendars can be parsed from the same stream without
-// reallocating them.
 func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool, reusableParams map[string]string) (*model.Calendar, error) {
 	calendar := &model.Calendar{}
 	currentState := stateCalendar
 	var cursor componentCursor
 	var skip skipTracker
+	var sawComponent bool
 
 	for {
 		line, ok := nextLogicalLine(scanner, pending, hasPending)
@@ -144,16 +148,16 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		propertyName = strings.ToUpper(propertyName)
 		switch propertyName {
 		case "BEGIN":
-			value = strings.ToUpper(value)
+			value = strings.ToUpper(strings.TrimRight(value, " \t"))
 			if currentState == stateSkipComponent {
 				skip.depth++
 				continue
 			}
-			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip); err != nil {
+			if err := handleBeginBlock(value, &currentState, calendar, &cursor, &skip, &sawComponent); err != nil {
 				return nil, err
 			}
 		case "END":
-			value = strings.ToUpper(value)
+			value = strings.ToUpper(strings.TrimRight(value, " \t"))
 			if currentState == stateSkipComponent {
 				skip.depth--
 				if skip.depth == 0 {
@@ -165,6 +169,12 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 				return nil, err
 			}
 			if currentState == stateFinished {
+				if err := validateCalendar(calendar, sawComponent); err != nil {
+					return nil, err
+				}
+				if err := validateCalendarTZIDs(calendar); err != nil {
+					return nil, err
+				}
 				return calendar, nil
 			}
 		default:
@@ -177,19 +187,15 @@ func parseOneCalendar(scanner *bufio.Scanner, pending *string, hasPending *bool,
 		}
 	}
 
-	// Check for scanner errors
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading iCalendar data: %w", err)
 	}
 
-	// Input ended before END:VCALENDAR was seen
 	return nil, icalerr.ErrInvalidCalendarFormatMissingEnd
 }
 
-// nextLogicalLine returns the next RFC 5545 content line after unfolding,
-// with trailing spaces trimmed.
-// Folded physical lines (CRLF followed by a single SPACE or HTAB) are joined
-// by stripping that leading white-space and appending the remainder.
+// nextLogicalLine returns the next RFC 5545 content line after unfolding.
+// Trailing value whitespace is preserved.
 func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) (string, bool) {
 	var line string
 	if *hasPending {
@@ -219,12 +225,12 @@ func nextLogicalLine(scanner *bufio.Scanner, pending *string, hasPending *bool) 
 		break
 	}
 	if folded {
-		return strings.TrimRight(b.String(), " "), true
+		return b.String(), true
 	}
-	return strings.TrimRight(line, " "), true
+	return line, true
 }
 
-// parsePropertyLine parses a single property line and adds it to the appropriate component based on current state.
+// parsePropertyLine dispatches a content line to the handler for the current component state.
 func parsePropertyLine(propertyName string, value string, params map[string]string, currentState parserState, calendar *model.Calendar, cursor *componentCursor) error {
 	switch currentState {
 	case stateAlarm:
@@ -242,10 +248,8 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	case stateStandard, stateDaylight:
 		return parseTimeZonePropertySubComponent(propertyName, value, params, cursor.tzProp)
 	case stateSkipComponent:
-		// Unreachable: parseOneCalendar skips property lines while ignoring unknown components.
 		return nil
 	case stateFinished:
-		// Unreachable: parseOneCalendar returns as soon as stateFinished is reached; kept as a defensive default.
 		return fmt.Errorf("%w: %s", icalerr.ErrPropertyWhenNotInCalendar, propertyName)
 	case stateCalendar:
 		return parseCalendarProperty(propertyName, value, params, calendar)
@@ -253,27 +257,59 @@ func parsePropertyLine(propertyName string, value string, params map[string]stri
 	return nil
 }
 
-// handleBeginBlock processes BEGIN blocks and updates the parser state.
-// Unrecognized component names enter skip mode so x-comp / iana-comp are ignored.
-func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker) error {
-	switch model.SectionToken(beginValue) {
+// requireCalendarComponent ensures a top-level component begins from calendar state.
+func requireCalendarComponent(currentState *parserState, sawComponent *bool, beginValue string) error {
+	if *currentState != stateCalendar {
+		return fmt.Errorf("%w: %s", icalerr.ErrComponentNotAllowedHere, beginValue)
+	}
+	*sawComponent = true
+	return nil
+}
+
+// handleBeginBlock transitions parser state for a BEGIN: token and allocates the new component.
+func handleBeginBlock(beginValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor, skip *skipTracker, sawComponent *bool) error {
+	token := model.SectionToken(beginValue)
+
+	switch token {
+	case model.SectionTokenVCalendar:
+		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVEvent:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateEvent
 		calendar.Events = append(calendar.Events, model.Event{})
 		cursor.event = &calendar.Events[len(calendar.Events)-1]
-	// We have already verified that the first line is a BEGIN:VCALENDAR, so this is an error case
-	case model.SectionTokenVCalendar:
-		return icalerr.ErrNestedBeginVCalendar
 	case model.SectionTokenVTimezone:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateTimezone
 		calendar.TimeZones = append(calendar.TimeZones, model.TimeZone{})
 		cursor.timeZone = &calendar.TimeZones[len(calendar.TimeZones)-1]
 	case model.SectionTokenVFreebusy:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
 		*currentState = stateFreebusy
 		calendar.FreeBusys = append(calendar.FreeBusys, model.FreeBusy{})
 		cursor.freeBusy = &calendar.FreeBusys[len(calendar.FreeBusys)-1]
+	case model.SectionTokenVJournal:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
+		*currentState = stateJournal
+		calendar.Journals = append(calendar.Journals, model.Journal{})
+		cursor.journal = &calendar.Journals[len(calendar.Journals)-1]
+	case model.SectionTokenVTodo:
+		if err := requireCalendarComponent(currentState, sawComponent, beginValue); err != nil {
+			return err
+		}
+		*currentState = stateTodo
+		calendar.Todos = append(calendar.Todos, model.Todo{})
+		cursor.todo = &calendar.Todos[len(calendar.Todos)-1]
 	case model.SectionTokenVAlarm:
-		switch *currentState { //nolint:exhaustive // it is an error condition to begin a VALARM block if we are not in an event or todo
+		switch *currentState { //nolint:exhaustive // VALARM is only valid inside VEVENT/VTODO; other states share the default error
 		case stateEvent:
 			if cursor.event == nil {
 				return fmt.Errorf("%w: VALARM", icalerr.ErrUnexpectedBeginBlock)
@@ -293,14 +329,6 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		}
 		cursor.alarmParent = *currentState
 		*currentState = stateAlarm
-	case model.SectionTokenVJournal:
-		*currentState = stateJournal
-		calendar.Journals = append(calendar.Journals, model.Journal{})
-		cursor.journal = &calendar.Journals[len(calendar.Journals)-1]
-	case model.SectionTokenVTodo:
-		*currentState = stateTodo
-		calendar.Todos = append(calendar.Todos, model.Todo{})
-		cursor.todo = &calendar.Todos[len(calendar.Todos)-1]
 	case model.SectionTokenVStandard:
 		if *currentState != stateTimezone || cursor.timeZone == nil {
 			return fmt.Errorf("%w: STANDARD must be inside VTIMEZONE", icalerr.ErrUnexpectedBeginBlock)
@@ -317,6 +345,7 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 		cursor.tzProp = &cursor.timeZone.Daylight[len(cursor.timeZone.Daylight)-1]
 	default:
 		// RFC 5545: applications MUST ignore unrecognized x-comp / iana-comp.
+		*sawComponent = true
 		skip.returnState = *currentState
 		skip.depth = 1
 		*currentState = stateSkipComponent
@@ -324,24 +353,35 @@ func handleBeginBlock(beginValue string, currentState *parserState, calendar *mo
 	return nil
 }
 
-// handleEndBlock processes END blocks and updates the parser state.
-func handleEndBlock(endLineValue string, currentState *parserState, calendar *model.Calendar, cursor *componentCursor) error {
+// dropAlarm removes the alarm the cursor points at from its parent component.
+// cursor.alarm always addresses the last element of that parent's slice, since
+// VALARM cannot nest.
+func dropAlarm(cursor *componentCursor) {
+	switch cursor.alarmParent { //nolint:exhaustive // VALARM only opens inside VEVENT or VTODO
+	case stateEvent:
+		if cursor.event != nil {
+			cursor.event.Alarms = cursor.event.Alarms[:len(cursor.event.Alarms)-1]
+		}
+	case stateTodo:
+		if cursor.todo != nil {
+			cursor.todo.Alarms = cursor.todo.Alarms[:len(cursor.todo.Alarms)-1]
+		}
+	}
+}
+
+// handleEndBlock validates and closes the component matching endLineValue.
+func handleEndBlock(endLineValue string, currentState *parserState, _ *model.Calendar, cursor *componentCursor) error {
 	switch endLineValue {
 	case string(model.SectionTokenVEvent):
 		if *currentState != stateEvent || cursor.event == nil {
 			return fmt.Errorf("%w: END:VEVENT", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateEvent(cursor.event, calendar.Method); err != nil {
-			return err
-		}
+		// Validation is deferred to validateCalendar so a late METHOD still applies.
 		cursor.event = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVCalendar):
 		if *currentState != stateCalendar {
 			return fmt.Errorf("%w: END:VCALENDAR", icalerr.ErrUnexpectedEndBlock)
-		}
-		if err := validateCalendar(calendar); err != nil {
-			return err
 		}
 		*currentState = stateFinished
 	case string(model.SectionTokenVTimezone):
@@ -366,7 +406,11 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		if *currentState != stateAlarm || cursor.alarm == nil {
 			return fmt.Errorf("%w: END:VALARM", icalerr.ErrUnexpectedEndBlock)
 		}
-		if err := validateAlarm(cursor.alarm); err != nil {
+		// An absent ACTION is a missing required property, which validateAlarm
+		// reports; a present but unrecognized one means the alarm is ignored.
+		if cursor.alarm.Action != "" && !isKnownAlarmAction(cursor.alarm.Action) {
+			dropAlarm(cursor)
+		} else if err := validateAlarm(cursor.alarm); err != nil {
 			return err
 		}
 		cursor.alarm = nil
@@ -391,14 +435,20 @@ func handleEndBlock(endLineValue string, currentState *parserState, calendar *mo
 		cursor.todo = nil
 		*currentState = stateCalendar
 	case string(model.SectionTokenVStandard):
-		if *currentState != stateStandard || cursor.timeZone == nil {
+		if *currentState != stateStandard || cursor.timeZone == nil || cursor.tzProp == nil {
 			return fmt.Errorf("%w: END:STANDARD", icalerr.ErrUnexpectedEndBlock)
+		}
+		if err := validateObservance(cursor.tzProp); err != nil {
+			return err
 		}
 		cursor.tzProp = nil
 		*currentState = stateTimezone
 	case string(model.SectionTokenVDaylight):
-		if *currentState != stateDaylight || cursor.timeZone == nil {
+		if *currentState != stateDaylight || cursor.timeZone == nil || cursor.tzProp == nil {
 			return fmt.Errorf("%w: END:DAYLIGHT", icalerr.ErrUnexpectedEndBlock)
+		}
+		if err := validateObservance(cursor.tzProp); err != nil {
+			return err
 		}
 		cursor.tzProp = nil
 		*currentState = stateTimezone

@@ -28,7 +28,7 @@ type Todo struct {
 	// REQUIRED, MUST NOT occur more than once
 	// a DTSTAMP property defines the date and time that the instance of the calendar component was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.2
-	DTStamp time.Time
+	DTStamp DateTime
 
 	// REQUIRED, MUST NOT occur more than once
 	// The unique identifier for the todo.
@@ -43,28 +43,28 @@ type Todo struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that a to-do was actually completed.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.1
-	Completed time.Time
+	Completed DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the calendar information was created.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.1
-	Created time.Time
+	Created DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Used to capture lengthy textual descriptions associated with the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.5
-	Description string
+	Description TextValue
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies when the calendar component begins.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.4
-	DTStart time.Time
+	DTStart DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that a to-do is expected to be completed.
 	// Either DUE or DURATION may be specified in a VTODO, but not both.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.3
-	Due time.Time
+	Due DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies a positive duration of time.
@@ -81,12 +81,12 @@ type Todo struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the date and time that the information associated with the calendar component was last revised.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.3
-	LastModified time.Time
+	LastModified DateTime
 
 	// OPTIONAL, MUST NOT occur more than once
 	// The location where the activity takes place.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.7
-	Location string
+	Location TextValue
 
 	// OPTIONAL, MUST NOT occur more than once
 	// The organizer of the activity.
@@ -98,15 +98,19 @@ type Todo struct {
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.8
 	PercentComplete int
 
-	// OPTIONAL, MUST NOT occur more than once
-	// Specifies the priority for a calendar component.
+	// Priority represents the priority of the to-do (0-9, where 0 is undefined, 1 is highest, 9 is lowest).
+	// Refers to the PRIORITY property.
+	// OPTIONAL, MUST NOT occur more than once.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.9
 	Priority int
 
 	// OPTIONAL, MUST NOT occur more than once
-	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
-	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.7.4
-	RecurrenceID time.Time
+	// Specifies a specific instance of a recurring to-do.
+	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.4
+	RecurrenceID DateTime
+
+	// RecurrenceIDRange is the RANGE parameter on RECURRENCE-ID (e.g. THISANDFUTURE).
+	RecurrenceIDRange string
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies the revision sequence number of the calendar component within a sequence of revisions.
@@ -121,12 +125,7 @@ type Todo struct {
 	// OPTIONAL, MUST NOT occur more than once
 	// A short, one-line summary about the activity.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.12
-	Summary string
-
-	// OPTIONAL, MUST NOT occur more than once
-	// The time transparency for the activity.
-	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.2.7
-	Transp Transp
+	Summary TextValue
 
 	// OPTIONAL, MUST NOT occur more than once
 	// Specifies a URL associated with the activity.
@@ -156,7 +155,7 @@ type Todo struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies non-processing information intended to provide a comment to the calendar user.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.1.4
-	Comment []string
+	Comment []TextValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the contact information for the activity.
@@ -166,7 +165,7 @@ type Todo struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies the list of date/time exceptions for a recurring calendar component.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.1
-	ExceptionDates []time.Time
+	ExceptionDates []DateTime
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies the status code returned for a scheduling request.
@@ -176,7 +175,7 @@ type Todo struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies a relationship or reference between one calendar component and another.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.4.5
-	Related []string
+	Related []RelatedToValue
 
 	// OPTIONAL, MAY occur more than once
 	// Specifies equipment or resources anticipated for an activity.
@@ -186,7 +185,7 @@ type Todo struct {
 	// OPTIONAL, MAY occur more than once
 	// Specifies the list of date/time values for recurring activities.
 	// https://datatracker.ietf.org/doc/html/rfc5545#section-3.8.5.2
-	Rdate []time.Time
+	Rdate []RecurrenceDate
 
 	// OPTIONAL, MAY occur more than once
 	// A Non-Standard Property. Can be represented by any name with a X-prefix.

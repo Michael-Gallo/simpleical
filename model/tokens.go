@@ -67,4 +67,8 @@ const (
 	PropTZURL           = "TZURL"
 	PropUID             = "UID"
 	PropURL             = "URL"
+	PropCalscale        = "CALSCALE"
+	PropMethod          = "METHOD"
+	PropProdID          = "PRODID"
+	PropVersion         = "VERSION"
 )

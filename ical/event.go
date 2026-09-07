@@ -3,7 +3,6 @@ package ical
 import (
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/michael-gallo/simpleical/internal/icalerr"
@@ -19,7 +18,7 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropDTStart:
 		return setOnceTimePropertyWithParams(&event.Start, value, params, propertyName, eventLocation)
 	case model.PropDTStamp:
-		return setOnceTimePropertyWithParams(&event.DTStamp, value, params, propertyName, eventLocation)
+		return setOnceUTCTimePropertyWithParams(&event.DTStamp, value, params, propertyName, eventLocation)
 
 	// End and Duration are mutually exclusive
 	case model.PropDTEnd:
@@ -28,39 +27,59 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		}
 		return setOnceTimePropertyWithParams(&event.End, value, params, propertyName, eventLocation)
 	case model.PropDuration:
-		if event.End != (time.Time{}) {
+		if !event.End.IsZero() {
 			return icalerr.ErrInvalidDurationPropertyDtend
 		}
-		return setOnceDurationProperty(&event.Duration, value, propertyName, eventLocation)
+		return setOncePositiveDurationProperty(&event.Duration, value, propertyName, eventLocation)
 	case model.PropLastModified:
-		return setOnceTimePropertyWithParams(&event.LastModified, value, params, propertyName, eventLocation)
+		return setOnceUTCTimePropertyWithParams(&event.LastModified, value, params, propertyName, eventLocation)
 
 	case model.PropSummary:
-		return setOnceProperty(&event.Summary, value, propertyName, eventLocation)
+		return setOnceTextProperty(&event.Summary, value, params, propertyName, eventLocation)
 	case model.PropDescription:
-		return setOnceProperty(&event.Description, value, propertyName, eventLocation)
+		return setOnceTextProperty(&event.Description, value, params, propertyName, eventLocation)
 	case model.PropLocation:
-		return setOnceProperty(&event.Location, value, propertyName, eventLocation)
+		return setOnceTextProperty(&event.Location, value, params, propertyName, eventLocation)
 	case model.PropUID:
 		return setOnceProperty(&event.UID, value, propertyName, eventLocation)
 	case model.PropClass:
-		return setOnceProperty(&event.Class, model.Class(value), propertyName, eventLocation)
+		class, err := parseClass(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&event.Class, class, propertyName, eventLocation)
 	case model.PropCreated:
-		return setOnceTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
+		return setOnceUTCTimePropertyWithParams(&event.Created, value, params, propertyName, eventLocation)
 	case model.PropPriority:
-		return setOnceIntProperty(&event.Priority, value, propertyName, eventLocation)
+		return setOnceBoundedInt(&event.Priority, value, 0, 9, icalerr.ErrInvalidPriority, propertyName, eventLocation)
 	case model.PropURL:
 		return setOnceProperty(&event.URL, value, propertyName, eventLocation)
 	case model.PropRecurrenceID:
-		return setOnceTimePropertyWithParams(&event.RecurrenceID, value, params, propertyName, eventLocation)
+		if err := setOnceTimePropertyWithParams(&event.RecurrenceID, value, params, propertyName, eventLocation); err != nil {
+			return err
+		}
+		rangeParam, err := parseRecurrenceIDRange(params)
+		if err != nil {
+			return err
+		}
+		event.RecurrenceIDRange = rangeParam
+		return nil
 	case model.PropContact:
 		event.Contacts = append(event.Contacts, value)
 		return nil
 
 	case model.PropStatus:
-		return setOnceProperty(&event.Status, model.EventStatus(value), propertyName, eventLocation)
+		status, err := parseEventStatus(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&event.Status, status, propertyName, eventLocation)
 	case model.PropTransp:
-		return setOnceProperty(&event.Transp, model.Transp(value), propertyName, eventLocation)
+		transp, err := parseTransp(value)
+		if err != nil {
+			return err
+		}
+		return setOnceProperty(&event.Transp, transp, propertyName, eventLocation)
 	case model.PropSequence:
 		return setOnceIntProperty(&event.Sequence, value, propertyName, eventLocation)
 	case model.PropOrganizer:
@@ -70,9 +89,9 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 		}
 		return setOnceProperty(&event.Organizer, organizer, propertyName, eventLocation)
 	case model.PropComment:
-		event.Comment = append(event.Comment, value)
+		return appendTextProperty(&event.Comment, value, params)
 	case model.PropCategories:
-		event.Categories = append(event.Categories, strings.Split(value, ",")...)
+		return appendTextListProperty(&event.Categories, value)
 	case model.PropGeo:
 		if event.Geo != nil {
 			return fmt.Errorf(icalerr.ErrDuplicatePropertyInComponentFormat, icalerr.ErrDuplicatePropertyInComponent, propertyName, eventLocation)
@@ -107,11 +126,11 @@ func parseEventProperty(propertyName string, value string, params map[string]str
 	case model.PropRequestStatus:
 		event.RequestStatus = append(event.RequestStatus, value)
 	case model.PropRelatedTo:
-		event.Related = append(event.Related, value)
+		return appendRelatedToProperty(&event.Related, value, params)
 	case model.PropResources:
-		event.Resources = append(event.Resources, strings.Split(value, ",")...)
+		return appendTextListProperty(&event.Resources, value)
 	case model.PropRDate:
-		return appendCommaSeparatedTimePropertyWithParams(&event.Rdate, value, params, propertyName, eventLocation)
+		return appendRDateProperty(&event.Rdate, value, params, propertyName, eventLocation)
 	default:
 		appendExtensionProperty(&event.XProp, &event.IANAProp, propertyName, value, params)
 	}
@@ -162,8 +181,17 @@ func validateEvent(event *model.Event, method string) error {
 	if event.UID == "" {
 		return icalerr.ErrMissingEventUIDProperty
 	}
+	if event.DTStamp.IsZero() {
+		return icalerr.ErrMissingEventDTStampProperty
+	}
 	if method == "" && event.Start.IsZero() {
 		return icalerr.ErrMissingEventDTStartProperty
+	}
+	if !event.Start.IsZero() && !event.End.IsZero() && event.Start.IsDate() != event.End.IsDate() {
+		return icalerr.ErrMismatchedDateValueTypes
+	}
+	if event.Duration != 0 && event.Start.IsDate() && event.Duration%(24*time.Hour) != 0 {
+		return icalerr.ErrDateDurationMustBeDayOrWeek
 	}
 	return nil
 }

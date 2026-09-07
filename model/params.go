@@ -23,6 +23,12 @@ const (
 	ParamMember        = "MEMBER"
 	ParamDelegatedTo   = "DELEGATED-TO"
 	ParamDelegatedFrom = "DELEGATED-FROM"
+	ParamTZID          = "TZID"
+	ParamAltrep        = "ALTREP"
+	ParamRange         = "RANGE"
+	ParamRelated       = "RELATED"
+	ParamRelType       = "RELTYPE"
+	ParamFBType        = "FBTYPE"
 )
 
 // Boolean parameter values used by RSVP and similar parameters.
