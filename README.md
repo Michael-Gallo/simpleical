@@ -44,37 +44,35 @@ calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 
 
 ## Performance
-Performance tests are for simple-ical v5.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
+Performance tests are for simple-ical v0.6.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
 
 ### Specs
 All tests were ran on a 5700X3D Processor with 32GB of RAM.
 
-### Calendar File With Minimal Event
+### Simple Event
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 1.454µ ± 0% | 4.736µ ± 0% | 9.506µ ± 0% |
-| B/op    | 5.023Ki ± 0% | 7.028Ki ± 0% | 7.988Ki ± 0% |
-|allocs/op| 13.00 ± 0% | 70.00 ± 0% | 144.00 ± 0% |
+| sec/op  | 2.173µ ± 0% | 4.484µ ± 1% | 8.611µ ± 0% |
+| B/op    | 5.391Ki ± 0% | 7.028Ki ± 0% | 7.983Ki ± 0% |
+|allocs/op| 16 ± 0% | 70 ± 0% | 144 ± 0% |
 
-### Calendar File with single representative event
+### Single Event
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 5.670µ ± 3% | 14.407µ ± 1% | 31.828µ ± 1% |
-| B/op    | 7.086Ki ± 0% | 13.119Ki ± 0% | 19.375Ki ± 0% |
-|allocs/op| 62.00 ± 0% | 241.00 ± 0% | 465.00 ± 0% |
+| sec/op  | 7.160µ ± 1% | 13.25µ ± 0% | 28.72µ ± 1% |
+| B/op    | 7.867Ki ± 0% | 13.12Ki ± 0% | 19.36Ki ± 0% |
+|allocs/op| 63 ± 0% | 241 ± 0% | 465 ± 0% |
 
-
-### Calendar File with Multiple Events
+### Multiple Events
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 7.398µ ± 1% | 23.020µ ± 2% | 48.202µ ± 1% |
-| B/op    | 9.156Ki ± 0% | 18.147Ki ± 0% | 27.941Ki ± 0% |
-|allocs/op| 91.00 ± 0% | 382.00 ± 0% | 712.00 ± 0% |
+| sec/op  | 10.25µ ± 0% | 20.86µ ± 0% | 43.59µ ± 1% |
+| B/op    | 10.63Ki ± 0% | 18.15Ki ± 0% | 27.91Ki ± 0% |
+|allocs/op| 97 ± 0% | 382 ± 0% | 712 ± 0% |
 
-
-### Calendar File with Events and TODOs
+### Complex Calendar
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
-| sec/op  | 8.944µ ± 1% | 21.573µ ± 0% | 64.367µ ± 0% |
-| B/op    | 10.266Ki ± 0% | 19.015Ki ± 0% | 33.549Ki ± 0% |
-|allocs/op| 109.00 ± 0% | 418.00 ± 0% | 970.00 ± 0% |
+| sec/op  | 12.81µ ± 1% | 19.62µ ± 0% | 57.99µ ± 0% |
+| B/op    | 11.93Ki ± 0% | 18.91Ki ± 0% | 33.22Ki ± 0% |
+|allocs/op| 118 ± 0% | 417 ± 0% | 965 ± 0% |
