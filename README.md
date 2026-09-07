@@ -44,12 +44,15 @@ calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 
 
 ## Performance
+
 Performance tests are for simple-ical v0.6.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
 
 ### Specs
+
 All tests were ran on a 5700X3D Processor with 32GB of RAM.
 
 ### Simple Event
+
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
 | sec/op  | 2.173µ ± 0% | 4.484µ ± 1% | 8.611µ ± 0% |
@@ -57,6 +60,7 @@ All tests were ran on a 5700X3D Processor with 32GB of RAM.
 |allocs/op| 16 ± 0% | 70 ± 0% | 144 ± 0% |
 
 ### Single Event
+
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
 | sec/op  | 7.160µ ± 1% | 13.25µ ± 0% | 28.72µ ± 1% |
@@ -64,6 +68,7 @@ All tests were ran on a 5700X3D Processor with 32GB of RAM.
 |allocs/op| 63 ± 0% | 241 ± 0% | 465 ± 0% |
 
 ### Multiple Events
+
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
 | sec/op  | 10.25µ ± 0% | 20.86µ ± 0% | 43.59µ ± 1% |
@@ -71,6 +76,7 @@ All tests were ran on a 5700X3D Processor with 32GB of RAM.
 |allocs/op| 97 ± 0% | 382 ± 0% | 712 ± 0% |
 
 ### Complex Calendar
+
 |         | SimpleIcal  | Gocal       | GolangIcal  |
 |---------|-------------|-------------|--------------|
 | sec/op  | 12.81µ ± 1% | 19.62µ ± 0% | 57.99µ ± 0% |
