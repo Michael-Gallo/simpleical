@@ -39,8 +39,8 @@ func unescapeText(s string) (string, error) {
 	return b.String(), nil
 }
 
-// splitUnescapedComma splits a TEXT list on commas that are not escaped with backslash.
-// Each segment is then unescaped.
+// splitUnescapedComma splits a TEXT list on unescaped commas and decodes
+// RFC 5545 TEXT escapes in the same pass. An escaped comma (\,) is data.
 func splitUnescapedComma(s string) ([]string, error) {
 	if s == "" {
 		return nil, nil
@@ -50,29 +50,27 @@ func splitUnescapedComma(s string) ([]string, error) {
 	b.Grow(len(s))
 	for i := 0; i < len(s); i++ {
 		if s[i] == '\\' {
-			if i+1 >= len(s) {
+			i++
+			if i >= len(s) {
 				return nil, icalerr.ErrInvalidTextEscape
 			}
-			b.WriteByte('\\')
-			b.WriteByte(s[i+1])
-			i++
+			switch s[i] {
+			case '\\', ';', ',':
+				b.WriteByte(s[i])
+			case 'n', 'N':
+				b.WriteByte('\n')
+			default:
+				return nil, icalerr.ErrInvalidTextEscape
+			}
 			continue
 		}
 		if s[i] == ',' {
-			part, err := unescapeText(b.String())
-			if err != nil {
-				return nil, err
-			}
-			parts = append(parts, part)
+			parts = append(parts, b.String())
 			b.Reset()
 			continue
 		}
 		b.WriteByte(s[i])
 	}
-	part, err := unescapeText(b.String())
-	if err != nil {
-		return nil, err
-	}
-	parts = append(parts, part)
+	parts = append(parts, b.String())
 	return parts, nil
 }

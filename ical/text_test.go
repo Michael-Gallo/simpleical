@@ -36,7 +36,26 @@ func TestUnescapeText(t *testing.T) {
 }
 
 func TestSplitUnescapedComma(t *testing.T) {
-	parts, err := splitUnescapedComma(`A\,B,C`)
-	require.NoError(t, err)
-	assert.Equal(t, []string{"A,B", "C"}, parts)
+	tests := []struct {
+		name    string
+		input   string
+		want    []string
+		wantErr bool
+	}{
+		{name: "escaped comma then separator", input: `A\,B,C`, want: []string{"A,B", "C"}},
+		{name: "newline escape", input: `A\nB,C`, want: []string{"A\nB", "C"}},
+		{name: "invalid escape", input: `A\x,B`, wantErr: true},
+		{name: "trailing escape", input: `A\`, wantErr: true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			parts, err := splitUnescapedComma(tc.input)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, parts)
+		})
+	}
 }

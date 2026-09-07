@@ -112,9 +112,8 @@ func parseDateTimeValue(value string, params map[string]string, propertyName str
 			return model.DateTime{Form: model.DateTimeFormLocalTZ, Time: temporal.Time, TZID: tzid}, nil
 		}
 		return model.DateTime{Form: model.DateTimeFormFloating, Time: temporal.Time}, nil
-	default:
-		return model.DateTime{}, icalerr.ErrParseErrorInComponent
 	}
+	return model.DateTime{}, icalerr.ErrParseErrorInComponent
 }
 
 // parseUTCDateTimeValue parses a DATE-TIME and requires UTC form (trailing Z).
