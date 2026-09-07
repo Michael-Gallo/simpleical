@@ -20,7 +20,7 @@ var (
 
 	//go:embed test_data/freebusy/test_freebusy_missing_uid.ical
 	testFreeBusyMissingUIDInput string
-	//go:embed test_data/freebusy/test_freebusy_missing_dtstamp.ical
+	//go:embed test_data/freebusy/invalid_freebusy_missing_dtstamp.ical
 	testFreeBusyMissingDTStampInput string
 	//go:embed test_data/freebusy/test_freebusy_duplicate_uid.ical
 	testFreeBusyDuplicateUIDInput string

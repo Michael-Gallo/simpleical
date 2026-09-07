@@ -41,7 +41,7 @@ var (
 	testTodoDurationWithoutDTStartInput string
 	//go:embed test_data/todos/test_todo_missing_dtstamp.ical
 	testTodoMissingDTStampInput string
-	//go:embed test_data/todos/test_todo_transp_not_allowed.ical
+	//go:embed test_data/todos/invalid_todo_transp_not_allowed.ical
 	testTodoTranspNotAllowedInput string
 	//go:embed test_data/todos/valid_test_todo_all_day_date.ical
 	testTodoAllDayDateInput string

@@ -51,7 +51,7 @@ var (
 	testIcalMissingUIDInput string
 	//go:embed test_data/events/test_event_missing_dtstart.ical
 	testIcalMissingDTStartInput string
-	//go:embed test_data/events/test_event_missing_dtstamp.ical
+	//go:embed test_data/events/invalid_event_missing_dtstamp.ical
 	testIcalMissingDTStampInput string
 	//go:embed test_data/events/test_event_with_alarm.ical
 	testEventWithAlarmInput string
@@ -103,6 +103,8 @@ var (
 	testEventDisplayAlarmWithSummaryInput string
 	//go:embed test_data/events/invalid_audio_alarm_with_description.ical
 	testEventAudioAlarmWithDescriptionInput string
+	//go:embed test_data/events/invalid_alarm_calendar_property.ical
+	testEventAlarmCalendarPropertyInput string
 )
 
 func TestValidEvent(t *testing.T) {
@@ -639,6 +641,11 @@ func TestInvalidEvent(t *testing.T) {
 			name:        "AUDIO VALARM with DESCRIPTION",
 			input:       testEventAudioAlarmWithDescriptionInput,
 			expectedErr: icalerr.ErrAlarmPropertyNotAllowed,
+		},
+		{
+			name:        "VALARM with calendar VERSION property",
+			input:       testEventAlarmCalendarPropertyInput,
+			expectedErr: icalerr.ErrPropertyNotAllowedInAlarm,
 		},
 	}
 	for _, tc := range testCases {

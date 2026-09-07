@@ -1,4 +1,5 @@
 test/test_data/calendar/valid_calendar_with_carriage_returns.ical text eol=crlf
+test/test_data/calendar/valid_method_after_vevent_no_dtstart.ical text eol=crlf
 
 # Spec-gap fixtures get pasted into external validators to cross-check our
 # reading of the RFC, so they must be conformant on the wire: RFC 5545 3.1

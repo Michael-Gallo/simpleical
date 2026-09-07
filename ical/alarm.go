@@ -114,7 +114,11 @@ func isRFCDefinedProperty(name string) bool {
 		model.PropTZOffsetTo,
 		model.PropTZURL,
 		model.PropUID,
-		model.PropURL:
+		model.PropURL,
+		model.PropCalscale,
+		model.PropMethod,
+		model.PropProdID,
+		model.PropVersion:
 		return true
 	default:
 		return false
