@@ -51,4 +51,6 @@ var (
 	errInvalidByPartForFrequency = errors.New("BY rule part is not allowed with this FREQ")
 
 	errNumericByDayInvalidFrequency = errors.New("numeric BYDAY is only allowed with MONTHLY or YEARLY FREQ")
+
+	errBySetPosWithoutByPart = errors.New("BYSETPOS MUST only be used in conjunction with another BYxxx rule part")
 )

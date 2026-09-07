@@ -720,6 +720,16 @@ func TestParseRRule(t *testing.T) {
 			input:       "FREQ=DAILY;BYYEARDAY=1",
 			expectError: errInvalidByPartForFrequency,
 		},
+		{
+			name:        "Error: BYSETPOS without another BYxxx part",
+			input:       "FREQ=MONTHLY;BYSETPOS=1",
+			expectError: errBySetPosWithoutByPart,
+		},
+		{
+			name:        "Error: BYSETPOS with COUNT but no BYxxx part",
+			input:       "FREQ=MONTHLY;COUNT=3;BYSETPOS=1",
+			expectError: errBySetPosWithoutByPart,
+		},
 
 		{
 			name:  "The third instance into the month of one of Tuesday, Wednesday, or Thursday, for the next 3 months",

@@ -334,7 +334,22 @@ func validateRRule(rrule *RRule) error {
 			}
 		}
 	}
+	if len(rrule.BySetPos) > 0 && !hasOtherByXxx(rrule) {
+		return errBySetPosWithoutByPart
+	}
 	return nil
+}
+
+// hasOtherByXxx reports whether rrule has any BYxxx part other than BYSETPOS.
+func hasOtherByXxx(rrule *RRule) bool {
+	return len(rrule.BySecond) > 0 ||
+		len(rrule.ByMinute) > 0 ||
+		len(rrule.ByHour) > 0 ||
+		len(rrule.ByDay) > 0 ||
+		len(rrule.ByMonthDay) > 0 ||
+		len(rrule.ByYearDay) > 0 ||
+		len(rrule.ByWeekNo) > 0 ||
+		len(rrule.ByMonth) > 0
 }
 
 // validByMonthDay reports whether v is in the RFC BYMONTHDAY range (±1..±31).

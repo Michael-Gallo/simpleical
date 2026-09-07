@@ -38,10 +38,12 @@ func TestReadFromFile(t *testing.T) {
 	assert.Equal(t, calendarsFromFile, calendarsFromString)
 }
 
+// text wraps s as a TEXT property value with no parameters.
 func text(s string) model.TextValue {
 	return model.TextValue{Value: s}
 }
 
+// texts wraps each string as a TEXT property value with no parameters.
 func texts(ss ...string) []model.TextValue {
 	out := make([]model.TextValue, len(ss))
 	for i, s := range ss {
@@ -50,6 +52,7 @@ func texts(ss ...string) []model.TextValue {
 	return out
 }
 
+// related wraps each string as a RELATED-TO value with no RELTYPE.
 func related(ss ...string) []model.RelatedToValue {
 	out := make([]model.RelatedToValue, len(ss))
 	for i, s := range ss {
@@ -58,31 +61,38 @@ func related(ss ...string) []model.RelatedToValue {
 	return out
 }
 
+// utcDT builds a UTC DATE-TIME at the given wall-clock components.
 func utcDT(year int, month time.Month, day, hour, minute, sec int) model.DateTime {
 	return model.NewUTCDateTime(time.Date(year, month, day, hour, minute, sec, 0, time.UTC))
 }
 
+// floatDT builds a floating DATE-TIME on the first of month at hour:00:00.
 func floatDT(year int, month time.Month, hour int) model.DateTime {
 	return model.NewFloatingDateTime(time.Date(year, month, 1, hour, 0, 0, 0, time.UTC))
 }
 
+// localDT builds a DATE-TIME with TZID tzid and the given local components.
 func localDT(tzid string, year int, month time.Month, day, hour, minute, sec int) model.DateTime {
 	return model.NewLocalTZDateTime(time.Date(year, month, day, hour, minute, sec, 0, time.UTC), tzid)
 }
 
+// dateDT builds an all-day DATE value on 2007-month-day.
 func dateDT(month time.Month, day int) model.DateTime {
 	return model.NewDate(time.Date(2007, month, day, 0, 0, 0, 0, time.UTC))
 }
 
+// rdateUTC builds an RDATE DATE-TIME value in UTC.
 func rdateUTC(year int, month time.Month, day, hour, minute int) model.RecurrenceDate {
 	dt := utcDT(year, month, day, hour, minute, 0)
 	return model.RecurrenceDate{DateTime: &dt}
 }
 
+// triggerStart builds a duration TRIGGER related to the start of the parent component.
 func triggerStart(d time.Duration) model.Trigger {
 	return model.Trigger{Duration: &d, Related: model.TriggerRelatedStart}
 }
 
+// intPtr returns a pointer to n for optional integer properties such as REPEAT.
 func intPtr(n int) *int {
 	return &n
 }

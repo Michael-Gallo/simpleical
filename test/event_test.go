@@ -45,6 +45,8 @@ var (
 	testIcalBothDurationAndEndDurationFirstInput string
 	//go:embed test_data/events/invalid_test_event_with_bad_rrule.ical
 	testIcalInvalidRRuleInput string
+	//go:embed test_data/events/invalid_event_rrule_bysetpos_alone.ical
+	testIcalInvalidRRuleBySetPosAloneInput string
 	//go:embed test_data/events/test_event_missing_colon.ical
 	testIcalMissingColonInput string
 	//go:embed test_data/events/test_event_missing_uid.ical
@@ -595,6 +597,11 @@ func TestInvalidEvent(t *testing.T) {
 		{
 			name:        "Invalid RRULE",
 			input:       testIcalInvalidRRuleInput,
+			expectedErr: icalerr.ErrInvalidRRule,
+		},
+		{
+			name:        "RRULE BYSETPOS without another BYxxx part",
+			input:       testIcalInvalidRRuleBySetPosAloneInput,
 			expectedErr: icalerr.ErrInvalidRRule,
 		},
 		{
