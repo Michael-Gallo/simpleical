@@ -29,6 +29,7 @@ bench-long:
 
 bench-comparative:
 	cd benchmarks && go test -bench=BenchmarkComparativeAll -benchmem -count 10 > results_comparative.txt
+	cd benchmarks && go run golang.org/x/perf/cmd/benchstat@latest results_comparative.txt | tee results_comparative_benchstat.txt
 
 check: fmt-check vet lint test-slow
 
