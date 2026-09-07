@@ -81,7 +81,10 @@ func ReadSingle(reader io.Reader) (*model.Calendar, error) {
 func Read(reader io.Reader) ([]*model.Calendar, error) {
 	reusableParams := make(map[string]string, 2)
 	scanner := bufio.NewScanner(reader)
-	scanner.Buffer(make([]byte, 64*1024), maxPhysicalLineBytes)
+	// Start with the scanner's default lazy buffer; it grows only when a single
+	// unfolded line exceeds it, up to maxPhysicalLineBytes. Preallocating a large
+	// buffer per Read call dominated allocation counts for small calendars.
+	scanner.Buffer(nil, maxPhysicalLineBytes)
 	var pending string
 	var hasPending bool
 	var calendars []*model.Calendar
