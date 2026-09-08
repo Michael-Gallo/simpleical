@@ -2,7 +2,9 @@
 
 Comparative parse-into-structs benchmarks against other Go iCalendar libraries.
 
-These benches measure turning ICS bytes into each library’s in-memory structs. They do not expand recurrences or serialize.
+These benches measure each library’s public parse entrypoint on the same ICS bytes. They do not expand recurrences or serialize.
+
+simpleical types and validates during parse. golang-ical and emersion/go-ical only build a generic property/component tree (raw strings, no RFC checks at decode time), so a faster simpleical result is not an equal-work comparison.
 
 ## Libraries
 
@@ -13,7 +15,7 @@ These benches measure turning ICS bytes into each library’s in-memory structs.
 | [golang-ical](https://github.com/arran4/golang-ical) | VEVENT and full-calendar tables | `ParseCalendar` |
 | [emersion/go-ical](https://github.com/emersion/go-ical) | VEVENT and full-calendar tables | `NewDecoder.Decode` |
 
-gocal is omitted from the full-calendar benches: it ignores non-`VEVENT` components and expands `RRULE`s during `Parse()`.
+gocal is omitted from the full-calendar benches: it ignores non-`VEVENT` components and expands `RRULE`s during `Parse()`. golang-ical and emersion are included as ICS syntax trees, not as typed RFC parsers.
 
 ## Setup
 

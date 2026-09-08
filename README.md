@@ -45,12 +45,11 @@ calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 
 ## Performance
 
-These numbers measure **parse into structs**: the time and allocations to turn ICS bytes into each library’s in-memory calendar. They do not measure recurrence expansion or serialization.
+These numbers measure each library’s public parse entrypoint on the same ICS bytes. They do not measure recurrence expansion or serialization.
 
-Comparisons use [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5), [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1), and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) (`v0.0.0-20250609112844-439c63cef608`). simple-ical is v0.6.1.
+**This is not the same amount of work.** simple-ical parses into typed fields (`Event.Summary`, `DateTime`, `rrule.RRule`, and so on) and checks RFC 5545 rules (required properties, duplicates, DTEND vs DURATION, TZID references, enums). [golang-ical](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) stop at a generic property/component tree: names, raw string values, and nested `BEGIN`/`END`. They do not type dates or RRULEs, and they do not validate the calendar, at parse time. A faster simple-ical number here means it did *more* than those two columns, not less.
 
-- **gocal** only appears on VEVENT-only files with no `RRULE`. It ignores non-`VEVENT` components and expands recurrences during `Parse()`.
-- **golang-ical** and **emersion/go-ical** parse the full calendar into a generic property/component tree. They can serialize; that is not measured here. simple-ical parses into typed structures and validates during parse.
+[gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1) is a different product again: VEVENT-only, and it expands recurrences during `Parse()`. It only appears on VEVENT-only files with no `RRULE`. golang-ical and emersion can serialize; that is not measured here. simple-ical is v0.6.1.
 
 ### Specs
 
