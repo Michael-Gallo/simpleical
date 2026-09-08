@@ -56,7 +56,7 @@ Comparisons use [golang-ical v0.3.5](https://github.com/arran4/golang-ical/relea
 
 All benchmarks were run on a 5700X3D processor with 32 GB of RAM.
 
-Fill the tables from a local `make bench-comparative` run. Do not paste numbers from a cloud or CI machine.
+Numbers will be filled from a local `make bench-comparative` run.
 
 ### VEVENT parse
 
