@@ -40,18 +40,6 @@ If you expect exactly one `VCALENDAR`, use `ical.ReadSingle`, which returns a si
 calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 ```
 
-## Comparison
-
-| | simple-ical | gocal | golang-ical | emersion/go-ical |
-|---|---|---|---|---|
-| Output | Typed `Calendar` / `Event` / `Todo` / … | `[]Event` with `time.Time` | Generic property tree | Generic component tree |
-| RFC 5545 checks on parse | Required props, duplicates, enums, TZID refs | UID / DTSTART / DTSTAMP (optional strictness) | Line/structure syntax | `BEGIN`/`END` matching |
-| `VEVENT` | Yes | Yes | Yes | Yes |
-| `VTODO`, `VJOURNAL`, `VALARM`, `VTIMEZONE`, `VFREEBUSY` | Yes | Ignored | Stored as components | Stored as components |
-| `RRULE` | Parsed into a struct, not expanded | Parsed and expanded during `Parse()` | Left as a string until getters | Left as a string until `RecurrenceSet()` |
-| Serialize | No | No | Yes | Yes |
-| Multiple sequential `VCALENDAR`s | `ical.Read` | No | One calendar per `ParseCalendar` | One calendar per `Decode` (loop for more) |
-
 ## Performance
 
 These numbers measure each library’s public parse entrypoint on the same ICS bytes.
@@ -59,6 +47,18 @@ These numbers measure each library’s public parse entrypoint on the same ICS b
 **This is not the same amount of work.** simple-ical parses into typed fields (`Event.Summary`, `DateTime`, `rrule.RRule`, and so on) and checks RFC 5545 rules (required properties, duplicates, DTEND vs DURATION, TZID references, enums). [golang-ical](https://github.com/arran4/golang-ical/releases/tag/v0.3.6) and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) do not map properties into typed fields and they do not validate the calendar.
 
 [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1) is in many ways a different product: VEVENT-only, and it expands recurrences during `Parse()`. Because of this we only compare it to VEVENT-only calendars without recurrence rules. golang-ical and emersion can serialize; that is not measured here. simple-ical is v0.6.1.
+
+### What each parser returns
+
+| | simple-ical | gocal | golang-ical | emersion/go-ical |
+|---|---|---|---|---|
+| After parse | Go structs with typed fields (`Event.Summary`, `DateTime`, …) | A list of `Event`s with `time.Time` values | Nested `BEGIN`/`END` blocks; each property is a name and a raw string | Same: nested `BEGIN`/`END` blocks; properties stay strings |
+| RFC 5545 checks on parse | Required props, duplicates, enums, TZID refs | UID / DTSTART / DTSTAMP (optional strictness) | Line/structure syntax | `BEGIN`/`END` matching |
+| `VEVENT` | Yes | Yes | Yes | Yes |
+| `VTODO`, `VJOURNAL`, `VALARM`, `VTIMEZONE`, `VFREEBUSY` | Yes | Ignored | Kept as nested blocks | Kept as nested blocks |
+| `RRULE` | Parsed into a struct, not expanded | Parsed and expanded during `Parse()` | Left as a string until getters | Left as a string until `RecurrenceSet()` |
+| Serialize | No | No | Yes | Yes |
+| Multiple sequential `VCALENDAR`s | `ical.Read` | No | One calendar per `ParseCalendar` | One calendar per `Decode` (loop for more) |
 
 ### Specs
 
