@@ -14,9 +14,7 @@ Full API documentation is available on [pkg.go.dev](https://pkg.go.dev/github.co
 
 This project is licensed under the Mozilla Public License 2.0. See the [LICENSE](LICENSE) file for details.
 
-
 ## Installation
-
 
 ```sh
 go get github.com/michael-gallo/simpleical
@@ -42,14 +40,13 @@ If you expect exactly one `VCALENDAR`, use `ical.ReadSingle`, which returns a si
 calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 ```
 
-
 ## Performance
 
-These numbers measure each library’s public parse entrypoint on the same ICS bytes. They do not measure recurrence expansion or serialization.
+These numbers measure each library’s public parse entrypoint on the same ICS bytes.
 
-**This is not the same amount of work.** simple-ical parses into typed fields (`Event.Summary`, `DateTime`, `rrule.RRule`, and so on) and checks RFC 5545 rules (required properties, duplicates, DTEND vs DURATION, TZID references, enums). [golang-ical](https://github.com/arran4/golang-ical/releases/tag/v0.3.6) and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) stop at a generic property/component tree: names, raw string values, and nested `BEGIN`/`END`. They do not type dates or RRULEs, and they do not validate the calendar at parse time. A faster simple-ical number here means it did *more* than those two columns, not less.
+**This is not the same amount of work.** simple-ical parses into typed fields (`Event.Summary`, `DateTime`, `rrule.RRule`, and so on) and checks RFC 5545 rules (required properties, duplicates, DTEND vs DURATION, TZID references, enums). [golang-ical](https://github.com/arran4/golang-ical/releases/tag/v0.3.6) and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) do not map properties into typed fields and they do not validate the calendar.
 
-[gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1) is a different product again: VEVENT-only, and it expands recurrences during `Parse()`. It only appears on VEVENT-only files with no `RRULE`. golang-ical and emersion can serialize; that is not measured here. simple-ical is v0.6.1.
+[gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1) is a in many ways a different product: VEVENT-only, and it expands recurrences during `Parse()`. Because of this we only compare it to VEVENT only calendars without recurrence rules. golang-ical and emersion can serialize; that is not measured here. simple-ical is v0.6.1.
 
 ### Specs
 
@@ -63,27 +60,27 @@ VEVENT-only calendars with no `RRULE`, `VTIMEZONE`, `VTODO`, `VALARM`, or `VJOUR
 
 #### Simple Event
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  |            |       |            |          |
-| B/op    |            |       |            |          |
-|allocs/op|            |       |            |          |
+|           | SimpleIcal | Gocal | GolangIcal | Emersion |
+| --------- | ---------- | ----- | ---------- | -------- |
+| sec/op    |            |       |            |          |
+| B/op      |            |       |            |          |
+| allocs/op |            |       |            |          |
 
 #### Rich Event
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  |            |       |            |          |
-| B/op    |            |       |            |          |
-|allocs/op|            |       |            |          |
+|           | SimpleIcal | Gocal | GolangIcal | Emersion |
+| --------- | ---------- | ----- | ---------- | -------- |
+| sec/op    |            |       |            |          |
+| B/op      |            |       |            |          |
+| allocs/op |            |       |            |          |
 
 #### Multiple Events
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  |            |       |            |          |
-| B/op    |            |       |            |          |
-|allocs/op|            |       |            |          |
+|           | SimpleIcal | Gocal | GolangIcal | Emersion |
+| --------- | ---------- | ----- | ---------- | -------- |
+| sec/op    |            |       |            |          |
+| B/op      |            |       |            |          |
+| allocs/op |            |       |            |          |
 
 ### Calendar parse
 
@@ -91,24 +88,24 @@ Full calendar objects (timezones, `RRULE` stored but not expanded, todos, alarms
 
 #### Single Event
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  |            |            |          |
-| B/op    |            |            |          |
-|allocs/op|            |            |          |
+|           | SimpleIcal | GolangIcal | Emersion |
+| --------- | ---------- | ---------- | -------- |
+| sec/op    |            |            |          |
+| B/op      |            |            |          |
+| allocs/op |            |            |          |
 
 #### Multiple Events
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  |            |            |          |
-| B/op    |            |            |          |
-|allocs/op|            |            |          |
+|           | SimpleIcal | GolangIcal | Emersion |
+| --------- | ---------- | ---------- | -------- |
+| sec/op    |            |            |          |
+| B/op      |            |            |          |
+| allocs/op |            |            |          |
 
 #### Complex Calendar
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  |            |            |          |
-| B/op    |            |            |          |
-|allocs/op|            |            |          |
+|           | SimpleIcal | GolangIcal | Emersion |
+| --------- | ---------- | ---------- | -------- |
+| sec/op    |            |            |          |
+| B/op      |            |            |          |
+| allocs/op |            |            |          |
