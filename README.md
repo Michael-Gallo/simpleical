@@ -2,6 +2,8 @@
 
 A very much not ready ICAL parser for Golang intended to follow the official [ICAL 2.0 spec](https://datatracker.ietf.org/doc/html/rfc5545) as closely as is reasonable.
 
+It returns typed RFC 5545 objects (`Calendar`, `Event`, `Todo`, `DateTime`, `rrule.RRule`, and so on), not a bag of property names and raw strings, and not a list of expanded event instances. Recurrence rules are parsed and stored; expanding them is left to the caller.
+
 Focused on ease of use and good documentation, with frequent links to the spec.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/michael-gallo/simpleical.svg)](https://pkg.go.dev/github.com/michael-gallo/simpleical)
