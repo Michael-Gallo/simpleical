@@ -54,7 +54,7 @@ Comparisons use [golang-ical v0.3.5](https://github.com/arran4/golang-ical/relea
 
 ### Specs
 
-All tests were ran on a 5700X3D Processor with 32GB of RAM.
+All tests were ran on an Intel Xeon Processor with 16GB of RAM.
 
 ### VEVENT parse
 
@@ -62,27 +62,27 @@ VEVENT-only calendars with no `RRULE`, `VTIMEZONE`, `VTODO`, `VALARM`, or `VJOUR
 
 #### Simple Event
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  | TBD | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD | TBD |
+|         | SimpleIcal   | Gocal        | GolangIcal   | Emersion     |
+|---------|--------------|--------------|--------------|--------------|
+| sec/op  | 2.536µ ± 1%  | 4.698µ ± 1%  | 8.203µ ± 1%  | 3.229µ ± 0%  |
+| B/op    | 5.391Ki ± 0% | 7.024Ki ± 0% | 7.918Ki ± 0% | 6.477Ki ± 0% |
+|allocs/op| 16 ± 0%      | 70 ± 0%      | 144 ± 0%     | 49 ± 0%      |
 
 #### Rich Event
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  | TBD | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD | TBD |
+|         | SimpleIcal   | Gocal        | GolangIcal    | Emersion      |
+|---------|--------------|--------------|---------------|---------------|
+| sec/op  | 4.743µ ± 1%  | 8.546µ ± 0%  | 19.43µ ± 0%   | 7.271µ ± 1%   |
+| B/op    | 7.008Ki ± 0% | 10.89Ki ± 0% | 16.29Ki ± 0%  | 12.31Ki ± 0%  |
+|allocs/op| 50 ± 0%      | 165 ± 0%     | 352 ± 0%      | 140 ± 0%      |
 
 #### Multiple Events
 
-|         | SimpleIcal | Gocal | GolangIcal | Emersion |
-|---------|------------|-------|------------|----------|
-| sec/op  | TBD | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD | TBD |
+|         | SimpleIcal   | Gocal        | GolangIcal    | Emersion      |
+|---------|--------------|--------------|---------------|---------------|
+| sec/op  | 6.961µ ± 1%  | 14.94µ ± 8%  | 31.70µ ± 1%   | 11.10µ ± 1%   |
+| B/op    | 9.438Ki ± 0% | 15.47Ki ± 0% | 24.38Ki ± 0%  | 17.82Ki ± 0%  |
+|allocs/op| 81 ± 0%      | 272 ± 0%     | 589 ± 0%      | 211 ± 0%      |
 
 ### Calendar parse
 
@@ -90,24 +90,24 @@ Full calendar objects (timezones, `RRULE` stored but not expanded, todos, alarms
 
 #### Single Event
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD |
+|         | SimpleIcal   | GolangIcal    | Emersion      |
+|---------|--------------|---------------|---------------|
+| sec/op  | 5.787µ ± 6%  | 26.49µ ± 2%   | 10.03µ ± 3%   |
+| B/op    | 7.867Ki ± 0% | 19.22Ki ± 0%  | 14.48Ki ± 0%  |
+|allocs/op| 63 ± 0%      | 465 ± 0%      | 180 ± 0%      |
 
 #### Multiple Events
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD |
+|         | SimpleIcal    | GolangIcal    | Emersion      |
+|---------|---------------|---------------|---------------|
+| sec/op  | 9.369µ ± 1%   | 40.34µ ± 1%   | 14.33µ ± 1%   |
+| B/op    | 10.63Ki ± 0%  | 27.72Ki ± 0%  | 20.19Ki ± 0%  |
+|allocs/op| 97 ± 0%       | 712 ± 0%      | 255 ± 0%      |
 
 #### Complex Calendar
 
-|         | SimpleIcal | GolangIcal | Emersion |
-|---------|------------|------------|----------|
-| sec/op  | TBD | TBD | TBD |
-| B/op    | TBD | TBD | TBD |
-|allocs/op| TBD | TBD | TBD |
+|         | SimpleIcal    | GolangIcal    | Emersion      |
+|---------|---------------|---------------|---------------|
+| sec/op  | 10.84µ ± 1%   | 53.80µ ± 2%   | 17.85µ ± 1%   |
+| B/op    | 11.93Ki ± 0%  | 32.94Ki ± 0%  | 23.30Ki ± 0%  |
+|allocs/op| 118 ± 0%      | 965 ± 0%      | 338 ± 0%      |
