@@ -45,40 +45,69 @@ calendar, err := ical.ReadSingle(strings.NewReader(icalData))
 
 ## Performance
 
-Performance tests are for simple-ical v0.6.1 and were ran against [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5) and [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1)
+These numbers measure **parse into structs**: the time and allocations to turn ICS bytes into each library’s in-memory calendar. They do not measure recurrence expansion or serialization.
+
+Comparisons use [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5), [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1), and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) (`v0.0.0-20250609112844-439c63cef608`). simple-ical is v0.6.1.
+
+- **gocal** only appears on VEVENT-only files with no `RRULE`. It ignores non-`VEVENT` components and expands recurrences during `Parse()`.
+- **golang-ical** and **emersion/go-ical** parse the full calendar into a generic property/component tree. They can serialize; that is not measured here. simple-ical types and validates during parse.
 
 ### Specs
 
 All tests were ran on a 5700X3D Processor with 32GB of RAM.
 
-### Simple Event
+### VEVENT parse
 
-|         | SimpleIcal  | Gocal       | GolangIcal  |
-|---------|-------------|-------------|--------------|
-| sec/op  | 2.173µ ± 0% | 4.484µ ± 1% | 8.611µ ± 0% |
-| B/op    | 5.391Ki ± 0% | 7.028Ki ± 0% | 7.983Ki ± 0% |
-|allocs/op| 16 ± 0% | 70 ± 0% | 144 ± 0% |
+VEVENT-only calendars with no `RRULE`, `VTIMEZONE`, `VTODO`, `VALARM`, or `VJOURNAL`.
 
-### Single Event
+#### Simple Event
 
-|         | SimpleIcal  | Gocal       | GolangIcal  |
-|---------|-------------|-------------|--------------|
-| sec/op  | 7.160µ ± 1% | 13.25µ ± 0% | 28.72µ ± 1% |
-| B/op    | 7.867Ki ± 0% | 13.12Ki ± 0% | 19.36Ki ± 0% |
-|allocs/op| 63 ± 0% | 241 ± 0% | 465 ± 0% |
+|         | SimpleIcal | Gocal | GolangIcal | Emersion |
+|---------|------------|-------|------------|----------|
+| sec/op  | TBD | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD | TBD |
 
-### Multiple Events
+#### Rich Event
 
-|         | SimpleIcal  | Gocal       | GolangIcal  |
-|---------|-------------|-------------|--------------|
-| sec/op  | 10.25µ ± 0% | 20.86µ ± 0% | 43.59µ ± 1% |
-| B/op    | 10.63Ki ± 0% | 18.15Ki ± 0% | 27.91Ki ± 0% |
-|allocs/op| 97 ± 0% | 382 ± 0% | 712 ± 0% |
+|         | SimpleIcal | Gocal | GolangIcal | Emersion |
+|---------|------------|-------|------------|----------|
+| sec/op  | TBD | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD | TBD |
 
-### Complex Calendar
+#### Multiple Events
 
-|         | SimpleIcal  | Gocal       | GolangIcal  |
-|---------|-------------|-------------|--------------|
-| sec/op  | 12.81µ ± 1% | 19.62µ ± 0% | 57.99µ ± 0% |
-| B/op    | 11.93Ki ± 0% | 18.91Ki ± 0% | 33.22Ki ± 0% |
-|allocs/op| 118 ± 0% | 417 ± 0% | 965 ± 0% |
+|         | SimpleIcal | Gocal | GolangIcal | Emersion |
+|---------|------------|-------|------------|----------|
+| sec/op  | TBD | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD | TBD |
+
+### Calendar parse
+
+Full calendar objects (timezones, `RRULE` stored but not expanded, todos, alarms, journals). gocal is omitted.
+
+#### Single Event
+
+|         | SimpleIcal | GolangIcal | Emersion |
+|---------|------------|------------|----------|
+| sec/op  | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD |
+
+#### Multiple Events
+
+|         | SimpleIcal | GolangIcal | Emersion |
+|---------|------------|------------|----------|
+| sec/op  | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD |
+
+#### Complex Calendar
+
+|         | SimpleIcal | GolangIcal | Emersion |
+|---------|------------|------------|----------|
+| sec/op  | TBD | TBD | TBD |
+| B/op    | TBD | TBD | TBD |
+|allocs/op| TBD | TBD | TBD |
