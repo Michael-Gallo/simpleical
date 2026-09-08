@@ -50,11 +50,11 @@ These numbers measure **parse into structs**: the time and allocations to turn I
 Comparisons use [golang-ical v0.3.5](https://github.com/arran4/golang-ical/releases/tag/v0.3.5), [gocal v0.9.1](https://github.com/apognu/gocal/releases/tag/v0.9.1), and [emersion/go-ical](https://pkg.go.dev/github.com/emersion/go-ical@v0.0.0-20250609112844-439c63cef608) (`v0.0.0-20250609112844-439c63cef608`). simple-ical is v0.6.1.
 
 - **gocal** only appears on VEVENT-only files with no `RRULE`. It ignores non-`VEVENT` components and expands recurrences during `Parse()`.
-- **golang-ical** and **emersion/go-ical** parse the full calendar into a generic property/component tree. They can serialize; that is not measured here. simple-ical types and validates during parse.
+- **golang-ical** and **emersion/go-ical** parse the full calendar into a generic property/component tree. They can serialize; that is not measured here. simple-ical parses into typed structures and validates during parse.
 
 ### Specs
 
-All tests were ran on an Intel Xeon Processor with 16GB of RAM.
+All benchmarks were run on an Intel Xeon processor with 16 GB of RAM.
 
 ### VEVENT parse
 
