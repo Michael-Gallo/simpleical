@@ -14,7 +14,7 @@ This is an icalendar parser focused on performance and compliance with the RFC55
 # Performance
 
 - **Do not preallocate large fixed-size buffers per parse call.** v0.6.0 shipped `scanner.Buffer(make([]byte, 64*1024), maxPhysicalLineBytes)` and paid ~13x B/op and ~3x sec/op on every parse until it was caught. `bufio.Scanner` lazily allocates 4 KiB and only grows when a single token needs more, so upfront preallocation is pure waste for every calendar smaller than the buffer, and growth reallocs are amortized and cheap. Pass `nil` and let the scanner size itself.
-- Run the comparative benchmarks (`benchmarks/`) before and after touching the parse hot path, and watch B/op and allocs, not just sec/op — allocation counts are what caught the regression above.
+- NEVER run any of the `make bench*` targets (`bench`, `bench-profile`, `bench-long`, `bench-comparative`). They are long-running and are run by the user on their own machine; an agent aborting one mid-run wastes the whole run. Read existing results from `benchmarks/results*.txt` and `benchmarks/results*_benchstat.txt` instead.
 
 # Setting Properties
 

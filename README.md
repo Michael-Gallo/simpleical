@@ -52,8 +52,6 @@ These numbers measure each library’s public parse entrypoint on the same ICS b
 
 All benchmarks were run on a 5700X3D processor with 32 GB of RAM.
 
-Numbers will be filled from a local `make bench-comparative` run.
-
 ### VEVENT parse
 
 VEVENT-only calendars with no `RRULE`, `VTIMEZONE`, `VTODO`, `VALARM`, or `VJOURNAL`.
@@ -62,25 +60,25 @@ VEVENT-only calendars with no `RRULE`, `VTIMEZONE`, `VTODO`, `VALARM`, or `VJOUR
 
 |           | SimpleIcal | Gocal | GolangIcal | Emersion |
 | --------- | ---------- | ----- | ---------- | -------- |
-| sec/op    |            |       |            |          |
-| B/op      |            |       |            |          |
-| allocs/op |            |       |            |          |
+| sec/op    | 2.172µ     | 4.611µ | 9.154µ    | 2.538µ   |
+| B/op      | 5.391Ki    | 7.028Ki | 8.062Ki  | 6.477Ki  |
+| allocs/op | 16         | 70    | 146        | 49       |
 
 #### Rich Event
 
 |           | SimpleIcal | Gocal | GolangIcal | Emersion |
 | --------- | ---------- | ----- | ---------- | -------- |
-| sec/op    |            |       |            |          |
-| B/op      |            |       |            |          |
-| allocs/op |            |       |            |          |
+| sec/op    | 5.656µ     | 9.715µ | 23.02µ    | 7.744µ   |
+| B/op      | 7.008Ki    | 10.90Ki | 16.55Ki  | 12.31Ki  |
+| allocs/op | 50         | 165   | 354        | 140      |
 
 #### Multiple Events
 
-|           | SimpleIcal | Gocal | GolangIcal | Emersion |
-| --------- | ---------- | ----- | ---------- | -------- |
-| sec/op    |            |       |            |          |
-| B/op      |            |       |            |          |
-| allocs/op |            |       |            |          |
+|           | SimpleIcal | Gocal  | GolangIcal | Emersion |
+| --------- | ---------- | ------ | ---------- | -------- |
+| sec/op    | 8.352µ     | 15.61µ | 37.76µ     | 11.99µ   |
+| B/op      | 9.438Ki    | 15.48Ki | 24.71Ki   | 17.82Ki  |
+| allocs/op | 81         | 272    | 591        | 211      |
 
 ### Calendar parse
 
@@ -90,22 +88,22 @@ Full calendar objects (timezones, `RRULE` stored but not expanded, todos, alarms
 
 |           | SimpleIcal | GolangIcal | Emersion |
 | --------- | ---------- | ---------- | -------- |
-| sec/op    |            |            |          |
-| B/op      |            |            |          |
-| allocs/op |            |            |          |
+| sec/op    | 7.155µ     | 29.65µ     | 9.500µ   |
+| B/op      | 7.867Ki    | 19.51Ki    | 14.48Ki  |
+| allocs/op | 63         | 467        | 180      |
 
 #### Multiple Events
 
 |           | SimpleIcal | GolangIcal | Emersion |
 | --------- | ---------- | ---------- | -------- |
-| sec/op    |            |            |          |
-| B/op      |            |            |          |
-| allocs/op |            |            |          |
+| sec/op    | 10.17µ     | 44.87µ     | 13.99µ   |
+| B/op      | 10.63Ki    | 28.09Ki    | 20.19Ki  |
+| allocs/op | 97         | 714        | 255      |
 
 #### Complex Calendar
 
 |           | SimpleIcal | GolangIcal | Emersion |
 | --------- | ---------- | ---------- | -------- |
-| sec/op    |            |            |          |
-| B/op      |            |            |          |
-| allocs/op |            |            |          |
+| sec/op    | 12.67µ     | 60.04µ     | 17.14µ   |
+| B/op      | 11.93Ki    | 33.41Ki    | 23.30Ki  |
+| allocs/op | 118        | 967        | 338      |
