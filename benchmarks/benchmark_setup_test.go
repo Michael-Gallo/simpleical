@@ -2,24 +2,25 @@ package benchmarks
 
 import (
 	"bytes"
-	_ "embed"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/apognu/gocal"
 	golangical "github.com/arran4/golang-ical"
+	emersionical "github.com/emersion/go-ical"
 	"github.com/michael-gallo/simpleical/ical"
 )
 
-const commonName = "Org"
-
 const (
 	// An extremely minimal ical file, with a single event with only required properties
-	simpleFileName   = "./test_simple.ical"
-	singleFileName   = "./test_event.ical"
-	multipleFileName = "./test_multiple_events.ical"
-	complexFileName  = "./test_complex.ical"
+	simpleFileName = "./test_simple.ical"
+	// VEVENT-only comparative fixtures: no RRULE and no non-VEVENT components
+	veventRichFileName      = "./test_vevent_rich.ical"
+	veventsMultipleFileName = "./test_vevents_multiple.ical"
+	singleFileName          = "./test_event.ical"
+	multipleFileName        = "./test_multiple_events.ical"
+	complexFileName         = "./test_complex.ical"
 	// A stream of three sequential VCALENDAR objects, parsed with ical.Read
 	multipleCalendarsFileName = "./test_multiple_calendars.ical"
 )
@@ -92,24 +93,44 @@ func BenchmarkMultipleCalendars(b *testing.B) {
 	}
 }
 
-// Runs benchmarks to test simple-ical against other parsers
-func BenchmarkComparativeAll(b *testing.B) {
+// BenchmarkComparativeVEVENT compares parse-into-structs on VEVENT-only
+// calendars with no RRULE. Gocal is included here because it only materializes
+// VEVENT components and would expand recurrences if an RRULE were present.
+func BenchmarkComparativeVEVENT(b *testing.B) {
+	testCases := []struct {
+		fileName   string
+		testName   string
+		eventCount int
+	}{
+		{simpleFileName, "Simple Event", 1},
+		{veventRichFileName, "Rich Event", 1},
+		{veventsMultipleFileName, "Multiple Events", 2},
+	}
+
+	for _, testCase := range testCases {
+		benchmarkVEVENTComparison(b, testCase.fileName, testCase.testName, testCase.eventCount)
+	}
+}
+
+// BenchmarkComparativeCalendar compares parse-into-structs on full calendar
+// objects (VTIMEZONE, RRULE, VTODO, VALARM, VJOURNAL). Gocal is omitted: it
+// skips non-VEVENT components and expands RRULEs during Parse.
+func BenchmarkComparativeCalendar(b *testing.B) {
 	testCases := []struct {
 		fileName string
 		testName string
 	}{
 		{singleFileName, "Single Event"},
 		{multipleFileName, "Multiple Events"},
-		{simpleFileName, "Simple Event"},
 		{complexFileName, "Complex Calendar"},
 	}
 
 	for _, testCase := range testCases {
-		benchmarkFileComparison(b, testCase.fileName, testCase.testName)
+		benchmarkCalendarComparison(b, testCase.fileName, testCase.testName)
 	}
 }
 
-func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
+func benchmarkVEVENTComparison(b *testing.B, fileName string, testName string, eventCount int) {
 	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
 		b.Fatalf("Invalid File: %v", err)
@@ -135,6 +156,9 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 			if err != nil {
 				b.Fatalf("Failed to parse %s: %v", testName, err)
 			}
+			if got := len(c.Events); got != eventCount {
+				b.Fatalf("gocal parsed %d events, want %d (RRULE expansion?)", got, eventCount)
+			}
 		}
 	})
 
@@ -142,6 +166,54 @@ func benchmarkFileComparison(b *testing.B, fileName string, testName string) {
 		for b.Loop() {
 			reader.Reset(fileContent)
 			_, err := golangical.ParseCalendar(&reader)
+			if err != nil {
+				b.Fatalf("Failed to parse %s: %v", testName, err)
+			}
+		}
+	})
+
+	b.Run(fmt.Sprintf("%s - Emersion", testName), func(b *testing.B) {
+		for b.Loop() {
+			reader.Reset(fileContent)
+			_, err := emersionical.NewDecoder(&reader).Decode()
+			if err != nil {
+				b.Fatalf("Failed to parse %s: %v", testName, err)
+			}
+		}
+	})
+}
+
+func benchmarkCalendarComparison(b *testing.B, fileName string, testName string) {
+	fileContent, err := os.ReadFile(fileName)
+	if err != nil {
+		b.Fatalf("Invalid File: %v", err)
+	}
+	var reader bytes.Reader
+
+	b.Run(fmt.Sprintf("%s - SimpleIcal", testName), func(b *testing.B) {
+		for b.Loop() {
+			reader.Reset(fileContent)
+			_, err := ical.ReadSingle(&reader)
+			if err != nil {
+				b.Fatalf("Failed to parse %s: %v", testName, err)
+			}
+		}
+	})
+
+	b.Run(fmt.Sprintf("%s - GolangIcal", testName), func(b *testing.B) {
+		for b.Loop() {
+			reader.Reset(fileContent)
+			_, err := golangical.ParseCalendar(&reader)
+			if err != nil {
+				b.Fatalf("Failed to parse %s: %v", testName, err)
+			}
+		}
+	})
+
+	b.Run(fmt.Sprintf("%s - Emersion", testName), func(b *testing.B) {
+		for b.Loop() {
+			reader.Reset(fileContent)
+			_, err := emersionical.NewDecoder(&reader).Decode()
 			if err != nil {
 				b.Fatalf("Failed to parse %s: %v", testName, err)
 			}
